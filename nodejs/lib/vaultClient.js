@@ -35,6 +35,18 @@ createVaultClient = (options) => {
   }, base)).promise();
 
   return {
+    setupCredentials: () => {
+      return new AWS.CredentialProviderChain([
+        new AWS.SharedIniFileCredentials(),
+        new AWS.EnvironmentCredentials('AWS'),
+        new AWS.EC2MetadataCredentials({
+          httpOptions: { timeout: 5000 },
+          maxRetries: 10,
+          retryDelayOptions: { base: 200 }
+        })
+      ]).resolvePromise();
+    },
+
     lookup: (name) => Promise.all([
       s3.getObject(createKeyRequestObject(bucketName, name)).promise()
         .then((encryptedKey) => {
