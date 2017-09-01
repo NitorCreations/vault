@@ -29,6 +29,7 @@ describe('VaultClient', () => {
     AWS.mock('S3', 'deleteObject', deleteObjectSpy);
     AWS.mock('KMS', 'decrypt', decryptSpy);
     AWS.mock('KMS', 'generateDataKey', generateDataKeySpy);
+    AWS.mock('CredentialProviderChain', 'resolvePromise', sinon.stub().resolves())
   });
 
   beforeEach(() => {
@@ -36,6 +37,7 @@ describe('VaultClient', () => {
       bucketName: BUCKET_NAME_FIXTURE,
       vaultKey: VAULT_KEY_FIXTURE
     });
+    return vaultClient.setupCredentials();
   });
 
   after(() => {
