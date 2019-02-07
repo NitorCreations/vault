@@ -30,6 +30,12 @@ def _to_bytes(data):
         return data.encode()
     return data
 
+def _to_str(data):
+    decode_method = getattr(data, "decode", None)
+    if callable(decode_method):
+        return data.decode()
+    return data
+
 class Vault(object):
     _session = boto3.Session()
     _kms = ""
@@ -135,7 +141,7 @@ class Vault(object):
             meta_add = meta
             if not isinstance(meta, bytes):
                 meta_add = _to_bytes(meta)
-            meta = json.loads(meta)
+            meta = json.loads(_to_str(meta))
             return AESGCM(self.direct_decrypt(datakey)).decrypt(b64decode(meta['nonce']), ciphertext, meta_add)
         except ClientError as e:
             if e.response['Error']['Code'] == "404" or e.response['Error']['Code'] == 'NoSuchKey':
