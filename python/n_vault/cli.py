@@ -26,7 +26,7 @@ from requests.exceptions import ConnectionError
 from .vault import Vault
 
 SYS_ENCODING = locale.getpreferredencoding()
-VAULT_STACK_VERSION = 20
+VAULT_STACK_VERSION = 22
 TEMPLATE_STRING = """{
   "Parameters": {
     "paramBucketName": {
@@ -183,7 +183,7 @@ TEMPLATE_STRING = """{
                 "cloudformation:DescribeStacks"
               ],
               "Resource": {
-                "Ref": "AWS::StackId"
+                "Fn::Sub": "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/${AWS::StackName}/*"
               },
               "Effect": "Allow",
               "Sid": "describeVault"
@@ -269,7 +269,7 @@ TEMPLATE_STRING = """{
                 "cloudformation:DescribeStacks"
               ],
               "Resource": {
-                "Ref": "AWS::StackId"
+                "Fn::Sub": "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/${AWS::StackName}/*"
               },
               "Effect": "Allow",
               "Sid": "describeVault"
