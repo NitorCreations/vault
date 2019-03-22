@@ -1,14 +1,13 @@
 package com.nitorcreations.vault;
 
-import com.amazonaws.services.kms.AWSKMSClient;
+import com.amazonaws.services.kms.AWSKMS;
 import com.amazonaws.services.kms.model.DataKeySpec;
 import com.amazonaws.services.kms.model.DecryptRequest;
 import com.amazonaws.services.kms.model.GenerateDataKeyRequest;
 import com.amazonaws.services.kms.model.GenerateDataKeyResult;
-import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import com.amazonaws.services.s3.model.GetObjectRequest;
-import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.util.IOUtils;
@@ -29,8 +28,8 @@ import static java.util.stream.Collectors.toList;
 
 public class VaultClient {
 
-  private final AmazonS3Client s3;
-  private final AWSKMSClient kms;
+  private final AmazonS3 s3;
+  private final AWSKMS kms;
   private final String bucketName;
   private final String vaultKey;
 
@@ -38,7 +37,7 @@ public class VaultClient {
   private static final String VALUE_OBJECT_NAME_FORMAT = "%s.%s";
   private static final String KEY_OBJECT_NAME_FORMAT = "%s.key";
 
-  public VaultClient(AmazonS3Client s3, AWSKMSClient kms, String bucketName, String vaultKey) {
+  public VaultClient(AmazonS3 s3, AWSKMS kms, String bucketName, String vaultKey) {
     if (s3 == null) {
       throw new IllegalArgumentException("S3 client is needed");
     }
