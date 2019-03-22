@@ -13,7 +13,7 @@ pom.xml:
 
 Setting up VaultClient:
 ```
-String region = "eu-central-1;
+String region = "eu-central-1";
 
 AmazonS3 s3Client = AmazonS3ClientBuilder.standard().build();
 AWSKMS kmsClient = AWSKMSClientBuilder.standard()
@@ -25,5 +25,5 @@ VaultClient vaultClient = new VaultClient(s3Client, kmsClient, bucketName, kmsKe
 
 Fetching data from the Vault:
 ```
-String value = vaultClient.lookup("my-key");
+String password = vaultClient.lookup("my-password-key");
 ```
