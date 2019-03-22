@@ -11,12 +11,9 @@ import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import org.apache.commons.io.IOUtils;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -25,7 +22,8 @@ import java.util.Random;
 import static java.util.Arrays.asList;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.mock;
@@ -33,7 +31,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@RunWith(JUnit4.class)
 public class VaultClientTest {
 
   private static final String BUCKET_NAME_FIXTURE = "bucket";
@@ -46,35 +43,11 @@ public class VaultClientTest {
   private AWSKMS kmsMock;
   private VaultClient vaultClient;
 
-  @Rule
-  public ExpectedException expectedException = ExpectedException.none();
-
-  @Test
-  public void constructorThrowsIaeWhenS3Null() {
-    expectedException.expect(IllegalArgumentException.class);
-    new VaultClient(null, mock(AWSKMS.class), BUCKET_NAME_FIXTURE, VAULT_KEY_FIXTURE);
-  }
-
-  @Test
-  public void constructorThrowsIaeWhenKmsNull() {
-    expectedException.expect(IllegalArgumentException.class);
-    new VaultClient(mock(AmazonS3.class), null, BUCKET_NAME_FIXTURE, VAULT_KEY_FIXTURE);
-  }
-
-  @Test
-  public void constructorThrowsIaeWhenBucketNameNull() {
-    expectedException.expect(IllegalArgumentException.class);
-    new VaultClient(mock(AmazonS3.class), mock(AWSKMS.class), null, VAULT_KEY_FIXTURE);
-  }
-
-  @Before
-  public void setUpS3() throws Exception {
+  @BeforeEach
+  public void setup() throws Exception {
     s3Mock = mock(AmazonS3.class);
     when(s3Mock.getObject(any(GetObjectRequest.class))).thenReturn(createS3Object("value"), createS3Object(KEY_FIXTURE));
-  }
 
-  @Before
-  public void setUpObjectListing() {
     ObjectListing mockObjectListing = mock(ObjectListing.class);
     final S3ObjectSummary valueObjectSummary = new S3ObjectSummary();
     valueObjectSummary.setKey(SECRET_NAME_FIXTURE + ".encrypted");
@@ -82,17 +55,11 @@ public class VaultClientTest {
     keyObjectSummary.setKey(SECRET_NAME_FIXTURE + ".key");
     when(mockObjectListing.getObjectSummaries()).thenReturn(asList(valueObjectSummary, keyObjectSummary));
     when(s3Mock.listObjects(BUCKET_NAME_FIXTURE)).thenReturn(mockObjectListing);
-  }
 
-  @Before
-  public void setUpKms() {
     kmsMock = mock(AWSKMS.class);
     when(kmsMock.decrypt(any(DecryptRequest.class))).thenReturn(createDecryptResult());
     when(kmsMock.generateDataKey(any(GenerateDataKeyRequest.class))).thenReturn(createGenerateDataKeyResult());
-  }
 
-  @Before
-  public void setUpVaultClient() {
     vaultClient = new VaultClient(s3Mock, kmsMock, BUCKET_NAME_FIXTURE, VAULT_KEY_FIXTURE);
   }
 
@@ -105,6 +72,24 @@ public class VaultClientTest {
     final S3Object s3Object = new S3Object();
     s3Object.setObjectContent(IOUtils.toInputStream(content, "UTF-8"));
     return s3Object;
+  }
+
+  @Test
+  public void constructorThrowsIaeWhenS3Null() {
+    assertThrows(IllegalArgumentException.class,
+            () -> new VaultClient(null, mock(AWSKMS.class), BUCKET_NAME_FIXTURE, VAULT_KEY_FIXTURE));
+  }
+
+  @Test
+  public void constructorThrowsIaeWhenKmsNull() {
+    assertThrows(IllegalArgumentException.class,
+            () -> new VaultClient(mock(AmazonS3.class), null, BUCKET_NAME_FIXTURE, VAULT_KEY_FIXTURE));
+  }
+
+  @Test
+  public void constructorThrowsIaeWhenBucketNameNull() {
+    assertThrows(IllegalArgumentException.class,
+            () -> new VaultClient(mock(AmazonS3.class), mock(AWSKMS.class), null, VAULT_KEY_FIXTURE));
   }
 
   private static GenerateDataKeyResult createGenerateDataKeyResult() {
