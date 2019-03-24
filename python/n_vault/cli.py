@@ -23,7 +23,7 @@ import boto3
 import requests
 from base64 import b64decode, b64encode
 from requests.exceptions import ConnectionError
-from .vault import Vault
+from n_vault.vault import Vault
 
 SYS_ENCODING = locale.getpreferredencoding()
 VAULT_STACK_VERSION = 22
@@ -567,11 +567,15 @@ def main():
             data = open(args.file, 'rb').read()
     elif args.store:
         if args.value:
-            data = args.value.encode()
+            data = args.value.encode("utf-8")
         elif args.file == "-":
-            data = sys.stdin.read()
+            if getattr(sys.stdin, "buffer", None):
+                data = sys.stdin.buffer.read()
+            else:
+                data = sys.stdin.read()
         else:
-            data = open(args.file, 'rb').read()
+            with open(args.file, 'rb') as f:
+                data = bytes(f.read())
     if not args.vaultstack:
         if "VAULT_STACK" in os.environ:
             args.vaultstack = os.environ["VAULT_STACK"]
@@ -625,7 +629,10 @@ def main():
                 with open(args.outfile, 'wb') as outf:
                     outf.write(data)
             else:
-                sys.stdout.write(data.decode(SYS_ENCODING))
+                if getattr(sys.stdout, "buffer", None):
+                    sys.stdout.buffer.write(data)
+                else:
+                    sys.stdout.write(data)
     else:
         if not args.bucket:
             sts = boto3.client("sts")

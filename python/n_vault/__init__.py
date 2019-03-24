@@ -15,4 +15,4 @@
 """ Vault module for securely storing secrets in s3 with local encryption
 with data keys from AWS KMS
 """
-from .vault import Vault
+from n_vault.vault import Vault

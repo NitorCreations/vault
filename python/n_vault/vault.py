@@ -27,13 +27,13 @@ from cryptography.hazmat.backends import default_backend
 def _to_bytes(data):
     encode_method = getattr(data, "encode", None)
     if callable(encode_method):
-        return data.encode()
+        return data.encode("utf-8")
     return data
 
 def _to_str(data):
     decode_method = getattr(data, "decode", None)
     if callable(decode_method):
-        return data.decode()
+        return data.decode("utf-8")
     return data
 
 class Vault(object):
@@ -86,11 +86,11 @@ class Vault(object):
         ret['datakey'] = key_dict['CiphertextBlob']
         aesgcm_cipher = AESGCM(data_key)
         nonce = os.urandom(12)
-        meta = json.dumps({"alg": "AESGCM", "nonce": b64encode(nonce).decode()}, separators=(',',':'), sort_keys=True).encode()
-        ret['aes-gcm-ciphertext'] = aesgcm_cipher.encrypt(nonce, _to_bytes(data), meta)
+        meta = json.dumps({"alg": "AESGCM", "nonce": b64encode(nonce).decode()}, separators=(',',':'), sort_keys=True)
+        ret['aes-gcm-ciphertext'] = aesgcm_cipher.encrypt(nonce, data, _to_bytes(meta))
         cipher = _get_cipher(data_key)
         encryptor = cipher.encryptor()
-        ret['ciphertext'] = encryptor.update(_to_bytes(data)) + encryptor.finalize()
+        ret['ciphertext'] = encryptor.update(data) + encryptor.finalize()
         ret['meta'] = meta
         return ret
 
@@ -131,22 +131,19 @@ class Vault(object):
 
     def lookup(self, name):
         s3cl = self._session.client('s3')
-        datakey = s3cl.get_object(Bucket=self._vault_bucket,
-                                  Key=self._prefix + name + '.key')['Body'].read()
+        datakey = bytes(s3cl.get_object(Bucket=self._vault_bucket,
+                                        Key=self._prefix + name + '.key')['Body'].read())
         try:
-            meta = s3cl.get_object(Bucket=self._vault_bucket,
-                                   Key=self._prefix + name + '.meta')['Body'].read()
-            ciphertext = s3cl.get_object(Bucket=self._vault_bucket,
-                                         Key=self._prefix + name + '.aesgcm.encrypted')['Body'].read()
-            meta_add = meta
-            if not isinstance(meta, bytes):
-                meta_add = _to_bytes(meta)
-            meta = json.loads(_to_str(meta))
+            meta_add = bytes(s3cl.get_object(Bucket=self._vault_bucket,
+                                             Key=self._prefix + name + '.meta')['Body'].read())
+            ciphertext = bytes(s3cl.get_object(Bucket=self._vault_bucket,
+                                               Key=self._prefix + name + '.aesgcm.encrypted')['Body'].read())
+            meta = json.loads(_to_str(meta_add))
             return AESGCM(self.direct_decrypt(datakey)).decrypt(b64decode(meta['nonce']), ciphertext, meta_add)
         except ClientError as e:
             if e.response['Error']['Code'] == "404" or e.response['Error']['Code'] == 'NoSuchKey':
-                ciphertext = s3cl.get_object(Bucket=self._vault_bucket,
-                                            Key=self._prefix + name + '.encrypted')['Body'].read()
+                ciphertext = bytes(s3cl.get_object(Bucket=self._vault_bucket,
+                                                   Key=self._prefix + name + '.encrypted')['Body'].read())
                 return self._decrypt(datakey, ciphertext)
             else:
                 raise
