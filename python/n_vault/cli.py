@@ -658,7 +658,7 @@ def main():
                     params['ParameterKey'] = "paramBucketName"
                     params['UsePreviousValue'] = True
                     clf.update_stack(StackName=args.vaultstack, TemplateBody=_template(),
-                                     Parameters=[params], Capabilities=['CAPABILITY_IAM'])
+                                     Parameters=[params], Capabilities=['CAPABILITY_IAM', 'CAPABILITY_NAMED_IAM'])
                 else:
                     print("Current stack version %(cur_ver)s does not need update to " \
                           "version %(code_version)s" % {"cur_ver": deployed_version,
