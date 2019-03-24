@@ -101,3 +101,6 @@ node_modules/
 
 # tmp files
 *~
+.settings
+.vscode
+.classpath
