@@ -2,12 +2,14 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>aws-vault-parent</artifactId>
-    <name>aws-vault</name>
+    <name>aws-vault-parent</name>
     <groupId>com.nitorcreations</groupId>
-    <version>1.0-SNAPSHOT</version>
+    <version>0.15-SNAPSHOT</version>
     <packaging>pom</packaging>
+    <url>http://github.com/NitorCreations/aws-vault</url>
 
     <modules>
-        <module>java</module>     
+        <module>java</module>
+        <module>java-cli</module>
     </modules>
 </project>

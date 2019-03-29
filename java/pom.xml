@@ -4,7 +4,12 @@
 
   <groupId>com.nitorcreations</groupId>
   <artifactId>aws-vault</artifactId>
-  <version>0.15-SNAPSHOT</version>
+  <name>aws-vault</name>
+  <parent>
+    <artifactId>aws-vault-parent</artifactId>
+    <groupId>com.nitorcreations</groupId>
+    <version>0.15-SNAPSHOT</version>
+  </parent>
   <build>
     <plugins>
       <plugin>
@@ -18,9 +23,6 @@
     </plugins>
   </build>
   <packaging>jar</packaging>
-
-  <name>aws-vault</name>
-  <url>http://github.com/NitorCreations/aws-vault-java</url>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
