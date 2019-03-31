@@ -30,7 +30,7 @@
             <configuration>
               <transformers>
                 <transformer>
-                  <mainClass>com.nitorcreations.vault.Main</mainClass>
+                  <mainClass>com.nitorcreations.vault.cli.Main</mainClass>
                 </transformer>
               </transformers>
             </configuration>

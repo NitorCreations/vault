@@ -1,18 +1,28 @@
 package com.nitorcreations.vault;
 
 import com.amazonaws.services.kms.AWSKMSClient;
+import com.amazonaws.services.kms.AWSKMSClientBuilder;
 import com.amazonaws.services.kms.AWSKMS;
 import com.amazonaws.services.kms.model.DataKeySpec;
 import com.amazonaws.services.kms.model.DecryptRequest;
+import com.amazonaws.services.kms.model.EncryptRequest;
 import com.amazonaws.services.kms.model.GenerateDataKeyRequest;
 import com.amazonaws.services.kms.model.GenerateDataKeyResult;
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.util.IOUtils;
+import com.amazonaws.regions.Regions;
+import com.amazonaws.services.cloudformation.AmazonCloudFormation;
+import com.amazonaws.services.cloudformation.AmazonCloudFormationClientBuilder;
+import com.amazonaws.services.cloudformation.model.DescribeStacksRequest;
+import com.amazonaws.services.cloudformation.model.DescribeStacksResult;
+import com.amazonaws.services.cloudformation.model.Output;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -61,6 +71,35 @@ public class VaultClient {
     this((AmazonS3) s3, (AWSKMS) kms, bucketName, vaultKey);
   }
 
+  public VaultClient() {
+    this(resolveKeyAndBucket(null, null));
+  }
+
+  public VaultClient(String vaultStack) {
+    this(resolveKeyAndBucket(vaultStack, null));
+  }
+
+  public VaultClient(String vaultStack, Regions region) {
+    this(resolveKeyAndBucket(vaultStack, region), region);
+  }
+
+  public VaultClient(KeyAndBucket kb) {
+    this(kb.vaultBucket, kb.keyArn);
+  }
+
+  public VaultClient(KeyAndBucket kb, Regions region) {
+    this(kb.vaultBucket, kb.keyArn, region);
+  }
+
+  public VaultClient(String vaultBucket, String keyArn) {
+    this(AmazonS3ClientBuilder.defaultClient(), AWSKMSClientBuilder.defaultClient(), vaultBucket, keyArn);
+  }
+
+  public VaultClient(String vaultBucket, String keyArn, Regions region) {
+    this(AmazonS3ClientBuilder.standard().withRegion(region).build(),
+         AWSKMSClientBuilder.standard().withRegion(region).build(), vaultBucket, keyArn);
+  }
+
   public VaultClient(AmazonS3 s3, AWSKMS kms, String bucketName, String vaultKey) {
     if (s3 == null) {
       throw new IllegalArgumentException("S3 client is needed");
@@ -76,6 +115,35 @@ public class VaultClient {
     this.bucketName = bucketName;
     this.vaultKey = vaultKey;
   }
+
+  public static KeyAndBucket resolveKeyAndBucket(final String vaultStack, final Regions region) {
+    String resolveStack = "vault";
+    if (vaultStack == null || vaultStack.isEmpty()) {
+      if (System.getenv("VAULT_STACK") != null) {
+        resolveStack = System.getenv("VAULT_STACK");
+      }
+    } else {
+      resolveStack = vaultStack;
+    }
+    AmazonCloudFormation cf;
+    if (region != null) {
+      cf = AmazonCloudFormationClientBuilder.standard().withRegion(region).build();
+    } else {
+      cf = AmazonCloudFormationClientBuilder.defaultClient();
+    }
+    DescribeStacksRequest request = new DescribeStacksRequest();
+    request.setStackName(resolveStack);
+    DescribeStacksResult result = cf.describeStacks(request);
+    String bucket = null, key = null;
+    for (Output output : result.getStacks().get(0).getOutputs()) {
+      if (output.getOutputKey().equals("vaultBucketName")) {
+        bucket = output.getOutputValue();
+      } else if (output.getOutputKey().equals("kmsKeyArn")) {
+        key = output.getOutputValue();
+      }
+    }
+    return new KeyAndBucket(key, bucket);
+  }
   public String lookup(String name) throws VaultException {
     return new String(lookupBytes(name), UTF_8);
   }
@@ -85,7 +153,7 @@ public class VaultClient {
       meta = readObject(metaValueObjectName(name));
       encrypted = readObject(aesgcmValueObjectName(name));
       key = readObject(keyObjectName(name));
-    } catch (IOException e) {
+    } catch (AmazonS3Exception | IOException e) {
       try {
         encrypted = readObject(encyptedValueObjectName(name));
         key = readObject(keyObjectName(name));
@@ -104,6 +172,9 @@ public class VaultClient {
   }
 
   public void store(String name, String data) throws VaultException {
+    store(name, data.getBytes(UTF_8));
+  }
+  public void store(String name, byte[] data) throws VaultException {
     EncryptResult encrypted;
     try {
       encrypted = encrypt(data);
@@ -148,10 +219,6 @@ public class VaultClient {
     return String.format(KEY_OBJECT_NAME_FORMAT, name);
   }
 
-  private EncryptResult encrypt(String data) throws GeneralSecurityException {
-    return encrypt(data.getBytes(UTF_8));
-  }
-
   private EncryptResult encrypt(byte[] data) throws GeneralSecurityException {
     final GenerateDataKeyResult dataKey = kms
         .generateDataKey(new GenerateDataKeyRequest().withKeyId(this.vaultKey).withKeySpec(DataKeySpec.AES_256));
@@ -169,6 +236,12 @@ public class VaultClient {
     return createCipher(decryptedKey, Cipher.DECRYPT_MODE).doFinal(encrypted);
   }
 
+  public byte[] directDecrypt(byte[] data) {
+    return kms.decrypt(new DecryptRequest().withCiphertextBlob(ByteBuffer.wrap(data))).getPlaintext().array();
+  }
+  public byte[] directEncrypt(byte[] data) {
+    return kms.encrypt(new EncryptRequest().withKeyId(this.vaultKey).withPlaintext(ByteBuffer.wrap(data))).getCiphertextBlob().array();
+  }
   private static Cipher createCipher(final ByteBuffer unencryptedKey, final int encryptMode) throws GeneralSecurityException {
     final byte[] iv = new byte[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1337 / 256, 1337 % 256 };
     final Cipher cipher = Cipher.getInstance("AES/CTR/NoPadding");
@@ -231,6 +304,14 @@ public class VaultClient {
       this.aesCipherText = aesCipherText;
       this.aesGCMCipherText = aesGCMCipherText;
       this.aesGCMAAD = aesGCMAAD;
+    }
+  }
+  public static class KeyAndBucket {
+    public final String keyArn;
+    public final String vaultBucket;
+    public KeyAndBucket(String keyArn, String vaultBucket) {
+      this.keyArn = keyArn;
+      this.vaultBucket = vaultBucket;
     }
   }
 }
