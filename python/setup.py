@@ -28,7 +28,7 @@ setup(name='nitor-vault',
           'console_scripts': ['vault=n_vault.cli:main']
       },
       install_requires=[
-          'boto3',
+          'threadlocal_aws==0.2',
           'requests',
           'argcomplete',
           'future',
