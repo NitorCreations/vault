@@ -147,6 +147,11 @@ def main():
         else:
             data = vlt.lookup(args.lookup)
             if args.outfile and not args.outfile == "-":
+                out_dir = os.path.dirname(args.outfile)
+                if not out_dir:
+                    out_dir = "."
+                if not os.path.exists(out_dir):
+                    os.makedirs(out_dir)
                 with open(args.outfile, 'wb') as outf:
                     outf.write(data)
             else:
