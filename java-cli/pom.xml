@@ -22,7 +22,7 @@
     <dependency>
       <groupId>info.picocli</groupId>
       <artifactId>picocli</artifactId>
-      <version>4.0.0-alpha-1-SNAPSHOT</version>
+      <version>4.0.0-beta-2</version>
     </dependency>
     <dependency>
       <groupId>com.nitorcreations</groupId>
