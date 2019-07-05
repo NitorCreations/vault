@@ -505,6 +505,7 @@ class Vault(object):
         if vault_iam_id and vault_iam_secret:
             self._session = session(aws_access_key_id=vault_iam_id,
                                     aws_secret_access_key=vault_iam_secret)
+        self._c_args = { "session": self._session, "region": self._region }
         # Either use given vault kms key and/or vault bucket or look them up from a
         # cloudformation stack
         if vault_key:
@@ -523,12 +524,12 @@ class Vault(object):
             if not self._vault_bucket and 'bucket_name' in stack_info:
                 self._vault_bucket = stack_info['bucket_name']
         if not self._vault_bucket:
-            account_id = sts(session=self._session, region=self._region).get_caller_identity()['Account']
+            account_id = sts(**self._c_args).get_caller_identity()['Account']
             self._vault_bucket = self._stack + "-" + self._region + "-" + account_id
 
     def _encrypt(self, data):
         ret = {}
-        key_dict = kms(session=self._session, region=self._region).generate_data_key(KeyId=self._vault_key,
+        key_dict = kms(**self._c_args).generate_data_key(KeyId=self._vault_key,
                                                KeySpec="AES_256")
         data_key = key_dict['Plaintext']
         ret['datakey'] = key_dict['CiphertextBlob']
@@ -554,7 +555,7 @@ class Vault(object):
         return cipher.decrypt(nonce, encrypted, None)
 
     def _get_cf_params(self):
-        stack = cloudformation(session=self._session, region=self._region).describe_stacks(StackName=self._stack)
+        stack = cloudformation(**self._c_args).describe_stacks(StackName=self._stack)
         ret = {}
         if 'Stacks' in stack and stack['Stacks']:
             for output in  stack['Stacks'][0]['Outputs']:
@@ -568,29 +569,29 @@ class Vault(object):
 
     def store(self, name, data):
         encrypted = self._encrypt(data)
-        s3(session=self._session, region=self._region).put_object(Bucket=self._vault_bucket, Body=encrypted['datakey'],
+        s3(**self._c_args).put_object(Bucket=self._vault_bucket, Body=encrypted['datakey'],
                             ACL='private', Key=self._prefix + name + '.key')
-        s3(session=self._session, region=self._region).put_object(Bucket=self._vault_bucket, Body=encrypted['ciphertext'],
+        s3(**self._c_args).put_object(Bucket=self._vault_bucket, Body=encrypted['ciphertext'],
                             ACL='private', Key=self._prefix + name + '.encrypted')
-        s3(session=self._session, region=self._region).put_object(Bucket=self._vault_bucket, Body=encrypted['aes-gcm-ciphertext'],
+        s3(**self._c_args).put_object(Bucket=self._vault_bucket, Body=encrypted['aes-gcm-ciphertext'],
                             ACL='private', Key=self._prefix + name + '.aesgcm.encrypted')
-        s3(session=self._session, region=self._region).put_object(Bucket=self._vault_bucket, Body=encrypted['meta'],
+        s3(**self._c_args).put_object(Bucket=self._vault_bucket, Body=encrypted['meta'],
                             ACL='private', Key=self._prefix + name + '.meta')
         return True
 
     def lookup(self, name):
-        datakey = bytes(s3(session=self._session, region=self._region).get_object(Bucket=self._vault_bucket,
+        datakey = bytes(s3(**self._c_args).get_object(Bucket=self._vault_bucket,
                                             Key=self._prefix + name + '.key')['Body'].read())
         try:
-            meta_add = bytes(s3(session=self._session, region=self._region).get_object(Bucket=self._vault_bucket,
+            meta_add = bytes(s3(**self._c_args).get_object(Bucket=self._vault_bucket,
                                                  Key=self._prefix + name + '.meta')['Body'].read())
-            ciphertext = bytes(s3(session=self._session, region=self._region).get_object(Bucket=self._vault_bucket,
+            ciphertext = bytes(s3(**self._c_args).get_object(Bucket=self._vault_bucket,
                                                    Key=self._prefix + name + '.aesgcm.encrypted')['Body'].read())
             meta = json.loads(_to_str(meta_add))
             return AESGCM(self.direct_decrypt(datakey)).decrypt(b64decode(meta['nonce']), ciphertext, meta_add)
         except ClientError as e:
             if e.response['Error']['Code'] == "404" or e.response['Error']['Code'] == 'NoSuchKey':
-                ciphertext = bytes(s3(session=self._session, region=self._region).get_object(Bucket=self._vault_bucket,
+                ciphertext = bytes(s3(**self._c_args).get_object(Bucket=self._vault_bucket,
                                                        Key=self._prefix + name + '.encrypted')['Body'].read())
                 return self._decrypt(datakey, ciphertext)
             else:
@@ -602,7 +603,7 @@ class Vault(object):
 
     def exists(self, name):
         try:
-            s3(session=self._session, region=self._region).head_object(Bucket=self._vault_bucket,
+            s3(**self._c_args).head_object(Bucket=self._vault_bucket,
                                  Key=self._prefix + name + '.key')
             return True
         except ClientError as e:
@@ -612,11 +613,11 @@ class Vault(object):
                 raise
 
     def delete(self, name):
-        s3(session=self._session, region=self._region).delete_object(Bucket=self._vault_bucket, Key=self._prefix + name + '.key')
-        s3(session=self._session, region=self._region).delete_object(Bucket=self._vault_bucket, Key=self._prefix + name + '.encrypted')
+        s3(**self._c_args).delete_object(Bucket=self._vault_bucket, Key=self._prefix + name + '.key')
+        s3(**self._c_args).delete_object(Bucket=self._vault_bucket, Key=self._prefix + name + '.encrypted')
         try:
-            s3(session=self._session, region=self._region).delete_object(Bucket=self._vault_bucket, Key=self._prefix + name + '.aesgcm.encrypted')
-            s3(session=self._session, region=self._region).delete_object(Bucket=self._vault_bucket, Key=self._prefix + name + '.meta')
+            s3(**self._c_args).delete_object(Bucket=self._vault_bucket, Key=self._prefix + name + '.aesgcm.encrypted')
+            s3(**self._c_args).delete_object(Bucket=self._vault_bucket, Key=self._prefix + name + '.meta')
         except ClientError as e:
             if e.response['Error']['Code'] == "404" or e.response['Error']['Code'] == 'NoSuchKey':
                 pass
@@ -630,7 +631,7 @@ class Vault(object):
         return ret
 
     def list_all(self):
-        s3bucket = s3_resource(session=self._session, region=self._region).Bucket(self._vault_bucket)
+        s3bucket = s3_resource(**self._c_args).Bucket(self._vault_bucket)
         ret = []
         for next_object in s3bucket.objects.filter(Prefix=self._prefix):
             if next_object.key.endswith(".aesgcm.encrypted") and next_object.key[:-17] not in ret:
@@ -646,25 +647,25 @@ class Vault(object):
         return self._vault_bucket
 
     def direct_encrypt(self, data):
-        return kms(session=self._session, region=self._region).encrypt(KeyId=self._vault_key, Plaintext=data)['CiphertextBlob']
+        return kms(**self._c_args).encrypt(KeyId=self._vault_key, Plaintext=data)['CiphertextBlob']
 
     def direct_decrypt(self, encrypted_data):
-        return kms(session=self._session, region=self._region).decrypt(CiphertextBlob=encrypted_data)['Plaintext']
+        return kms(**self._c_args).decrypt(CiphertextBlob=encrypted_data)['Plaintext']
 
     def init(self):
         try:
-            cloudformation(session=self._session, region=self._region).describe_stacks(StackName=self._stack)
+            cloudformation(**self._c_args).describe_stacks(StackName=self._stack)
             print("Vault stack '" + self._stack + "' already initialized")
         except:
             params = {}
             params['ParameterKey'] = "paramBucketName"
             params['ParameterValue'] = self._bucket
-            cloudformation(session=self._session, region=self._region).create_stack(StackName=self._stack, TemplateBody=_template(),
+            cloudformation(**self._c_args).create_stack(StackName=self._stack, TemplateBody=_template(),
                              Parameters=[params], Capabilities=['CAPABILITY_IAM'])
 
     def update(self):
         try:
-            stack = cloudformation(session=self._session, region=self._region).describe_stacks(StackName=self._stack)
+            stack = cloudformation(**self._c_args).describe_stacks(StackName=self._stack)
             deployed_version = None
             ok_to_update = False
             params = self._get_cf_params()
@@ -676,7 +677,7 @@ class Vault(object):
                 params = {}
                 params['ParameterKey'] = "paramBucketName"
                 params['UsePreviousValue'] = True
-                cloudformation(session=self._session, region=self._region).update_stack(StackName=self._stack, TemplateBody=_template(),
+                cloudformation(**self._c_args).update_stack(StackName=self._stack, TemplateBody=_template(),
                                  Parameters=[params],
                                  Capabilities=['CAPABILITY_IAM', 'CAPABILITY_NAMED_IAM'])
             else:
