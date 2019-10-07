@@ -135,7 +135,7 @@ public class VaultClientTest {
   @Test
   public void storeWritesKeyAndValueToCorrectBucket() throws Exception {
     vaultClient.store(SECRET_NAME_FIXTURE, DATA_FIXTURE);
-    verify(s3Mock, times(2)).putObject(argThat(putObjectRequest -> BUCKET_NAME_FIXTURE.equals(putObjectRequest.getBucketName())));
+    verify(s3Mock, times(4)).putObject(argThat(putObjectRequest -> BUCKET_NAME_FIXTURE.equals(putObjectRequest.getBucketName())));
   }
 
   @Test
