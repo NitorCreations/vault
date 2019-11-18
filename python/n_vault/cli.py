@@ -163,7 +163,7 @@ def main():
         vlt = Vault(vault_stack=args.vaultstack, vault_key=args.key_arn,
                     vault_bucket=args.bucket, vault_iam_id=args.id,
                     vault_iam_secret=args.secret, vault_prefix=args.prefix,
-                    vault_region=args.region)
+                    vault_region=args.region, vault_init=args.init)
         if args.init:
             vlt.init()
         elif args.update:

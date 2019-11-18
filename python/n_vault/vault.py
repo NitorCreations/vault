@@ -486,7 +486,7 @@ class Vault(object):
     _stack = ""
     def __init__(self, vault_stack="", vault_key="", vault_bucket="",
                  vault_iam_id="", vault_iam_secret="", vault_prefix="",
-                 vault_region=None):
+                 vault_region=None, vault_init=False):
         self._prefix = vault_prefix
         if self._prefix and not self._prefix.endswith("/"):
             self._prefix = self._prefix + "/"
@@ -518,11 +518,12 @@ class Vault(object):
             self._vault_bucket = os.environ["VAULT_BUCKET"]
         # If not given in constructor or environment, resolve from CloudFormation
         if not (self._vault_key and self._vault_bucket):
-            stack_info = self._get_cf_params()
-            if not self._vault_key and 'key_arn' in stack_info:
-                self._vault_key = stack_info['key_arn']
-            if not self._vault_bucket and 'bucket_name' in stack_info:
-                self._vault_bucket = stack_info['bucket_name']
+            if not vault_init:
+              stack_info = self._get_cf_params()
+              if not self._vault_key and 'key_arn' in stack_info:
+                  self._vault_key = stack_info['key_arn']
+              if not self._vault_bucket and 'bucket_name' in stack_info:
+                  self._vault_bucket = stack_info['bucket_name']
         if not self._vault_bucket:
             account_id = sts(**self._c_args).get_caller_identity()['Account']
             self._vault_bucket = self._stack + "-" + self._region + "-" + account_id
@@ -659,7 +660,7 @@ class Vault(object):
         except:
             params = {}
             params['ParameterKey'] = "paramBucketName"
-            params['ParameterValue'] = self._bucket
+            params['ParameterValue'] = self._vault_bucket
             cloudformation(**self._c_args).create_stack(StackName=self._stack, TemplateBody=_template(),
                              Parameters=[params], Capabilities=['CAPABILITY_IAM'])
 
