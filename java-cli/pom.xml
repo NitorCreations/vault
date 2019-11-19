@@ -26,7 +26,7 @@
     </dependency>
     <dependency>
       <groupId>com.nitorcreations</groupId>
-      <artifactId>aws-vault</artifactId>
+      <artifactId>aws-vault-2</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

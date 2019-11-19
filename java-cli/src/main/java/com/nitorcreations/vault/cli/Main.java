@@ -1,33 +1,29 @@
 package com.nitorcreations.vault.cli;
 
-import com.nitorcreations.vault.VaultClient;
-import com.nitorcreations.vault.VaultException;
-import com.nitorcreations.vault.VaultClient.KeyAndBucket;
+import com.nitorcreations.vault2.VaultClient;
+import com.nitorcreations.vault2.VaultException;
+import com.nitorcreations.vault2.VaultClient.KeyAndBucket;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import static java.util.Base64.getDecoder;
 import static java.util.Base64.getEncoder;
-import com.amazonaws.regions.Region;
-import com.amazonaws.regions.Regions;
-import com.amazonaws.services.kms.AWSKMSClientBuilder;
-import com.amazonaws.services.kms.AWSKMS;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import static picocli.CommandLine.Command;
 import static picocli.CommandLine.Option;
 import static picocli.CommandLine.ArgGroup;
 import picocli.CommandLine;
 import picocli.CommandLine.Help.Ansi;
+import software.amazon.awssdk.auth.credentials.*;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.regions.providers.DefaultAwsRegionProviderChain;
+import software.amazon.awssdk.services.kms.KmsClient;
+import software.amazon.awssdk.services.kms.KmsClientBuilder;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.S3ClientBuilder;
+
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 @Command(name="vault", mixinStandardHelpOptions = true, version = "AWS-Vault 0.15")
@@ -73,7 +69,7 @@ public class Main implements Runnable {
     @Option(names = {"--secret"}, description="Give an IAM secret access key to override those defined by environent")
     String secret;
     @Option(names = {"-r", "--region"}, description="Give a region for the stack and bucket")
-    Regions region;
+    Region region;
 
     public static void main(String[] args) {
         CommandLine.run(new Main(), args);
@@ -82,10 +78,7 @@ public class Main implements Runnable {
     @Override
     public void run() {
       if (region == null && System.getenv("AWS_DEFAULT_REGION") == null) {
-        Region current = Regions.getCurrentRegion();
-        if (current != null) {
-          region = Regions.fromName(current.getName());
-        }
+        region = new DefaultAwsRegionProviderChain().getRegion();
       }
       if (prefix == null && System.getenv("VAULT_PREFIX") != null) {
         prefix = System.getenv("VAULT_PREFIX");
@@ -105,27 +98,23 @@ public class Main implements Runnable {
           keyArn = kb.keyArn;
         }
       }
-      VaultClient client;
+
+      AwsCredentialsProvider provider = DefaultCredentialsProvider.create();
       if (id != null && secret != null) {
-        BasicAWSCredentials awsCreds = new BasicAWSCredentials(id, secret);
-        AmazonS3ClientBuilder s3builder = AmazonS3ClientBuilder.standard()
-          .withCredentials(new AWSStaticCredentialsProvider(awsCreds));
-        AWSKMSClientBuilder kmsbuilder = AWSKMSClientBuilder.standard()
-          .withCredentials(new AWSStaticCredentialsProvider(awsCreds));
-
-        if (region != null) {
-          s3builder = s3builder.withRegion(region);
-          kmsbuilder = kmsbuilder.withRegion(region);
-        }
-
-        AmazonS3 s3Client = s3builder.build();
-        AWSKMS kmsClient = kmsbuilder.build();
-        client = new VaultClient(s3Client, kmsClient, bucket, keyArn);
-      } else if (region != null){
-        client = new VaultClient(bucket, keyArn, region);
-      } else {
-        client = new VaultClient(bucket, keyArn);
+        AwsCredentials creds = AwsBasicCredentials.create(id, secret);
+        provider = StaticCredentialsProvider.create(creds);
       }
+
+      S3ClientBuilder s3ClientBuilder = S3Client.builder().credentialsProvider(provider);
+      KmsClientBuilder kmsClientBuilder = KmsClient.builder().credentialsProvider(provider);
+
+      if (region != null) {
+        s3ClientBuilder.region(region);
+        kmsClientBuilder.region(region);
+      }
+
+      VaultClient client = new VaultClient(s3ClientBuilder.build(), kmsClientBuilder.build(), bucket, keyArn);
+
       if (command.all) {
         for (String entry : client.all()) {
           System.out.println(entry);
