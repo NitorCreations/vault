@@ -10,6 +10,7 @@
 
     <modules>
         <module>java</module>
+        <module>java-2</module>
         <module>java-cli</module>
     </modules>
 </project>
