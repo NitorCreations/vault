@@ -14,14 +14,14 @@
     "test": "mocha"
   },
   "dependencies": {
-    "aws-sdk": "2.61.0"
+    "aws-sdk": "2.539.0"
   },
   "devDependencies": {
-    "aws-sdk-mock": "1.7.0",
-    "mocha": "3.4.2",
-    "should": "11.2.1",
-    "should-sinon": "0.0.5",
-    "sinon": "2.3.4"
+    "aws-sdk-mock": "4.5.0",
+    "mocha": "6.2.1",
+    "should": "13.2.3",
+    "should-sinon": "0.0.6",
+    "sinon": "7.5.0"
   },
   "engines": {
     "node": ">= 0.8.0"
