@@ -104,3 +104,4 @@ node_modules/
 .settings
 .vscode
 .classpath
+dependency-reduced-pom.xml

@@ -98,7 +98,7 @@ public class VaultClient {
   }
 
   public static KeyAndBucket resolveKeyAndBucket(final String vaultStack, final Region region) {
-    String resolveStack = "vault2";
+    String resolveStack = "vault";
     if (vaultStack == null || vaultStack.isEmpty()) {
       if (System.getenv("VAULT_STACK") != null) {
         resolveStack = System.getenv("VAULT_STACK");
@@ -138,7 +138,7 @@ public class VaultClient {
         encrypted = readObject(encyptedValueObjectName(name));
         key = readObject(keyObjectName(name));
       } catch (IOException ex) {
-        throw new IllegalStateException(String.format("Could not read secret %s from vault2", name), ex);
+        throw new IllegalStateException(String.format("Could not read secret %s from vault", name), ex);
       }
     }
 
