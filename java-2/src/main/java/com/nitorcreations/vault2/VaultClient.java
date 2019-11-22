@@ -146,7 +146,7 @@ public class VaultClient {
             .build()).plaintext();
 
     try {
-      return decrypt(encrypted, decryptedKey.asByteBuffer(), meta);
+      return decrypt(encrypted, ByteBuffer.wrap(decryptedKey.asByteArray()), meta);
     } catch (GeneralSecurityException | IOException e) {
       throw new VaultException(String.format("Unable to decrypt secret %s", name), e);
     }
@@ -207,8 +207,8 @@ public class VaultClient {
   private EncryptResult encrypt(byte[] data) throws GeneralSecurityException {
     final GenerateDataKeyResponse dataKey = kms
         .generateDataKey(GenerateDataKeyRequest.builder().keyId(this.vaultKey).keySpec(DataKeySpec.AES_256).build());
-    final Cipher cipher = createCipher(dataKey.plaintext().asByteBuffer(), Cipher.ENCRYPT_MODE);
-    final CipherAndAAD aesgcmcipher = createAESGCMCipher(dataKey.plaintext().asByteBuffer());
+    final Cipher cipher = createCipher(ByteBuffer.wrap(dataKey.plaintext().asByteArray()), Cipher.ENCRYPT_MODE);
+    final CipherAndAAD aesgcmcipher = createAESGCMCipher(ByteBuffer.wrap(dataKey.plaintext().asByteArray()));
 
     return new EncryptResult(dataKey.ciphertextBlob().asByteArray(), cipher.doFinal(data),
         aesgcmcipher.cipher.doFinal(data), aesgcmcipher.aad);
@@ -239,27 +239,28 @@ public class VaultClient {
   }
 
   private static CipherAndAAD createAESGCMCipher(final ByteBuffer unencryptedKey) throws GeneralSecurityException {
-    final Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
     final byte[] nonce = new byte[GCM_NONCE_LENGTH];
     random.nextBytes(nonce);
-    GCMParameterSpec spec = new GCMParameterSpec(GCM_TAG_LENGTH * 8, nonce);
-    cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(unencryptedKey.array(), "AES"), spec);
     byte[] aad = ("{\"alg\":\"AESGCM\",\"nonce\":\"" + Base64.getEncoder().encodeToString(nonce) + "\"}")
         .getBytes(UTF_8);
-    cipher.updateAAD(aad);
-    return new CipherAndAAD(cipher, aad);
+    return new CipherAndAAD(createAESGCMCipher(unencryptedKey, aad, nonce), aad);
   }
 
   private static Cipher createAESGCMCipher(final ByteBuffer unencryptedKey, byte[] aad) throws GeneralSecurityException,
           IOException {
-    final Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
     Map<String, String> map = new ObjectMapper().readValue(new String(aad, UTF_8),
           new TypeReference<Map<String, String>>() {});
     final byte[] nonce = Base64.getDecoder().decode(map.get("nonce"));
-    GCMParameterSpec spec = new GCMParameterSpec(GCM_TAG_LENGTH * 8, nonce);
-    cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(unencryptedKey.array(), "AES"), spec);
-    cipher.updateAAD(aad);
-    return cipher;
+    return createAESGCMCipher(unencryptedKey, aad, nonce);
+  }
+
+  private static Cipher createAESGCMCipher(final ByteBuffer unencryptedKey, byte[] aad, byte[] nonce)
+          throws GeneralSecurityException {
+      final Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+      GCMParameterSpec spec = new GCMParameterSpec(GCM_TAG_LENGTH * 8, nonce);
+      cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(unencryptedKey.array(), "AES"), spec);
+      cipher.updateAAD(aad);
+      return cipher;
   }
 
   private void writeObject(String key, byte[] value) {
