@@ -16,6 +16,7 @@ import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+
 import com.amazonaws.util.IOUtils;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.cloudformation.AmazonCloudFormation;
@@ -192,14 +193,31 @@ public class VaultClient {
   }
 
   public void delete(String name) {
-    deleteObject(keyObjectName(name));
-    deleteObject(encyptedValueObjectName(name));
+    try {
+      deleteObject(keyObjectName(name));
+    } catch (AmazonS3Exception e) {
+      throw new VaultException(String.format("No secret with name %s found", name), e);
+    }
+    try {
+      deleteObject(encyptedValueObjectName(name));
+    } catch (AmazonS3Exception e) {
+      // Not significant if key deleted
+    }
+    try {
+      deleteObject(aesgcmValueObjectName(name));
+    } catch (AmazonS3Exception e) {
+      // Not significant if key deleted
+    }
+    try {
+      deleteObject(metaValueObjectName(name));
+    } catch (AmazonS3Exception e) {
+      // Not significant if key deleted
+    }
   }
-
   public List<String> all() {
     return this.s3.listObjects(this.bucketName).getObjectSummaries().stream()
-        .filter(object -> object.getKey().endsWith(VALUE_OBJECT_SUFFIX))
-        .map(object -> object.getKey().substring(0, object.getKey().length() - (VALUE_OBJECT_SUFFIX.length() + 1)))
+        .filter(object -> object.getKey().endsWith(".key"))
+        .map(object -> object.getKey().substring(0, object.getKey().length() - 4))
         .collect(toList());
   }
 

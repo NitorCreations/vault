@@ -137,8 +137,8 @@ public class VaultClient {
       try {
         encrypted = readObject(encyptedValueObjectName(name));
         key = readObject(keyObjectName(name));
-      } catch (IOException ex) {
-        throw new IllegalStateException(String.format("Could not read secret %s from vault", name), ex);
+      } catch (IOException | NoSuchKeyException ex) {
+        throw new VaultException(String.format("Could not read secret %s from vault", name), ex);
       }
     }
 
@@ -177,15 +177,32 @@ public class VaultClient {
   }
 
   public void delete(String name) {
-    deleteObject(keyObjectName(name));
-    deleteObject(encyptedValueObjectName(name));
+    try {
+      deleteObject(keyObjectName(name));
+    } catch (NoSuchKeyException e) {
+      throw new VaultException(String.format("No secret with name %s found", name), e);
+    }
+    try {
+      deleteObject(encyptedValueObjectName(name));
+    } catch (NoSuchKeyException e) {
+      // Not significant if key deleted
+    }
+    try {
+      deleteObject(aesgcmValueObjectName(name));
+    } catch (NoSuchKeyException e) {
+      // Not significant if key deleted
+    }
+    try {
+      deleteObject(metaValueObjectName(name));
+    } catch (NoSuchKeyException e) {
+      // Not significant if key deleted
+    }
   }
 
   public List<String> all() {
     return this.s3.listObjectsV2(ListObjectsV2Request.builder().bucket(this.bucketName).build()).contents().stream()
-        .filter(object -> object.key().endsWith(VALUE_OBJECT_SUFFIX))
-        .map(object -> object.key().substring(0, object.key().length() - (VALUE_OBJECT_SUFFIX.length() + 1)))
-        .collect(toList());
+        .filter(object -> object.key().endsWith(".key"))
+        .map(object -> object.key().substring(0, object.key().length() - 4)).collect(toList());
   }
 
   private static String encyptedValueObjectName(String name) {
@@ -239,28 +256,27 @@ public class VaultClient {
   }
 
   private static CipherAndAAD createAESGCMCipher(final ByteBuffer unencryptedKey) throws GeneralSecurityException {
+    final Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
     final byte[] nonce = new byte[GCM_NONCE_LENGTH];
     random.nextBytes(nonce);
+    GCMParameterSpec spec = new GCMParameterSpec(GCM_TAG_LENGTH * 8, nonce);
+    cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(unencryptedKey.array(), "AES"), spec);
     byte[] aad = ("{\"alg\":\"AESGCM\",\"nonce\":\"" + Base64.getEncoder().encodeToString(nonce) + "\"}")
         .getBytes(UTF_8);
-    return new CipherAndAAD(createAESGCMCipher(unencryptedKey, aad, nonce), aad);
+    cipher.updateAAD(aad);
+    return new CipherAndAAD(cipher, aad);
   }
 
-  private static Cipher createAESGCMCipher(final ByteBuffer unencryptedKey, byte[] aad) throws GeneralSecurityException,
-          IOException {
+  private static Cipher createAESGCMCipher(final ByteBuffer unencryptedKey, byte[] aad) throws GeneralSecurityException, IOException {
+    final Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
     Map<String, String> map = new ObjectMapper().readValue(new String(aad, UTF_8),
-          new TypeReference<Map<String, String>>() {});
+        new TypeReference<Map<String, String>>() {
+        });
     final byte[] nonce = Base64.getDecoder().decode(map.get("nonce"));
-    return createAESGCMCipher(unencryptedKey, aad, nonce);
-  }
-
-  private static Cipher createAESGCMCipher(final ByteBuffer unencryptedKey, byte[] aad, byte[] nonce)
-          throws GeneralSecurityException {
-      final Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-      GCMParameterSpec spec = new GCMParameterSpec(GCM_TAG_LENGTH * 8, nonce);
-      cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(unencryptedKey.array(), "AES"), spec);
-      cipher.updateAAD(aad);
-      return cipher;
+    GCMParameterSpec spec = new GCMParameterSpec(GCM_TAG_LENGTH * 8, nonce);
+    cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(unencryptedKey.array(), "AES"), spec);
+    cipher.updateAAD(aad);
+    return cipher;
   }
 
   private void writeObject(String key, byte[] value) {
@@ -269,11 +285,11 @@ public class VaultClient {
   }
 
   private byte[] readObject(String key) throws IOException {
-    return this.s3.getObject(GetObjectRequest.builder().bucket(this.bucketName).key(key).build()).readAllBytes();
+    return this.s3.getObject(GetObjectRequest.builder().bucket(this.bucketName).key(key).build()).readNBytes(Integer.MAX_VALUE);
   }
 
   private void deleteObject(String key) {
-    this.s3.deleteObject(DeleteObjectRequest.builder().bucket(this.bucketName).key(key).build());
+      this.s3.deleteObject(DeleteObjectRequest.builder().bucket(this.bucketName).key(key).build());
   }
 
   private static class CipherAndAAD {

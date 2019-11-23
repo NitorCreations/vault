@@ -9,11 +9,14 @@ import java.io.IOException;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
+import java.util.concurrent.Callable;
+
 import static java.util.Base64.getDecoder;
 import static java.util.Base64.getEncoder;
 import static picocli.CommandLine.Command;
 import static picocli.CommandLine.Option;
 import static picocli.CommandLine.ArgGroup;
+
 import picocli.CommandLine;
 import picocli.CommandLine.Help.Ansi;
 import software.amazon.awssdk.auth.credentials.*;
@@ -27,7 +30,7 @@ import software.amazon.awssdk.services.s3.S3ClientBuilder;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 @Command(name="vault", mixinStandardHelpOptions = true, version = "AWS-Vault 0.15")
-public class Main implements Runnable {
+public class Main implements Callable<Integer> {
     static {
       String logConfig = ".level=" + java.util.logging.Level.INFO + '\n';
       logConfig += "handlers=java.util.logging.ConsoleHandler\n";
@@ -72,11 +75,11 @@ public class Main implements Runnable {
     Region region;
 
     public static void main(String[] args) {
-        CommandLine.run(new Main(), args);
+        System.exit(new CommandLine(new Main()).execute(args));
     }
 
     @Override
-    public void run() {
+    public Integer call() {
       if (region == null && System.getenv("AWS_DEFAULT_REGION") == null) {
         region = new DefaultAwsRegionProviderChain().getRegion();
       }
@@ -129,10 +132,10 @@ public class Main implements Runnable {
           }
           out.write(client.lookupBytes(command.lookup));
         } catch (IOException ieo) {
-          System.exit(1);
+          return 1;
         } catch (VaultException ve) {
           System.err.println("Failed to lookup \'" + command.lookup + "\': " + ve.getMessage());
-          System.exit(1);
+          return 1;
         } finally {
           if (out != null) {
             try {
@@ -146,7 +149,7 @@ public class Main implements Runnable {
           if (file == null) {
             System.err.println("store needs either a name or file");
             CommandLine.usage(new Main(), System.err, Ansi.ON);
-            System.exit(1);
+            return 1;
           } else {
             storeName = file.getName();
           }
@@ -161,7 +164,7 @@ public class Main implements Runnable {
           client.store(storeName, data);
         } catch (IOException | VaultException e) {
           System.err.println("Failed to store " + storeName);
-          System.exit(1);
+          return 1;
         }
       } else if (command.encrypt != null) {
         OutputStream out = null;
@@ -176,7 +179,7 @@ public class Main implements Runnable {
             if (file == null) {
               System.err.println("encrypt needs either a value or file");
               CommandLine.usage(new Main(), System.err, Ansi.ON);
-              System.exit(1);
+              return 1;
             } else {
               data = Files.readAllBytes(file.toPath());
             }
@@ -185,7 +188,7 @@ public class Main implements Runnable {
           }
           out.write(getEncoder().encode(client.directEncrypt(data)));
         } catch (IOException ieo) {
-          System.exit(1);
+          return 1;
         } finally {
           if (out != null) {
             try {
@@ -206,7 +209,7 @@ public class Main implements Runnable {
             if (file == null) {
               System.err.println("decrypt needs either a value or a file");
               CommandLine.usage(new Main(), System.err, Ansi.ON);
-              System.exit(1);
+              return 1;
             } else {
               data = Files.readAllBytes(file.toPath());
             }
@@ -215,7 +218,7 @@ public class Main implements Runnable {
           }
           out.write(client.directDecrypt(data));
         } catch (IOException ieo) {
-          System.exit(1);
+          return 1;
         } finally {
           if (out != null) {
             try {
@@ -223,7 +226,15 @@ public class Main implements Runnable {
             } catch (Throwable e) {}
           }
         } 
+      } else if (command.delete != null && !command.delete.isEmpty()) {
+        try {
+          client.delete(command.delete);
+        } catch (VaultException e) {
+          System.err.println("Failed to delete " + command.delete);
+          return 1;
+        }
       }
+      return 0;
     }
 
     static class Command {

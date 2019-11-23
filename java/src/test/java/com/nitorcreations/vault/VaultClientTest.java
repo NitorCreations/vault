@@ -167,12 +167,18 @@ public class VaultClientTest {
   public void deleteRemovesEncryptedValueFromS3() {
     vaultClient.delete(SECRET_NAME_FIXTURE);
     verify(s3Mock).deleteObject(argThat(deleteObjectRequest -> (SECRET_NAME_FIXTURE + ".encrypted").equals(deleteObjectRequest.getKey())));
+    verify(s3Mock).deleteObject(argThat(deleteObjectRequest -> (SECRET_NAME_FIXTURE + ".aesgcm.encrypted").equals(deleteObjectRequest.getKey())));
+  }
+  @Test
+  public void deleteRemovesMetaValueFromS3() {
+    vaultClient.delete(SECRET_NAME_FIXTURE);
+    verify(s3Mock).deleteObject(argThat(deleteObjectRequest -> (SECRET_NAME_FIXTURE + ".meta").equals(deleteObjectRequest.getKey())));
   }
 
   @Test
   public void deleteRemovesKeyAndValueFromCorrectBucket() {
     vaultClient.delete(SECRET_NAME_FIXTURE);
-    verify(s3Mock, times(2)).deleteObject(argThat(deleteObjectRequest -> BUCKET_NAME_FIXTURE.equals(deleteObjectRequest.getBucketName())));
+    verify(s3Mock, times(4)).deleteObject(argThat(deleteObjectRequest -> BUCKET_NAME_FIXTURE.equals(deleteObjectRequest.getBucketName())));
   }
 
   @Test

@@ -31,7 +31,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <aws-java-sdk.version>2.10.22</aws-java-sdk.version>
+    <aws-java-sdk.version>2.10.23</aws-java-sdk.version>
   </properties>
   <dependencyManagement>
     <dependencies>
