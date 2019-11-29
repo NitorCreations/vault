@@ -22,10 +22,10 @@ const createAuthEncryptedValueRequestObject = (bucketName, name) => createReques
 
 const createMetaRequestObject = (bucketName, name) => createRequestObject(bucketName, `${name}.meta`);
 
-const createDecipher = (meta, decryptedKey) => {
+const createDecipher = (meta, decryptedKey, authTag) => {
   return meta === 'nometa' ?
     crypto.createDecipheriv(ALGORITHMS.crypto, decryptedKey, STATIC_IV) :
-    crypto.createDecipheriv(ALGORITHMS.authCrypto, decryptedKey, Buffer.from(JSON.parse(meta.Body).nonce, "base64")).setAAD(meta.Body);
+    crypto.createDecipheriv(ALGORITHMS.authCrypto, decryptedKey, Buffer.from(JSON.parse(meta.Body).nonce, "base64")).setAAD(meta.Body).setAuthTag(authTag);
 };
 
 const createVaultClient = (options) => {
@@ -76,7 +76,7 @@ const createVaultClient = (options) => {
         const encryptedValue = keyValueAndMeta[1].Body.slice(0, -16);
         const authTag = keyValueAndMeta[1].Body.slice(-16);
         const meta = keyValueAndMeta[2];
-        const decipher = createDecipher(meta, decryptedKey).setAuthTag(authTag);
+        const decipher = createDecipher(meta, decryptedKey, authTag);
         const value = decipher.update(encryptedValue, null, ENCODING);
 
         try {
