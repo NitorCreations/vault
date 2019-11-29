@@ -6,7 +6,7 @@ const ALGORITHMS = Object.freeze({
   authCrypto: 'id-aes256-GCM',
   kms: 'AES_256'
 });
-const STATIC_IV = new Buffer([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1337 / 256, 1337 % 256]);
+const STATIC_IV = Buffer.from([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1337 / 256, 1337 % 256]);
 const ENCODING = 'UTF-8';
 
 const createRequestObject = (bucketName, key) => Object.freeze({
