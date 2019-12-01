@@ -31,24 +31,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 @Command(name="vault", mixinStandardHelpOptions = true, version = "AWS-Vault 0.15")
 public class Main implements Callable<Integer> {
-    static {
-      String logConfig = ".level=" + java.util.logging.Level.INFO + '\n';
-      logConfig += "handlers=java.util.logging.ConsoleHandler\n";
-      // ensure ConsoleHandler does not filter
-      logConfig += "java.util.logging.ConsoleHandler" + ".level=" + java.util.logging.Level.FINEST + '\n';
-      
-      //set your custom levels
-      logConfig += "com.amazonaws.auth.profile.internal.BasicProfileConfigLoader.level=" + java.util.logging.Level.SEVERE + "\n";
-      
-      try {
-        java.util.logging.LogManager.getLogManager().readConfiguration(new java.io.ByteArrayInputStream(logConfig.getBytes("UTF-8")));
-        // no need to close ByteArrayInputStream -- it is a no-op
-      }
-      catch (IOException ioe) {
-        System.err.println("cannot fully configure logging");
-        ioe.printStackTrace();
-      }
-    }
     @ArgGroup(exclusive = true, multiplicity="1")
     Command command;
     @Option(names = {"-w", "--overwrite"}, description="Add this argument if you want to overwrite an existing element")
@@ -75,7 +57,23 @@ public class Main implements Callable<Integer> {
     Region region;
 
     public static void main(String[] args) {
-        System.exit(new CommandLine(new Main()).execute(args));
+      String logConfig = ".level=" + java.util.logging.Level.INFO + '\n';
+      logConfig += "handlers=java.util.logging.ConsoleHandler\n";
+      // ensure ConsoleHandler does not filter
+      logConfig += "java.util.logging.ConsoleHandler" + ".level=" + java.util.logging.Level.FINEST + '\n';
+
+      //set your custom levels
+      logConfig += "com.amazonaws.auth.profile.internal.BasicProfileConfigLoader.level=" + java.util.logging.Level.SEVERE + "\n";
+
+      try {
+        java.util.logging.LogManager.getLogManager().readConfiguration(new java.io.ByteArrayInputStream(logConfig.getBytes("UTF-8")));
+        // no need to close ByteArrayInputStream -- it is a no-op
+      }
+      catch (IOException ioe) {
+        System.err.println("cannot fully configure logging");
+        ioe.printStackTrace();
+      }
+      System.exit(new CommandLine(new Main()).execute(args));
     }
 
     @Override
