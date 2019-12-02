@@ -17,12 +17,14 @@ import argparse
 import locale
 import os
 import sys
+import signal
 import json
 import argcomplete
 import requests
 from base64 import b64decode, b64encode
 from requests.exceptions import ConnectionError
 from n_vault.vault import Vault
+from n_vault import stop_cov
 
 SYS_ENCODING = locale.getpreferredencoding()
 
@@ -75,96 +77,104 @@ def main():
                                          "verride those defined by environent")
     parser.add_argument('-r', '--region', help="Give a region for the stack" +\
                                                "and bucket")
-    argcomplete.autocomplete(parser)
+    if "_ARGCOMPLETE" in os.environ:
+        argcomplete.autocomplete(parser)
+    else:
+        signal.signal(signal.SIGINT, stop_cov)
+        signal.signal(signal.SIGTERM, stop_cov)
+
     args = parser.parse_args()
-    if args.store and not (args.value or args.file):
-        parser.error("--store requires --value or --file")
-    store_with_no_name = not args.store and not args.lookup and not args.init \
-                         and not args.delete and not args.all and not args.update \
-                         and not args.recrypt and not args.encrypt and not args.decrypt
-    if store_with_no_name and not args.file:
-        parser.error("--store requires a name or a --file argument to get the name to store")
-    elif store_with_no_name:
-        if args.file == "-":
-            parser.error("--store requires a name for stdin")
-        else:
-            args.store = os.path.basename(args.file)
-            data = open(args.file, 'rb').read()
-    elif args.store:
-        if args.value:
-            data = args.value.encode("utf-8")
-        elif args.file == "-":
-            if getattr(sys.stdin, "buffer", None):
-                data = sys.stdin.buffer.read()
+    try:
+        if args.store and not (args.value or args.file):
+            parser.error("--store requires --value or --file")
+        store_with_no_name = not args.store and not args.lookup and not args.init \
+                            and not args.delete and not args.all and not args.update \
+                            and not args.recrypt and not args.encrypt and not args.decrypt
+        if store_with_no_name and not args.file:
+            parser.error("--store requires a name or a --file argument to get the name to store")
+        elif store_with_no_name:
+            if args.file == "-":
+                parser.error("--store requires a name for stdin")
             else:
-                data = sys.stdin.read()
-        else:
-            with open(args.file, 'rb') as f:
-                data = bytes(f.read())
-    if not args.vaultstack:
-        if "VAULT_STACK" in os.environ:
-            args.vaultstack = os.environ["VAULT_STACK"]
-        else:
-            args.vaultstack = "vault"
-
-    if not args.bucket and "VAULT_BUCKET" in os.environ:
-        args.bucket = os.environ["VAULT_BUCKET"]
-
-    if not args.prefix and "VAULT_PREFIX" in os.environ:
-        args.prefix = os.environ["VAULT_PREFIX"]
-    elif not args.prefix:
-        args.prefix = ""
-
-    instance_data = None
-
-    if not args.init and not args.update:
-        vlt = Vault(vault_stack=args.vaultstack, vault_key=args.key_arn,
-                    vault_bucket=args.bucket, vault_iam_id=args.id,
-                    vault_iam_secret=args.secret, vault_prefix=args.prefix,
-                    vault_region=args.region)
-        if args.store:
-            if args.overwrite or not vlt.exists(args.store):
-                vlt.store(args.store, data)
-            elif not args.overwrite:
-                parser.error("Will not overwrite '" + args.store +
-                             "' without the --overwrite (-w) flag")
-        elif args.delete:
-            vlt.delete(args.delete)
-        elif args.all:
-            data = vlt.all()
-            if args.outfile and not args.outfile == "-":
-                with open(args.outfile, 'w') as outf:
-                    outf.write(data)
+                args.store = os.path.basename(args.file)
+                data = open(args.file, 'rb').read()
+        elif args.store:
+            if args.value:
+                data = args.value.encode("utf-8")
+            elif args.file == "-":
+                if getattr(sys.stdin, "buffer", None):
+                    data = sys.stdin.buffer.read()
+                else:
+                    data = sys.stdin.read()
             else:
-                sys.stdout.write(data)
-        elif args.recrypt:
-            vlt.recrypt(args.recrypt)
-            print(args.recrypt + " successfully recrypted")
-        elif args.encrypt:
-            print(b64encode(vlt.direct_encrypt(args.encrypt)))
-        elif args.decrypt:
-            print(vlt.direct_decrypt(b64decode(args.decrypt)))
-        else:
-            data = vlt.lookup(args.lookup)
-            if args.outfile and not args.outfile == "-":
-                out_dir = os.path.dirname(args.outfile)
-                if not out_dir:
-                    out_dir = "."
-                if not os.path.exists(out_dir):
-                    os.makedirs(out_dir)
-                with open(args.outfile, 'wb') as outf:
-                    outf.write(data)
+                with open(args.file, 'rb') as f:
+                    data = bytes(f.read())
+        if not args.vaultstack:
+            if "VAULT_STACK" in os.environ:
+                args.vaultstack = os.environ["VAULT_STACK"]
             else:
-                if getattr(sys.stdout, "buffer", None):
-                    sys.stdout.buffer.write(data)
+                args.vaultstack = "vault"
+
+        if not args.bucket and "VAULT_BUCKET" in os.environ:
+            args.bucket = os.environ["VAULT_BUCKET"]
+
+        if not args.prefix and "VAULT_PREFIX" in os.environ:
+            args.prefix = os.environ["VAULT_PREFIX"]
+        elif not args.prefix:
+            args.prefix = ""
+
+        instance_data = None
+
+        if not args.init and not args.update:
+            vlt = Vault(vault_stack=args.vaultstack, vault_key=args.key_arn,
+                        vault_bucket=args.bucket, vault_iam_id=args.id,
+                        vault_iam_secret=args.secret, vault_prefix=args.prefix,
+                        vault_region=args.region)
+            if args.store:
+                if args.overwrite or not vlt.exists(args.store):
+                    vlt.store(args.store, data)
+                elif not args.overwrite:
+                    parser.error("Will not overwrite '" + args.store +
+                                "' without the --overwrite (-w) flag")
+            elif args.delete:
+                vlt.delete(args.delete)
+            elif args.all:
+                data = vlt.all()
+                if args.outfile and not args.outfile == "-":
+                    with open(args.outfile, 'w') as outf:
+                        outf.write(data)
                 else:
                     sys.stdout.write(data)
-    else:
-        vlt = Vault(vault_stack=args.vaultstack, vault_key=args.key_arn,
-                    vault_bucket=args.bucket, vault_iam_id=args.id,
-                    vault_iam_secret=args.secret, vault_prefix=args.prefix,
-                    vault_region=args.region, vault_init=args.init)
-        if args.init:
-            vlt.init()
-        elif args.update:
-            vlt.update()
+            elif args.recrypt:
+                vlt.recrypt(args.recrypt)
+                print(args.recrypt + " successfully recrypted")
+            elif args.encrypt:
+                print(b64encode(vlt.direct_encrypt(args.encrypt)))
+            elif args.decrypt:
+                print(vlt.direct_decrypt(b64decode(args.decrypt)))
+            else:
+                data = vlt.lookup(args.lookup)
+                if args.outfile and not args.outfile == "-":
+                    out_dir = os.path.dirname(args.outfile)
+                    if not out_dir:
+                        out_dir = "."
+                    if not os.path.exists(out_dir):
+                        os.makedirs(out_dir)
+                    with open(args.outfile, 'wb') as outf:
+                        outf.write(data)
+                else:
+                    if getattr(sys.stdout, "buffer", None):
+                        sys.stdout.buffer.write(data)
+                    else:
+                        sys.stdout.write(data)
+        else:
+            vlt = Vault(vault_stack=args.vaultstack, vault_key=args.key_arn,
+                        vault_bucket=args.bucket, vault_iam_id=args.id,
+                        vault_iam_secret=args.secret, vault_prefix=args.prefix,
+                        vault_region=args.region, vault_init=args.init)
+            if args.init:
+                vlt.init()
+            elif args.update:
+                vlt.update()
+    finally:
+        stop_cov(None, None)

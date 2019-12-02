@@ -38,4 +38,8 @@ setup(name='nitor-vault',
           'wmi',
           'pypiwin32'
           ] if sys.platform.startswith('win') else []),
-      zip_safe=False)
+      zip_safe=False,
+      tests_require=[
+        'coverage',
+        'coveralls'
+      ])
