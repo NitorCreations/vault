@@ -17,9 +17,20 @@ Decrypt a single value `vault -l my-key`
 
 ## Using encrypted CloudFormation stack parameters
 
-Encrypt a value like this: `$ aws kms encrypt --key-id <key id or ARN> --plaintext 'My secret value'`
+Encrypt a value like this: `$ vault -e 'My secret value'`
 
-The response to the above commadn will contain a `CiphertextBlob` with a base64 encoded value encrypted with your chosen KMS key. Use that value in a CF parameter.
+The command above will print the base64 encoded value encrypted with your vault KMS key. Use that value in a CF parameter. The value is then also safe to commit into version control and you can use it in scripts for example like this:
+
+```
+#!/bin/bash
+
+MY_ENCRYPTED_SECRET="AQICAHhu3HREZVp0YXWZLoAceH1Nr2ZTXoNZZKTriJY71pQOjAHKtG5uYCdJOKYy9dhMEX03AAAAbTBrBgkqhkiG9w0BBwagXjBcAgEAMFcGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMYy/tKGJFDQP6f9m1AgEQgCq1E1q8I+btMUdwRK8wYFNyE/5ntICNM96VPDnYbeTgcHzLoCx+HM1cGvc"
+
+
+UNENCRYPTED_SECRET="$(vault -y $MY_ENCRYPTED_SECRET)"
+```
+
+Obviously you need to make sure that in the context of running vault there is some sort of way for providing kms permissions by for example adding the decryptPolicy managed policy from the vault cloudformation stack to the ec2 instance or whatever runs the code.
 
 To decrypt the parameter value at stack creation or update time, use a custom resource:
 
