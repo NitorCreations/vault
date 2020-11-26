@@ -4,7 +4,7 @@
   <artifactId>aws-vault-parent</artifactId>
   <name>aws-vault-parent</name>
   <groupId>com.nitorcreations</groupId>
-  <version>0.16-SNAPSHOT</version>
+  <version>0.16</version>
   <packaging>pom</packaging>
   <description>Library to manage larger secrets like certificates or full configuration files in S3 with client-side encryption with KMS generated random data keys</description>
   <url>http://github.com/NitorCreations/vault</url>
