@@ -8,7 +8,7 @@
   <parent>
     <artifactId>aws-vault-parent</artifactId>
     <groupId>com.nitorcreations</groupId>
-    <version>0.16</version>
+    <version>0.17-SNAPSHOT</version>
   </parent>
   <packaging>jar</packaging>
 
