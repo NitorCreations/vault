@@ -23,7 +23,7 @@ import argcomplete
 import requests
 from base64 import b64decode, b64encode
 from requests.exceptions import ConnectionError
-from n_vault.vault import Vault
+from n_vault.vault import Vault, _to_str
 from n_vault import stop_cov
 
 SYS_ENCODING = locale.getpreferredencoding()
@@ -149,9 +149,9 @@ def main():
                 vlt.recrypt(args.recrypt)
                 print(args.recrypt + " successfully recrypted")
             elif args.encrypt:
-                print(b64encode(vlt.direct_encrypt(args.encrypt)))
+                print(_to_str(b64encode(vlt.direct_encrypt(args.encrypt))))
             elif args.decrypt:
-                print(vlt.direct_decrypt(b64decode(args.decrypt)))
+                print(_to_str(vlt.direct_decrypt(b64decode(args.decrypt))))
             else:
                 data = vlt.lookup(args.lookup)
                 if args.outfile and not args.outfile == "-":
