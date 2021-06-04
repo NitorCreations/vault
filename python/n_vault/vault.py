@@ -26,7 +26,7 @@ from threadlocal_aws import session, region
 from threadlocal_aws.clients import s3, kms, cloudformation, sts
 from threadlocal_aws.resources import s3 as s3_resource
 
-VAULT_STACK_VERSION = 22
+VAULT_STACK_VERSION = 23
 TEMPLATE_STRING = """{
   "Parameters": {
     "paramBucketName": {
@@ -314,7 +314,7 @@ TEMPLATE_STRING = """{
         "Description": { "Fn::Sub": "Nitor Vault ${AWS::StackName} Decrypter"},
         "Handler": "index.handler",
         "MemorySize": 128,
-        "Runtime": "python2.7",
+        "Runtime": "python3.8",
         "Timeout": 300,
         "Role": {"Fn::GetAtt": ["resourceLambdaRole", "Arn"]},
         "FunctionName": {"Fn::Sub": "${AWS::StackName}-decrypter"},
@@ -324,7 +324,7 @@ TEMPLATE_STRING = """{
             "import logging",
             "import boto3",
             "import base64",
-            "from botocore.vendored import requests",
+            "import cfnresponse",
             "log = logging.getLogger()",
             "log.setLevel(logging.INFO)",
             "kms = boto3.client('kms')",
@@ -342,28 +342,6 @@ TEMPLATE_STRING = """{
             "    log.error(error_msg)",
             "    send(event, context, FAILED, responseData, event['LogicalResourceId'])",
             "    raise Exception(error_msg)",
-            "",
-            "def send(event, context, responseStatus, responseData, physicalResourceId):",
-            "  responseUrl = event['ResponseURL']",
-            "  responseBody = {}",
-            "  responseBody['Status'] = responseStatus",
-            "  responseBody['Reason'] = 'See the details in CloudWatch Log Stream: ' + context.log_stream_name",
-            "  responseBody['PhysicalResourceId'] = physicalResourceId or context.log_stream_name",
-            "  responseBody['StackId'] = event['StackId']",
-            "  responseBody['RequestId'] = event['RequestId']",
-            "  responseBody['LogicalResourceId'] = event['LogicalResourceId']",
-            "  responseBody['Data'] = responseData",
-            "  json_responseBody = json.dumps(responseBody)",
-            "  headers = {",
-            "    'content-type' : '',",
-            "    'content-length' : str(len(json_responseBody))",
-            "  }",
-            "  try:",
-            "    response = requests.put(responseUrl,",
-            "                            data=json_responseBody,",
-            "                            headers=headers)",
-            "  except Exception as e:",
-            "    log.warning('send(..) failed executing requests.put(..): ' + repr(e))"
           ]]}
         }
       }
