@@ -336,11 +336,11 @@ TEMPLATE_STRING = """{
             "  try:",
             "    responseData['Plaintext'] = kms.decrypt(CiphertextBlob=base64.b64decode(ciphertext)).get('Plaintext')",
             "    log.info('Decrypt successful!')",
-            "    send(event, context, SUCCESS, responseData, event['LogicalResourceId'])",
+            "    cfnresponse.send(event, context, SUCCESS, responseData, event['LogicalResourceId'])",
             "  except Exception as e:",
             "    error_msg = 'Failed to decrypt: ' + repr(e)",
             "    log.error(error_msg)",
-            "    send(event, context, FAILED, responseData, event['LogicalResourceId'])",
+            "    cfnresponse.send(event, context, FAILED, responseData, event['LogicalResourceId'])",
             "    raise Exception(error_msg)",
           ]]}
         }
