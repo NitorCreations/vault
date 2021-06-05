@@ -26,7 +26,7 @@ from threadlocal_aws import session, region
 from threadlocal_aws.clients import s3, kms, cloudformation, sts
 from threadlocal_aws.resources import s3 as s3_resource
 
-VAULT_STACK_VERSION = 23
+VAULT_STACK_VERSION = 24
 TEMPLATE_STRING = """{
   "Parameters": {
     "paramBucketName": {
@@ -334,7 +334,7 @@ TEMPLATE_STRING = """{
             "  ciphertext = event['ResourceProperties']['Ciphertext']",
             "  responseData = {}",
             "  try:",
-            "    responseData['Plaintext'] = kms.decrypt(CiphertextBlob=base64.b64decode(ciphertext)).get('Plaintext')",
+            "    responseData['Plaintext'] = kms.decrypt(CiphertextBlob=base64.b64decode(ciphertext)).get('Plaintext').decode()",
             "    log.info('Decrypt successful!')",
             "    cfnresponse.send(event, context, SUCCESS, responseData, event['LogicalResourceId'])",
             "  except Exception as e:",
