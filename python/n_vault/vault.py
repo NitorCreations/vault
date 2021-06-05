@@ -341,7 +341,7 @@ TEMPLATE_STRING = """{
             "    error_msg = 'Failed to decrypt: ' + repr(e)",
             "    log.error(error_msg)",
             "    cfnresponse.send(event, context, FAILED, responseData, event['LogicalResourceId'])",
-            "    raise Exception(error_msg)",
+            "    raise Exception(error_msg)"
           ]]}
         }
       }
