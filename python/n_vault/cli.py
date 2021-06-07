@@ -21,10 +21,11 @@ import signal
 import json
 import argcomplete
 import requests
+from sys import exit
 from base64 import b64decode, b64encode
 from requests.exceptions import ConnectionError
 from n_vault.vault import Vault, _to_str
-from n_vault import stop_cov
+from n_vault import stop_cov, VERSION
 
 SYS_ENCODING = locale.getpreferredencoding()
 
@@ -32,6 +33,7 @@ def main():
     parser = argparse.ArgumentParser(description="Store and lookup locally " +\
                                      "encrypted data stored in S3")
     action = parser.add_mutually_exclusive_group(required=True)
+    action.add_argument('--version', action="store_true", help="Print vault version")
     action.add_argument('-s', '--store', help="Name of element to store. Opt" +\
                                               "ionally read from file name",
                         nargs='?', default="")
@@ -84,6 +86,9 @@ def main():
         signal.signal(signal.SIGTERM, stop_cov)
 
     args = parser.parse_args()
+    if args.version:
+        print(VERSION)
+        exit(0)
     try:
         if args.store and not (args.value or args.file):
             parser.error("--store requires --value or --file")

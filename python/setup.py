@@ -13,9 +13,9 @@
 # limitations under the License.
 import sys
 from setuptools import setup
-
+from n_vault import VERSION
 setup(name='nitor-vault',
-      version='0.43',
+      version=VERSION,
       description='Vault for storing locally encypted data in S3 using KMS keys',
       url='http://github.com/NitorCreations/vault',
       download_url='https://github.com/NitorCreations/vault/tarball/0.43',
