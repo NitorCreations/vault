@@ -14,6 +14,10 @@
 import sys
 from setuptools import setup
 from n_vault import VERSION
+
+with open("../README.md") as f:
+    long_description = f.read()
+
 setup(name='nitor-vault',
       version=VERSION,
       description='Vault for storing locally encypted data in S3 using KMS keys',
@@ -21,6 +25,8 @@ setup(name='nitor-vault',
       download_url='https://github.com/NitorCreations/vault/tarball/0.43',
       author='Pasi Niemi',
       author_email='pasi@nitor.com',
+      long_description=long_description,
+      long_description_content_type="text/markdown",
       license='Apache 2.0',
       packages=['n_vault'],
       include_package_data=True,
