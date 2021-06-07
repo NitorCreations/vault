@@ -3,6 +3,15 @@ nitor-vault
 
 Command line tools and libraries for encrypting keys and values using client-side encryption with AWS KMS keys.
 
+# Installation
+
+The easiest install is the python package from pypi:
+```
+pip install nitor-vault
+```
+
+Javascript and java versions are available from npm and maven central respectively and installation will depend on your needs.
+
 # Example usage
 
 Initialize vault bucket and other infrastructure: `vault --init`. Will create a CloudFormation stack.
