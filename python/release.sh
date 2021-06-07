@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-VERSION=$(grep version setup.py | cut -d\' -f 2)
+VERSION=$(grep '^VERSION' n_vault/__init__.py | cut -d\' -f 2)
 MAJOR=${VERSION//.*}
 MINOR=${VERSION##*.}
 if [ "$1" = "-m" ]; then
@@ -31,7 +31,7 @@ else
   NEW_VERSION=$MAJOR.$MINOR
 fi
 
-sed -i "s/$VERSION/$NEW_VERSION/g" setup.py
+sed -i "s/^VERSION='$VERSION'/VERSION='$NEW_VERSION'/g" n_vault/__init__.py
 git commit -m "$1" setup.py
 git tag "$NEW_VERSION" -m "$1"
 git push --tags origin master
