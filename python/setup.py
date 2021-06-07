@@ -15,7 +15,7 @@ import sys
 from setuptools import setup
 from n_vault import VERSION
 
-with open("../README.md") as f:
+with open("README.md") as f:
     long_description = f.read()
 
 setup(name='nitor-vault',
