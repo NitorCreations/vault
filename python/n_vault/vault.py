@@ -24,7 +24,7 @@ from cryptography.hazmat.primitives.ciphers import Cipher
 from cryptography.hazmat.backends import default_backend
 from threadlocal_aws import session, region
 from threadlocal_aws.clients import s3, kms, cloudformation, sts
-from threadlocal_aws.resources import s3 as s3_resource
+from threadlocal_aws.resources import s3_Bucket as bucket
 
 VAULT_STACK_VERSION = 24
 TEMPLATE_STRING = """{
@@ -610,9 +610,8 @@ class Vault(object):
         return ret
 
     def list_all(self):
-        s3bucket = s3_resource(**self._c_args).Bucket(self._vault_bucket)
         ret = []
-        for next_object in s3bucket.objects.filter(Prefix=self._prefix):
+        for next_object in bucket(self._vault_bucket, **self._c_args).objects.filter(Prefix=self._prefix):
             if next_object.key.endswith(".aesgcm.encrypted") and next_object.key[:-17] not in ret:
                 ret.append(next_object.key[:-17])
             elif next_object.key.endswith(".encrypted") and next_object.key[:-10] not in ret:
