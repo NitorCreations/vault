@@ -81,7 +81,7 @@ module.exports = {
     const s3 = new AWS.S3({
       region,
     });
-    kms.generateDataKey({
+    return kms.generateDataKey({
       KeyId: vaultKey,
       KeySpec: ALGORITHMS.kms
     }).promise()
