@@ -1,13 +1,14 @@
 {
   "name": "@nitor/aws-vault",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": {
     "name": "Nitor Creations",
     "email": "",
     "url": "http://nitorcreations.com"
   },
   "contributors": [
-    "Eetu Huisman <eetu.huisman@nitorcreations.com>"
+    "Eetu Huisman <eetu.huisman@nitorcreations.com>",
+    "Jouni Tenhunen <jouni.tenhunen@nitor.com>"
   ],
   "main": "index.js",
   "scripts": {
