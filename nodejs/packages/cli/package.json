@@ -1,0 +1,28 @@
+{
+  "name": "@nitor/aws-vault-cli",
+  "version": "0.0.1",
+  "description": "Command-line interface for AWS vault",
+  "author": {
+    "name": "Nitor",
+    "email": "",
+    "url": "http://nitor.com"
+  },
+  "contributors": [
+    "Eetu Huisman <eetu.huisman@nitor.com>"
+  ],
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/NitorCreations/vault"
+  },
+  "bugs": {
+    "url": "http://github.com/NitorCreations/vault/issues"
+  },
+  "license": "Apache-2.0",
+  "peerDependencies": {
+    "@nitor/aws-vault": "0.1.1"
+  },
+  "dependencies": {
+    "sade": "^1.4.2"
+  }
+}
