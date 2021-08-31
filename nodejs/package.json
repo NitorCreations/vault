@@ -4,10 +4,10 @@
   "author": {
     "name": "Nitor Creations",
     "email": "",
-    "url": "http://nitorcreations.com"
+    "url": "https://nitor.com"
   },
   "contributors": [
-    "Eetu Huisman <eetu.huisman@nitorcreations.com>"
+    "Eetu Huisman <eetu.huisman@nitor.com>"
   ],
   "main": "index.js",
   "scripts": {
@@ -26,7 +26,7 @@
     "url": "git://github.com/NitorCreations/vault"
   },
   "bugs": {
-    "url": "http://github.com/NitorCreations/vault/issues"
+    "url": "https://github.com/NitorCreations/vault/issues"
   },
   "license": "Apache-2.0",
   "devDependencies": {
