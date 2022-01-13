@@ -38,12 +38,11 @@ setup(name='nitor-vault',
           'requests',
           'argcomplete',
           'future',
-          'cryptography'
-      ] + ([
-          'win-unicode-console',
-          'wmi',
-          'pypiwin32'
-          ] if sys.platform.startswith('win') else []),
+          'cryptography',
+          "win-unicode-console;platform_system=='Windows'",
+          "wmi;platform_system=='Windows'",
+          "pypiwin32;platform_system=='Windows'"
+      ],
       zip_safe=False,
       tests_require=[
         'coverage',
