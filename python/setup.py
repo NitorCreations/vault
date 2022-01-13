@@ -1,4 +1,4 @@
-# Copyright 2017-2018 Nitor Creations Oy
+# Copyright 2017-2022 Nitor Creations Oy
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ setup(name='nitor-vault',
       version=VERSION,
       description='Vault for storing locally encypted data in S3 using KMS keys',
       url='http://github.com/NitorCreations/vault',
-      download_url='https://github.com/NitorCreations/vault/tarball/0.43',
+      download_url=f'https://github.com/NitorCreations/vault/tarball/${VERSION}',
       author='Pasi Niemi',
       author_email='pasi@nitor.com',
       long_description=long_description,
@@ -38,12 +38,11 @@ setup(name='nitor-vault',
           'requests',
           'argcomplete',
           'future',
-          'cryptography'
-      ] + ([
-          'win-unicode-console',
-          'wmi',
-          'pypiwin32'
-          ] if sys.platform.startswith('win') else []),
+          'cryptography',
+          "win-unicode-console;platform_system=='Windows'",
+          "wmi;platform_system=='Windows'",
+          "pypiwin32;platform_system=='Windows'"
+      ],
       zip_safe=False,
       tests_require=[
         'coverage',
