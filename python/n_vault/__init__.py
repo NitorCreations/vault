@@ -17,7 +17,7 @@ with data keys from AWS KMS
 """
 from os import environ
 cov = None
-VERSION='0.53'
+VERSION='0.54'
 if "VAULT_MEASURE_COVERAGE" in environ:
     from coverage import Coverage
     cov = Coverage(auto_data=True, source=["n_vault"], branch=False,
