@@ -2,7 +2,7 @@
   "name": "nitor-vault",
   "version": "0.1.0",
   "description": "Encrypted key-value store for AWS.  ",
-  "main": "nodejs/index.js",
+  "main": "nodejs/dist/index.js",
   "repository": "https://github.com/NitorCreations/vault.git",
   "author": "Pasi <pasi@nitor.com>",
   "license": "Apache-2.0",

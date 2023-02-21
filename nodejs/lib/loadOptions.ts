@@ -1,4 +1,4 @@
-import { CloudFormation } from "aws-sdk";
+import { CloudFormation } from "@aws-sdk/client-cloudformation";
 
 interface OptionsInput {
   vaultstack: string | undefined;
@@ -7,9 +7,9 @@ interface OptionsInput {
   r: string | undefined;
 }
 export const loadOptions = async (options: OptionsInput) => {
-  const describeStackOutput = await new CloudFormation({ region: options.r })
-    .describeStacks({ StackName: options.vaultstack })
-    .promise();
+  const describeStackOutput = await new CloudFormation({
+    region: options.r,
+  }).describeStacks({ StackName: options.vaultstack });
   const { describeStackOutput: describeStackOutput_1 } = await Promise.resolve({
     describeStackOutput,
   });
