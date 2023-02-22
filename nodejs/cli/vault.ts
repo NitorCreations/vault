@@ -80,7 +80,7 @@ prog
   .action((options) => {
     loadOptions(options)
       .then((options) => client.all(options))
-      .then(console.log)
+      .then((res) => console.log(res.join("\n")))
       .catch(handleRejection);
   });
 
