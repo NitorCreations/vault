@@ -1,0 +1,19 @@
+[package]
+name = "vault"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+aws-config = "0.54.1"
+aws-sdk-s3 = "0.24.0"
+aws-sdk-kms = "0.24.0"
+aws-sdk-cloudformation = "0.24.0"
+aws-sdk-sts = "0.24.0"
+aes-gcm = "0.10.1"
+rand = "0.8.5"
+serde_json="1.0"
+serde = "1.0.152"
+base64 = "0.21.0"
