@@ -193,7 +193,7 @@ public class Main implements Callable<Integer> {
               out.close();
             } catch (Throwable e) {}
           }
-        } 
+        }
       } else if (command.decrypt != null) {
         OutputStream out = null;
         try {
@@ -223,7 +223,7 @@ public class Main implements Callable<Integer> {
               out.close();
             } catch (Throwable e) {}
           }
-        } 
+        }
       } else if (command.delete != null && !command.delete.isEmpty()) {
         try {
           client.delete(command.delete);

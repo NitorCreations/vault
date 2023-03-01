@@ -34,7 +34,7 @@ else
   SED_COMMAND=(sed -i)
 fi
 
-VERSION=$(grep '^VERSION' n_vault/__init__.py | cut -d\' -f 2)
+VERSION=$(grep '^VERSION' n_vault/__init__.py | cut -d\" -f 2)
 MAJOR=${VERSION//.*/}
 MINOR=${VERSION##*.}
 if [ "$1" = "-m" ]; then
@@ -51,8 +51,8 @@ else
   NEW_VERSION=$MAJOR.$MINOR
 fi
 
-"${SED_COMMAND[@]}" "s/^VERSION='$VERSION'/VERSION='$NEW_VERSION'/g" n_vault/__init__.py
-"${SED_COMMAND[@]}" "s/^version = */VERSION = $NEW_VERSION/g" setup.cfg
+"${SED_COMMAND[@]}" "s/^VERSION = .*/VERSION = \"$NEW_VERSION\"/g" n_vault/__init__.py
+"${SED_COMMAND[@]}" "s/^version = .*/version = $NEW_VERSION/g" setup.cfg
 git commit -m "$1" n_vault/__init__.py setup.cfg
 git tag "$NEW_VERSION" -m "$1"
 git push --tags origin master
