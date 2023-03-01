@@ -7,21 +7,22 @@ __pycache__/
 *.so
 
 # Distribution / packaging
+.eggs/
+.installed.cfg
 .Python
-env/
+*.egg
+*.egg-info/
+*.whl
 build/
 develop-eggs/
 dist/
 downloads/
 eggs/
-.eggs/
+env/
 lib64/
 parts/
 sdist/
 var/
-*.egg-info/
-.installed.cfg
-*.egg
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -34,15 +35,15 @@ pip-log.txt
 pip-delete-this-directory.txt
 
 # Unit test / coverage reports
-htmlcov/
-.tox/
+.cache
 .coverage
 .coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*,cover
 .hypothesis/
+.tox/
+*,cover
+coverage.xml
+htmlcov/
+nosetests.xml
 
 # Translations
 *.mo
@@ -100,10 +101,10 @@ target/
 node_modules/
 
 # tmp files
-*~
+.classpath
+.factorypath
 .settings
 .vscode
-.classpath
-dependency-reduced-pom.xml
 *.versionsBackup
-.factorypath
+*~
+dependency-reduced-pom.xml
