@@ -37,6 +37,7 @@ fi
 VERSION=$(grep '^VERSION' n_vault/__init__.py | cut -d\" -f 2)
 MAJOR=${VERSION//.*/}
 MINOR=${VERSION##*.}
+
 if [ "$1" = "-m" ]; then
   MAJOR=$(($MAJOR + 1))
   MINOR="0"
@@ -49,14 +50,34 @@ elif [ "$1" = "-v" ]; then
 else
   MINOR=$(($MINOR + 1))
   NEW_VERSION=$MAJOR.$MINOR
+  MESSAGE="$1"
+fi
+
+if [ -z "$MESSAGE" ]; then
+  MESSAGE="$NEW_VERSION"
 fi
 
 "${SED_COMMAND[@]}" "s/^VERSION = .*/VERSION = \"$NEW_VERSION\"/g" n_vault/__init__.py
 "${SED_COMMAND[@]}" "s/^version = .*/version = $NEW_VERSION/g" setup.cfg
+# update tarball url versio
+"${SED_COMMAND[@]}" "s/$VERSION/$NEW_VERSION/g" setup.cfg
 git commit -m "$1" n_vault/__init__.py setup.cfg
-git tag "$NEW_VERSION" -m "$1"
-git push --tags origin master
+git tag "$NEW_VERSION" -m "$MESSAGE"
+git push origin "$NEW_VERSION"
 rm -rf dist
-echo "Using $(which python) $(python --version)"
-python setup.py sdist bdist_wheel
+
+if [ -n "$(command -v python3)" ]; then
+    PYTHON=$(which python3)
+else
+    PYTHON=$(which python)
+fi
+
+if [ ! -e "$PYTHON" ]; then
+    echo "Python executable not found: $PYTHON"
+    exit 1
+else
+    echo "Using $PYTHON $($PYTHON --version)"
+fi
+
+$PYTHON setup.py sdist bdist_wheel
 twine upload dist/*
