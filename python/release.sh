@@ -14,8 +14,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Check platform
+case "$(uname -s)" in
+  "Darwin")
+    PLATFORM="mac"
+    ;;
+  "MINGW"*)
+    PLATFORM="windows"
+    ;;
+  *)
+    PLATFORM="linux"
+    ;;
+esac
+
+# BSD sed on MacOS works differently
+if [ "$PLATFORM" = mac ]; then
+  SED_COMMAND=(sed -i '')
+else
+  SED_COMMAND=(sed -i)
+fi
+
 VERSION=$(grep '^VERSION' n_vault/__init__.py | cut -d\' -f 2)
-MAJOR=${VERSION//.*}
+MAJOR=${VERSION//.*/}
 MINOR=${VERSION##*.}
 if [ "$1" = "-m" ]; then
   MAJOR=$(($MAJOR + 1))
@@ -31,10 +51,12 @@ else
   NEW_VERSION=$MAJOR.$MINOR
 fi
 
-sed -i "s/^VERSION='$VERSION'/VERSION='$NEW_VERSION'/g" n_vault/__init__.py
-git commit -m "$1" n_vault/__init__.py
+"${SED_COMMAND[@]}" "s/^VERSION='$VERSION'/VERSION='$NEW_VERSION'/g" n_vault/__init__.py
+"${SED_COMMAND[@]}" "s/^version = */VERSION = $NEW_VERSION/g" setup.cfg
+git commit -m "$1" n_vault/__init__.py setup.cfg
 git tag "$NEW_VERSION" -m "$1"
 git push --tags origin master
 rm -rf dist
+echo "Using $(which python) $(python --version)"
 python setup.py sdist bdist_wheel
 twine upload dist/*
