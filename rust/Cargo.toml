@@ -1,8 +1,8 @@
 [package]
 name = "nitor-vault"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
-authors = ["Kalle Ahlström <kalle.ahlstrom@nitor.com"]
+authors = ["Kalle Ahlström <kalle.ahlstrom@nitor.com", "Akseli Lukkarila <akseli.lukkarila@nitor.com>"]
 description = "Encrypted AWS key-value storage"
 license ="Apache-2.0"
 repository = "https://github.com/nitorcreations/vault"
