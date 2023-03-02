@@ -16,13 +16,12 @@ use serde::{Deserialize, Serialize};
 pub struct Vault {
     region: Region,
     cf_params: CfParams,
-    config: SdkConfig,
     s3: s3Client,
     kms: kmsClient,
 }
 
-#[derive(Debug)]
-struct CfParams {
+#[derive(Debug, Clone)]
+pub struct CfParams {
     bucket_name: String,
     key_arn: Option<String>,
     // deployed_version: Option<String>,
@@ -47,7 +46,6 @@ impl Vault {
             cf_params,
             s3: s3Client::new(&config),
             kms: kmsClient::new(&config),
-            config,
         })
     }
 
@@ -85,8 +83,8 @@ impl Vault {
             .collect())
     }
 
-    pub async fn stack_info(&self) {
-        println!("{:?}", get_cf_params(&self.config, "vault").await)
+    pub fn stack_info(&self) -> CfParams {
+        self.cf_params.to_owned()
     }
 
     async fn encrypt(&self, data: &[u8]) -> Result<EncryptObject, String> {
