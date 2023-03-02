@@ -41,13 +41,18 @@ struct Meta {
     nonce: String,
 }
 
+fn get_region_provider(region_opt: Option<&str>) -> RegionProviderChain {
+    RegionProviderChain::first_try(region_opt.map(|r| Region::new(r.to_owned())))
+        .or_default_provider()
+        .or_else("eu-west-1")
+}
+
 impl Vault {
     pub async fn new(vault_stack: Option<&str>, region_opt: Option<&str>) -> Result<Vault, String> {
-        let region_provider =
-            RegionProviderChain::first_try(region_opt.map(|r| Region::new(r.to_owned())))
-                .or_default_provider()
-                .or_else("eu-west-1");
-        let config = aws_config::from_env().region(region_provider).load().await;
+        let config = aws_config::from_env()
+            .region(get_region_provider(region_opt))
+            .load()
+            .await;
         let cf_params = get_cf_params(&config, vault_stack.unwrap_or("vault")).await?;
         Ok(Vault {
             region: config.region().unwrap().to_owned(),
@@ -61,7 +66,7 @@ impl Vault {
         region_opt: Option<&str>,
     ) -> Result<Vault, String> {
         let config = aws_config::from_env()
-            .region(region_opt.map(|r| Region::new(r.to_owned())))
+            .region(get_region_provider(region_opt))
             .load()
             .await;
         Ok(Vault {
