@@ -3,6 +3,7 @@ use aes_gcm::{
     aes::{cipher::typenum, Aes256},
     AesGcm, KeyInit, Nonce,
 };
+
 use aws_config::{meta::region::RegionProviderChain, SdkConfig};
 use aws_sdk_cloudformation::{model::Output, Client as cfClient};
 use aws_sdk_kms::{model::DataKeySpec, types::Blob, Client as kmsClient};
@@ -19,12 +20,14 @@ pub struct Vault {
     s3: s3Client,
     kms: kmsClient,
 }
+
 #[derive(Debug)]
 struct CfParams {
     bucket_name: String,
     key_arn: Option<String>,
     // deployed_version: Option<String>,
 }
+
 #[derive(Serialize, Deserialize)]
 struct Meta {
     alg: String,
@@ -47,6 +50,7 @@ impl Vault {
             config,
         })
     }
+
     pub fn test(&self) {
         println!(
             "region:{},vault_stack:{:?},s3:{:?}",
@@ -80,9 +84,11 @@ impl Vault {
             })
             .collect())
     }
+
     pub async fn stack_info(&self) {
         println!("{:?}", get_cf_params(&self.config, "vault").await)
     }
+
     async fn encrypt(&self, data: &[u8]) -> Result<EncryptObject, String> {
         let key_dict = self
             .kms
@@ -138,6 +144,7 @@ impl Vault {
             .map(|body| body.to_vec())
             .map_err(|e| e.to_string())
     }
+
     async fn direct_decrypt(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, String> {
         self.kms
             .decrypt()
@@ -149,6 +156,7 @@ impl Vault {
             .map(|blob| blob.to_owned().into_inner())
             .ok_or("Error parsing KMS plaintext".to_owned())
     }
+
     async fn put_s3_obj(
         &self,
         body: aws_sdk_s3::types::ByteStream,
@@ -166,6 +174,7 @@ impl Vault {
             .send()
             .await
     }
+
     pub async fn store(&self, name: &str, data: &[u8]) -> Result<(), String> {
         let encrypted = self.encrypt(data).await.map_err(|e| e.to_string())?;
         self.put_s3_obj(
@@ -191,6 +200,7 @@ impl Vault {
 
         Ok(())
     }
+
     pub async fn lookup(&self, name: &str) -> Result<String, String> {
         let key = name;
         let data_key = self.get_s3_obj_as_vec(format!("{key}.key")).await.unwrap();
