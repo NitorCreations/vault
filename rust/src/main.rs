@@ -17,13 +17,18 @@ struct Args {
 
     #[arg(short, long, help = "List available secrets")]
     all: bool,
+
+    #[arg(short, long, help = "specify region for the bucket")]
+    region: Option<String>,
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     let args: Args = parse_args().await;
 
-    let client = Vault::new(None, None).await.expect("Error getting Vault");
+    let client = Vault::new(None, args.region.as_deref())
+        .await
+        .expect("Error getting Vault");
 
     if let Some(name) = args.lookup.as_deref() {
         println!("Loading value for: {name}");
