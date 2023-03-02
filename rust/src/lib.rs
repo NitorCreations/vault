@@ -48,6 +48,21 @@ impl Vault {
             kms: kmsClient::new(&config),
         })
     }
+    pub async fn from_params(
+        cf_params: CfParams,
+        region_opt: Option<&str>,
+    ) -> Result<Vault, String> {
+        let config = aws_config::from_env()
+            .region(region_opt.map(|r| Region::new(r.to_owned())))
+            .load()
+            .await;
+        Ok(Vault {
+            region: config.region().ok_or("error getting region")?.to_owned(),
+            cf_params,
+            s3: s3Client::new(&config),
+            kms: kmsClient::new(&config),
+        })
+    }
 
     pub fn test(&self) {
         println!(
