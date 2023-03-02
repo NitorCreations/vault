@@ -93,15 +93,22 @@ impl Vault {
         let key_dict = self
             .kms
             .generate_data_key()
-            .key_id(self.cf_params.key_arn.to_owned().unwrap())
+            .key_id(
+                self.cf_params
+                    .key_arn
+                    .to_owned()
+                    .ok_or("No KEY_ARN provided, can't encrypt")?,
+            )
             .key_spec(DataKeySpec::Aes256)
             .send()
             .await
             .map_err(|e| e.to_string())?;
 
-        let plaintext = key_dict.plaintext().unwrap().as_ref();
+        let plaintext = key_dict
+            .plaintext()
+            .ok_or("No Plaintext for generated datakey")?;
         let aesgcm_cipher: AesGcm<Aes256, typenum::U12> =
-            AesGcm::new_from_slice(plaintext).map_err(|e| e.to_string())?;
+            AesGcm::new_from_slice(plaintext.as_ref()).map_err(|e| e.to_string())?;
         let mut nonce: [u8; 12] = [0; 12];
         let mut rng = rand::thread_rng();
         rng.fill(nonce.as_mut_slice());
@@ -124,7 +131,11 @@ impl Vault {
             .map_err(|e| e.to_string())?;
 
         Ok(EncryptObject {
-            data_key: key_dict.ciphertext_blob().unwrap().to_owned().into_inner(),
+            data_key: key_dict
+                .ciphertext_blob()
+                .ok_or("No ciphertextBlob on Datakey")?
+                .to_owned()
+                .into_inner(),
             aes_gcm_ciphertext,
             meta,
         })
@@ -203,14 +214,13 @@ impl Vault {
 
     pub async fn lookup(&self, name: &str) -> Result<String, String> {
         let key = name;
-        let data_key = self.get_s3_obj_as_vec(format!("{key}.key")).await.unwrap();
-        let meta_add = self.get_s3_obj_as_vec(format!("{key}.meta")).await.unwrap();
-        let ciphertext = self
-            .get_s3_obj_as_vec(format!("{key}.aesgcm.encrypted"))
-            .await?;
+        let data_key = self.get_s3_obj_as_vec(format!("{key}.key"));
+        let ciphertext = self.get_s3_obj_as_vec(format!("{key}.aesgcm.encrypted"));
+        let meta_add = self.get_s3_obj_as_vec(format!("{key}.meta")).await?;
         let meta: Meta = serde_json::from_slice(&meta_add).map_err(|e| e.to_string())?;
         let cipher: AesGcm<Aes256, typenum::U12> =
-            AesGcm::new_from_slice(self.direct_decrypt(&data_key).await?.as_slice()).unwrap();
+            AesGcm::new_from_slice(self.direct_decrypt(&data_key.await?).await?.as_slice())
+                .map_err(|e| e.to_string())?;
         let nonce = general_purpose::STANDARD
             .decode(meta.nonce)
             .map_err(|e| e.to_string())?;
@@ -219,12 +229,12 @@ impl Vault {
             .decrypt(
                 nonce,
                 Payload {
-                    msg: &ciphertext,
+                    msg: &ciphertext.await?,
                     aad: &meta_add,
                 },
             )
             .map_err(|e| e.to_string())?;
-        Ok(String::from_utf8(res).unwrap())
+        String::from_utf8(res).map_err(|e| e.to_string())
     }
 }
 
