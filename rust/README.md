@@ -1,11 +1,16 @@
 # nitor-vault
 
+Library for encrypting keys and values using client-side encryption with AWS KMS keys.
+
 ## Build
 
-```console
+```shell
+# debug
 cargo build
-cargo build --release
 cargo run
+# release
+cargo build --release
+cargo run --release
 ```
 
 ## Format code
