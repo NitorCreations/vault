@@ -26,6 +26,14 @@ pub struct CfParams {
     key_arn: Option<String>,
     // deployed_version: Option<String>,
 }
+impl CfParams {
+    pub fn from(bucket_name: &str, key_arn: Option<&str>) -> CfParams {
+        CfParams {
+            bucket_name: bucket_name.to_owned(),
+            key_arn: key_arn.map(|x| x.to_owned()),
+        }
+    }
+}
 
 #[derive(Serialize, Deserialize)]
 struct Meta {
