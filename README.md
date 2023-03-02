@@ -4,7 +4,7 @@ Command line tools and libraries for encrypting keys and values using client-sid
 
 ## Installation
 
-The easiest install is the python package from pypi:
+The easiest installation method is the Python package from PyPI:
 
 ```shell
 pip install nitor-vault
@@ -36,7 +36,6 @@ The value is then also safe to commit into version control and you can use it in
 #!/bin/bash
 
 MY_ENCRYPTED_SECRET="AQICAHhu3HREZVp0YXWZLoAceH1Nr2ZTXoNZZKTriJY71pQOjAHKtG5uYCdJOKYy9dhMEX03AAAAbTBrBgkqhkiG9w0BBwagXjBcAgEAMFcGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMYy/tKGJFDQP6f9m1AgEQgCq1E1q8I+btMUdwRK8wYFNyE/5ntICNM96VPDnYbeTgcHzLoCx+HM1cGvc"
-
 
 UNENCRYPTED_SECRET="$(vault -y $MY_ENCRYPTED_SECRET)"
 ```

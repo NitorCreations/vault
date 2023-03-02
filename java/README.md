@@ -3,7 +3,8 @@
 Vault Java library is available in Maven Central:
 
 pom.xml:
-```
+
+```xml
 <dependency>
   <groupId>com.nitorcreations</groupId>
   <artifactId>aws-vault</artifactId>
@@ -12,7 +13,8 @@ pom.xml:
 ```
 
 Setting up VaultClient:
-```
+
+```java
 String region = "eu-central-1";
 
 AmazonS3 s3Client = AmazonS3ClientBuilder.standard().build();
@@ -24,6 +26,7 @@ VaultClient vaultClient = new VaultClient(s3Client, kmsClient, bucketName, kmsKe
 ```
 
 Fetching data from the Vault:
-```
+
+```java
 String password = vaultClient.lookup("my-password-key");
 ```
