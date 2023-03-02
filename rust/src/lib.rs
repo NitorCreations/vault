@@ -122,7 +122,7 @@ impl Vault {
         EncryptObject {
             data_key: key_dict.ciphertext_blob().unwrap().to_owned().into_inner(),
             aes_gcm_ciphertext,
-            meta: meta,
+            meta,
         }
     }
     async fn get_s3_obj_as_vec(&self, key: String) -> Vec<u8> {
@@ -211,7 +211,7 @@ struct EncryptObject {
     meta: String,
 }
 
-fn parse_output_value_from_key(key: &str, out: &Vec<Output>) -> Option<String> {
+fn parse_output_value_from_key(key: &str, out: &[Output]) -> Option<String> {
     out.iter()
         .find(|output| output.output_key() == Some(key))
         .map(|output| output.output_value().unwrap_or_default().to_owned())
