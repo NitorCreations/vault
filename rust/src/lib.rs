@@ -33,10 +33,9 @@ struct Meta {
 
 impl Vault {
     pub async fn new(vault_stack: Option<&str>, region_opt: Option<&str>) -> Vault {
-        let region_provider =
-            RegionProviderChain::first_try(region_opt.map(|r| Region::new(r.to_owned())))
-                .or_default_provider()
-                .or_else("eu-west-1");
+        let region_provider = RegionProviderChain::first_try(region_opt.map(|r| Region::new(r.to_owned())))
+            .or_default_provider()
+            .or_else("eu-west-1");
         let config = aws_config::from_env().region(region_provider).load().await;
         let cf_params = get_cf_params(&config, vault_stack.unwrap_or("vault")).await;
         Vault {
@@ -71,13 +70,9 @@ impl Vault {
             .iter()
             .for_each(|object| {
                 if let Some(key) = object.key() {
-                    if key.ends_with(".aesgcm.encrypted")
-                        && !res.contains(&key[..key.len() - 17].to_owned())
-                    {
+                    if key.ends_with(".aesgcm.encrypted") && !res.contains(&key[..key.len() - 17].to_owned()) {
                         res.push(key[..key.len() - 17].to_owned());
-                    } else if key.ends_with(".encrypted")
-                        && !res.contains(&key[..key.len() - 10].to_owned())
-                    {
+                    } else if key.ends_with(".encrypted") && !res.contains(&key[..key.len() - 10].to_owned()) {
                         res.push(key[..key.len() - 10].to_owned());
                     }
                 }
@@ -98,8 +93,7 @@ impl Vault {
             .await
             .expect("error getting key from KMS");
         let plaintext = key_dict.plaintext().unwrap().as_ref();
-        let aesgcm_cipher: AesGcm<Aes256, typenum::U12> =
-            AesGcm::new_from_slice(plaintext).unwrap();
+        let aesgcm_cipher: AesGcm<Aes256, typenum::U12> = AesGcm::new_from_slice(plaintext).unwrap();
         let mut nonce: [u8; 12] = [0; 12];
         let mut rng = rand::thread_rng();
         rng.fill(nonce.as_mut_slice());
@@ -169,11 +163,8 @@ impl Vault {
             &format!("{}.aesgcm.encrypted", name),
         )
         .await;
-        self.put_s3_obj(
-            ByteStream::from(encrypted.data_key),
-            &format!("{}.key", name),
-        )
-        .await;
+        self.put_s3_obj(ByteStream::from(encrypted.data_key), &format!("{}.key", name))
+            .await;
         self.put_s3_obj(
             ByteStream::from(encrypted.meta.as_bytes().to_owned()),
             &format!("{}.meta", name),
@@ -184,9 +175,7 @@ impl Vault {
         let key = name;
         let data_key = self.get_s3_obj_as_vec(format!("{key}.key")).await;
         let meta_add = self.get_s3_obj_as_vec(format!("{key}.meta")).await;
-        let ciphertext = self
-            .get_s3_obj_as_vec(format!("{key}.aesgcm.encrypted"))
-            .await;
+        let ciphertext = self.get_s3_obj_as_vec(format!("{key}.aesgcm.encrypted")).await;
         let meta: Meta = serde_json::from_slice(&meta_add).unwrap();
         let cipher: AesGcm<Aes256, typenum::U12> =
             AesGcm::new_from_slice(self.direct_decrypt(&data_key).await.as_slice()).unwrap();
