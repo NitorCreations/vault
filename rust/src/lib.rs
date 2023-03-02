@@ -66,10 +66,11 @@ impl Vault {
             .contents()
             .ok_or("error getting S3 output contents")?
             .iter()
-            .filter_map(|object| {
+            .filter_map(|object| -> Option<String> {
                 if let Some(key) = object.key() {
                     if key.ends_with(".aesgcm.encrypted") {
-                        Some(key[..key.len() - 17].to_owned())
+                        key.strip_suffix(".aesgcm.encrypted")
+                            .map(|stripped| stripped.to_owned())
                     } else {
                         None
                     }
