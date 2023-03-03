@@ -81,7 +81,7 @@ impl Vault {
 
     pub fn test(&self) {
         println!(
-            "region:{}, vault_stack:{:?}, s3:{:?}",
+            "region: {}\nvault_stack: {:#?}\ns3: {:#?}",
             self.region, self.cf_params, self.s3
         );
     }
@@ -288,7 +288,7 @@ async fn get_cf_params(config: &SdkConfig, stack: &str) -> Result<CfParams, Stri
         .stacks()
         .and_then(|stacks| stacks.first())
         .and_then(|stack| stack.outputs())
-        .ok_or("error getting Cloudformation Stack Ouput")?
+        .ok_or("Error getting Cloudformation Stack Ouput")?
         .to_owned();
 
     Ok(CfParams {
