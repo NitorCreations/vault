@@ -90,7 +90,7 @@ TEMPLATE_STRING = """{
         },
         "ManagedPolicyArns": ["arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"]
       }
-    },    
+    },
     "kmsKey": {
       "Type": "AWS::KMS::Key",
       "Properties": {
@@ -436,9 +436,12 @@ TEMPLATE_STRING = """{
           "Fn::Join": [":", [{"Ref": "AWS::StackName"}, "lambdaDecrypterArn"]]
         }
       }
-    }        
+    }
   }
-}""" % {"version": VAULT_STACK_VERSION}
+}""" % {
+    "version": VAULT_STACK_VERSION
+}
+
 
 def _template():
     return json.dumps(json.loads(TEMPLATE_STRING))
@@ -679,10 +682,8 @@ class Vault:
         try:
             cloudformation(**self._c_args).describe_stacks(StackName=self._stack)
             print("Vault stack '" + self._stack + "' already initialized")
-        except:
-            params = {}
-            params["ParameterKey"] = "paramBucketName"
-            params["ParameterValue"] = self._vault_bucket
+        except Exception:
+            params = {"ParameterKey": "paramBucketName", "ParameterValue": self._vault_bucket}
             cloudformation(**self._c_args).create_stack(
                 StackName=self._stack,
                 TemplateBody=_template(),
@@ -701,9 +702,7 @@ class Vault:
             if deployed_version < VAULT_STACK_VERSION:
                 ok_to_update = True
             if ok_to_update or deployed_version is None:
-                params = {}
-                params["ParameterKey"] = "paramBucketName"
-                params["UsePreviousValue"] = True
+                params = {"ParameterKey": "paramBucketName", "UsePreviousValue": True}
                 cloudformation(**self._c_args).update_stack(
                     StackName=self._stack,
                     TemplateBody=_template(),
@@ -711,12 +710,9 @@ class Vault:
                     Capabilities=["CAPABILITY_IAM", "CAPABILITY_NAMED_IAM"],
                 )
             else:
-                print(
-                    "Current stack version %(cur_ver)s does not need update to "
-                    "version %(code_version)s" % {"cur_ver": deployed_version, "code_version": VAULT_STACK_VERSION}
-                )
+                print(f"Current stack version {deployed_version} does not need update to version {VAULT_STACK_VERSION}")
         except Exception as e:
-            print("Error while updating stack '" + self._stack + "': " + repr(e))
+            print(f"Error while updating stack '{self._stack}': {repr(e)}")
 
 
 STATIC_IV = bytearray(
