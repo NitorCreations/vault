@@ -56,14 +56,14 @@ def main():
         help="Updates the CloudFormation stack which declares all resources needed by the vault.",
     )
     action.add_argument("-d", "--delete", help="Name of element to delete")
-    action.add_argument("-a", "--all", action="store_true", help="List avail" + "able secrets")
+    action.add_argument("-a", "--all", action="store_true", help="List available secrets")
     action.add_argument("-e", "--encrypt", help="Directly encrypt given value")
     action.add_argument("-y", "--decrypt", help="Directly decrypt given value")
     parser.add_argument(
         "-w",
         "--overwrite",
         action="store_true",
-        help="Add this argument if you want to overwrite an " + "existing element",
+        help="Add this argument if you want to overwrite an existing element",
     )
     store_data = parser.add_mutually_exclusive_group(required=False)
     store_data.add_argument("-v", "--value", help="Value to store")
@@ -79,31 +79,31 @@ def main():
     parser.add_argument(
         "-p",
         "--prefix",
-        help="Optional prefix to store val" + "ue under. empty by default",
+        help="Optional prefix to store value under. empty by default",
     )
     parser.add_argument(
         "--vaultstack",
-        help="Optional CloudFormation stack " + "to lookup key and bucket. 'vau" + "lt' by default",
+        help="Optional CloudFormation stack to lookup key and bucket. 'vault' by default",
     )
     parser.add_argument(
         "-b",
         "--bucket",
-        help="Override the bucket name eit" + "her for initialization or st" + "oring and looking up values",
+        help="Override the bucket name either for initialization or storing and looking up values",
     )
     parser.add_argument(
         "-k",
         "--key-arn",
-        help="Override the KMS key arn fo" + "r storinig or looking up",
+        help="Override the KMS key arn for storing or looking up",
     )
     parser.add_argument(
         "--id",
-        help="Give an IAM access key id to override " + "those defined by environent",
+        help="Give an IAM access key id to override those defined by environment",
     )
     parser.add_argument(
         "--secret",
-        help="Give an IAM secret access key to o" + "verride those defined by environent",
+        help="Give an IAM secret access key to override those defined by environment",
     )
-    parser.add_argument("-r", "--region", help="Give a region for the stack" + "and bucket")
+    parser.add_argument("-r", "--region", help="Give a region for the stack and bucket")
     if "_ARGCOMPLETE" in os.environ:
         argcomplete.autocomplete(parser)
     else:
