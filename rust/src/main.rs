@@ -25,7 +25,6 @@ struct Args {
     // TODO
     //#[arg(short, long, help = "Delete key", value_name = "KEY")]
     //delete: Option<String>,
-
     #[arg(long, help = "Print information")]
     info: bool,
 
@@ -40,10 +39,8 @@ struct Args {
     // TODO
     //#[arg(short = 'w', long, help = "Overwrite existing key", value_name = "KEY")]
     //overwrite: Option<String>,
-
     #[arg(short, long, help = "Specify region for the bucket")]
     region: Option<String>,
-
     // TODO
     //#[arg(short, long, help = "Store new key", value_name = "KEY", num_args = 2)]
     //store: Option<String>,
@@ -62,8 +59,11 @@ struct Args {
 async fn main() -> Result<(), Box<dyn Error>> {
     let args: Args = parse_args().await;
 
-    let client = Vault::new(None, args.region.as_deref()).await?;
-
+    // how to implement this better
+    let client = match Vault::new(None, args.region.as_deref()).await {
+        Ok(vault) => vault,
+        Err(error) => return Ok(println!("Error creating vault:\n {error}")),
+    };
     if args.all {
         list_all(&client).await;
         return Ok(());

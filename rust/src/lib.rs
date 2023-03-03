@@ -93,7 +93,7 @@ impl Vault {
             .bucket(&self.cf_params.bucket_name)
             .send()
             .await
-            .map_err(|e| e.to_string())?;
+            .map_err(|e| format!("{e:#?}"))?;
         Ok(output
             .contents()
             .ok_or("error getting S3 output contents")?
@@ -130,13 +130,13 @@ impl Vault {
             .key_spec(DataKeySpec::Aes256)
             .send()
             .await
-            .map_err(|e| e.to_string())?;
+            .map_err(|e| format!("{e:#?}"))?;
 
         let plaintext = key_dict
             .plaintext()
             .ok_or("No Plaintext for generated datakey")?;
         let aesgcm_cipher: AesGcm<Aes256, typenum::U12> =
-            AesGcm::new_from_slice(plaintext.as_ref()).map_err(|e| e.to_string())?;
+            AesGcm::new_from_slice(plaintext.as_ref()).map_err(|e| format!("{e:#?}"))?;
         let mut nonce: [u8; 12] = [0; 12];
         let mut rng = rand::thread_rng();
         rng.fill(nonce.as_mut_slice());
@@ -146,7 +146,7 @@ impl Vault {
             alg: "AESGCM".to_owned(),
             nonce: general_purpose::STANDARD.encode(nonce),
         })
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| format!("{e:#?}"))?;
 
         let aes_gcm_ciphertext = aesgcm_cipher
             .encrypt(
@@ -156,7 +156,7 @@ impl Vault {
                     aad: meta.as_bytes(),
                 },
             )
-            .map_err(|e| e.to_string())?;
+            .map_err(|e| format!("{e:#?}"))?;
 
         Ok(EncryptObject {
             data_key: key_dict
@@ -176,12 +176,12 @@ impl Vault {
             .key(&key)
             .send()
             .await
-            .map_err(|e| e.to_string())?
+            .map_err(|e| format!("{e:#?}"))?
             .body
             .collect()
             .await
             .map(|body| body.to_vec())
-            .map_err(|e| e.to_string())
+            .map_err(|e| format!("{e:#?}"))
     }
 
     async fn direct_decrypt(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, String> {
@@ -190,7 +190,7 @@ impl Vault {
             .ciphertext_blob(Blob::new(encrypted_data))
             .send()
             .await
-            .map_err(|e| e.to_string())?
+            .map_err(|e| format!("{e:#?}"))?
             .plaintext()
             .map(|blob| blob.to_owned().into_inner())
             .ok_or("Error parsing KMS plaintext".to_owned())
@@ -215,27 +215,27 @@ impl Vault {
     }
 
     pub async fn store(&self, name: &str, data: &[u8]) -> Result<(), String> {
-        let encrypted = self.encrypt(data).await.map_err(|e| e.to_string())?;
+        let encrypted = self.encrypt(data).await.map_err(|e| format!("{e:#?}"))?;
         self.put_s3_obj(
             ByteStream::from(encrypted.aes_gcm_ciphertext),
             &format!("{}.aesgcm.encrypted", name),
         )
         .await
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| format!("{e:#?}"))?;
 
         self.put_s3_obj(
             ByteStream::from(encrypted.data_key),
             &format!("{}.key", name),
         )
         .await
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| format!("{e:#?}"))?;
 
         self.put_s3_obj(
             ByteStream::from(encrypted.meta.as_bytes().to_owned()),
             &format!("{}.meta", name),
         )
         .await
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| format!("{e:#?}"))?;
 
         Ok(())
     }
@@ -245,13 +245,13 @@ impl Vault {
         let data_key = self.get_s3_obj_as_vec(format!("{key}.key"));
         let ciphertext = self.get_s3_obj_as_vec(format!("{key}.aesgcm.encrypted"));
         let meta_add = self.get_s3_obj_as_vec(format!("{key}.meta")).await?;
-        let meta: Meta = serde_json::from_slice(&meta_add).map_err(|e| e.to_string())?;
+        let meta: Meta = serde_json::from_slice(&meta_add).map_err(|e| format!("{e:#?}"))?;
         let cipher: AesGcm<Aes256, typenum::U12> =
             AesGcm::new_from_slice(self.direct_decrypt(&data_key.await?).await?.as_slice())
-                .map_err(|e| e.to_string())?;
+                .map_err(|e| format!("{e:#?}"))?;
         let nonce = general_purpose::STANDARD
             .decode(meta.nonce)
-            .map_err(|e| e.to_string())?;
+            .map_err(|e| format!("{e:#?}"))?;
         let nonce = Nonce::from_slice(nonce.as_slice());
         let res = cipher
             .decrypt(
@@ -261,8 +261,8 @@ impl Vault {
                     aad: &meta_add,
                 },
             )
-            .map_err(|e| e.to_string())?;
-        String::from_utf8(res).map_err(|e| e.to_string())
+            .map_err(|e| format!("{e:#?}"))?;
+        String::from_utf8(res).map_err(|e| format!("{e:#?}"))
     }
 }
 
@@ -284,7 +284,7 @@ async fn get_cf_params(config: &SdkConfig, stack: &str) -> Result<CfParams, Stri
         .stack_name(stack)
         .send()
         .await
-        .map_err(|err| err.to_string())?
+        .map_err(|e| format!("{e:#?}"))?
         .stacks()
         .and_then(|stacks| stacks.first())
         .and_then(|stack| stack.outputs())
