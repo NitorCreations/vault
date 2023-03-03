@@ -66,16 +66,22 @@ def main():
         help="Add this argument if you want to overwrite an existing element",
     )
     store_data = parser.add_mutually_exclusive_group(required=False)
-    store_data.add_argument("-v", "--value", help="Value to store")
+    store_data.add_argument(
+        "-v",
+        "--value",
+        help="Value to store",
+    )
     store_data.add_argument(
         "-f",
         "--file",
-        help="File to store. If no -s argument"
-        + " given, the name of the file is "
-        + "used as the default name. Give -"
-        + " for stdin",
+        help="File to store. If no -s argument given, the name of the file is used as the default name. " +
+        "Give - for stdin",
     )
-    parser.add_argument("-o", "--outfile", help="The file to write the data to")
+    parser.add_argument(
+        "-o",
+        "--outfile",
+        help="The file to write the data to",
+    )
     parser.add_argument(
         "-p",
         "--prefix",
@@ -104,6 +110,7 @@ def main():
         help="Give an IAM secret access key to override those defined by environment",
     )
     parser.add_argument("-r", "--region", help="Give a region for the stack and bucket")
+
     if "_ARGCOMPLETE" in os.environ:
         argcomplete.autocomplete(parser)
     else:
@@ -175,7 +182,7 @@ def main():
                 if args.overwrite or not vlt.exists(args.store):
                     vlt.store(args.store, data)
                 elif not args.overwrite:
-                    parser.error("Will not overwrite '" + args.store + "' without the --overwrite (-w) flag")
+                    parser.error(f"Will not overwrite '{args.store}' without the --overwrite (-w) flag")
             elif args.delete:
                 vlt.delete(args.delete)
             elif args.all:

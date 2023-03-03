@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-""" Vault module for securely storing secrets in s3 with local encryption
-with data keys from AWS KMS
+"""
+Vault module for securely storing secrets in s3 with local encryption with data keys from AWS KMS
 """
 import sys
 from os import environ
@@ -33,3 +33,6 @@ def stop_cov(signum, frame):
         cov.stop()
     if signum:
         sys.exit(0)
+
+# flake8: noqa
+from n_vault.vault import Vault
