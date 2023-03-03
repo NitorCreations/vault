@@ -26,6 +26,7 @@ pub struct CfParams {
     key_arn: Option<String>,
     // deployed_version: Option<String>,
 }
+
 impl CfParams {
     pub fn from(bucket_name: &str, key_arn: Option<&str>) -> CfParams {
         CfParams {
@@ -61,6 +62,7 @@ impl Vault {
             kms: kmsClient::new(&config),
         })
     }
+
     pub async fn from_params(
         cf_params: CfParams,
         region_opt: Option<&str>,
@@ -79,7 +81,7 @@ impl Vault {
 
     pub fn test(&self) {
         println!(
-            "region:{},vault_stack:{:?},s3:{:?}",
+            "region:{}, vault_stack:{:?}, s3:{:?}",
             self.region, self.cf_params, self.s3
         );
     }
