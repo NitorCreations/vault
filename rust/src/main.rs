@@ -35,7 +35,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let client = Vault::new(None, args.region.as_deref()).await?;
 
     if let Some(name) = args.lookup.as_deref() {
-        println!("{}", client.lookup(name).await.unwrap());
+        print!("{}", client.lookup(name).await.unwrap());
         return Ok(());
     }
 
