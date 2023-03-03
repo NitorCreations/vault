@@ -1,5 +1,4 @@
-nitor-vault
-===========
+# nitor-vault
 
 Node.js library for storing encrypting keys and values securely to AWS infrastructure.
 

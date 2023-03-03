@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Nitor Creations Oy
+# Copyright 2016-2023 Nitor Creations Oy
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,13 +16,15 @@
 with data keys from AWS KMS
 """
 from os import environ
+
 cov = None
-VERSION='0.54'
+VERSION = "0.54"
 if "VAULT_MEASURE_COVERAGE" in environ:
     from coverage import Coverage
-    cov = Coverage(auto_data=True, source=["n_vault"], branch=False,
-                   omit=["n_vault/__init__.py"])
+
+    cov = Coverage(auto_data=True, source=["n_vault"], branch=False, omit=["n_vault/__init__.py"])
     cov.start()
+
 
 def stop_cov(signum, frame):
     if cov:
@@ -30,5 +32,6 @@ def stop_cov(signum, frame):
         cov.stop()
     if signum:
         sys.exit(0)
+
 
 from n_vault.vault import Vault
