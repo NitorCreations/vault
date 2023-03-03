@@ -1,326 +1,326 @@
 # flake8: noqa: E501
 VAULT_STACK_VERSION = 24
-TEMPLATE_STRING = """{
-  "Parameters": {
-    "paramBucketName": {
+TEMPLATE_STRING = """{{
+  "Parameters": {{
+    "paramBucketName": {{
       "Default": "nitor-core-vault",
       "Type": "String",
       "Description": "Name of the vault bucket"
-    }
-  },
-  "Resources": {
-    "resourceDecryptRole": {
+    }}
+  }},
+  "Resources": {{
+    "resourceDecryptRole": {{
       "Type": "AWS::IAM::Role",
-      "Properties": {
+      "Properties": {{
         "Path": "/",
-        "AssumeRolePolicyDocument": {
+        "AssumeRolePolicyDocument": {{
           "Version": "2012-10-17",
           "Statement": [
-            {
+            {{
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": {
+              "Principal": {{
                 "Service": [
                   "ec2.amazonaws.com"
                 ]
-              }
-            }
+              }}
+            }}
           ]
-        }
-      }
-    },
-    "resourceEncryptRole": {
+        }}
+      }}
+    }},
+    "resourceEncryptRole": {{
       "Type": "AWS::IAM::Role",
-      "Properties": {
+      "Properties": {{
         "Path": "/",
-        "AssumeRolePolicyDocument": {
+        "AssumeRolePolicyDocument": {{
           "Version": "2012-10-17",
           "Statement": [
-            {
+            {{
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": {
+              "Principal": {{
                 "Service": [
                   "ec2.amazonaws.com"
                 ]
-              }
-            }
+              }}
+            }}
           ]
-        }
-      }
-    },
-    "resourceLambdaRole": {
+        }}
+      }}
+    }},
+    "resourceLambdaRole": {{
       "Type": "AWS::IAM::Role",
-      "Properties": {
+      "Properties": {{
         "Path": "/",
-        "AssumeRolePolicyDocument": {
+        "AssumeRolePolicyDocument": {{
           "Version": "2012-10-17",
           "Statement": [
-            {
+            {{
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": {
+              "Principal": {{
                 "Service": [
                   "lambda.amazonaws.com",
                   "edgelambda.amazonaws.com"
                 ]
-              }
-            }
+              }}
+            }}
           ]
-        },
+        }},
         "ManagedPolicyArns": [
           "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
         ]
-      }
-    },
-    "kmsKey": {
+      }}
+    }},
+    "kmsKey": {{
       "Type": "AWS::KMS::Key",
-      "Properties": {
-        "KeyPolicy": {
+      "Properties": {{
+        "KeyPolicy": {{
           "Version": "2012-10-17",
           "Id": "key-default-2",
           "Statement": [
-            {
+            {{
               "Action": [
                 "kms:*"
               ],
-              "Principal": {
-                "AWS": {
+              "Principal": {{
+                "AWS": {{
                   "Fn::Join": [
                     "",
                     [
                       "arn:aws:iam::",
-                      {
+                      {{
                         "Ref": "AWS::AccountId"
-                      },
+                      }},
                       ":root"
                     ]
                   ]
-                }
-              },
+                }}
+              }},
               "Resource": "*",
               "Effect": "Allow",
               "Sid": "allowAdministration"
-            }
+            }}
           ]
-        },
+        }},
         "Description": "Key for encrypting / decrypting secrets"
-      }
-    },
-    "vaultBucket": {
+      }}
+    }},
+    "vaultBucket": {{
       "Type": "AWS::S3::Bucket",
-      "Properties": {
-        "BucketName": {
+      "Properties": {{
+        "BucketName": {{
           "Ref": "paramBucketName"
-        }
-      }
-    },
-    "iamPolicyEncrypt": {
+        }}
+      }}
+    }},
+    "iamPolicyEncrypt": {{
       "Type": "AWS::IAM::ManagedPolicy",
-      "Properties": {
-        "PolicyDocument": {
+      "Properties": {{
+        "PolicyDocument": {{
           "Version": "2012-10-17",
           "Statement": [
-            {
+            {{
               "Action": [
                 "s3:GetObject",
                 "s3:PutObject",
                 "s3:DeleteObject"
               ],
-              "Resource": {
+              "Resource": {{
                 "Fn::Join": [
                   "",
                   [
                     "arn:aws:s3:::",
-                    {
+                    {{
                       "Ref": "paramBucketName"
-                    },
+                    }},
                     "/*"
                   ]
                 ]
-              },
+              }},
               "Effect": "Allow",
               "Sid": "putVaultItems"
-            },
-            {
+            }},
+            {{
               "Action": [
                 "s3:ListBucket"
               ],
-              "Resource": {
+              "Resource": {{
                 "Fn::Join": [
                   "",
                   [
                     "arn:aws:s3:::",
-                    {
+                    {{
                       "Ref": "paramBucketName"
-                    }
+                    }}
                   ]
                 ]
-              },
+              }},
               "Effect": "Allow",
               "Sid": "listVault"
-            },
-            {
+            }},
+            {{
               "Action": [
                 "cloudformation:DescribeStacks"
               ],
-              "Resource": {
-                "Fn::Sub": "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/${AWS::StackName}/*"
-              },
+              "Resource": {{
+                "Fn::Sub": "arn:aws:cloudformation:${{AWS::Region}}:${{AWS::AccountId}}:stack/${{AWS::StackName}}/*"
+              }},
               "Effect": "Allow",
               "Sid": "describeVault"
-            },
-            {
+            }},
+            {{
               "Action": [
                 "kms:Decrypt",
                 "kms:Encrypt",
                 "kms:GenerateDataKey"
               ],
-              "Resource": {
+              "Resource": {{
                 "Fn::GetAtt": [
                   "kmsKey",
                   "Arn"
                 ]
-              },
+              }},
               "Effect": "Allow",
               "Sid": "allowEncrypt"
-            },
-            {
+            }},
+            {{
               "Sid": "InvokeLambdaPermission",
               "Effect": "Allow",
               "Action": [
                 "lambda:InvokeFunction"
               ],
-              "Resource": {
+              "Resource": {{
                 "Fn::GetAtt": [
                   "lambdaDecrypter",
                   "Arn"
                 ]
-              }
-            }
+              }}
+            }}
           ]
-        },
+        }},
         "Description": "Policy to allow encrypting and decrypting vault secrets",
         "Roles": [
-          {
+          {{
             "Ref": "resourceEncryptRole"
-          }
+          }}
         ]
-      }
-    },
-    "iamPolicyDecrypt": {
+      }}
+    }},
+    "iamPolicyDecrypt": {{
       "Type": "AWS::IAM::ManagedPolicy",
-      "Properties": {
-        "PolicyDocument": {
+      "Properties": {{
+        "PolicyDocument": {{
           "Version": "2012-10-17",
           "Statement": [
-            {
+            {{
               "Action": [
                 "s3:GetObject"
               ],
-              "Resource": {
+              "Resource": {{
                 "Fn::Join": [
                   "",
                   [
                     "arn:aws:s3:::",
-                    {
+                    {{
                       "Ref": "paramBucketName"
-                    },
+                    }},
                     "/*"
                   ]
                 ]
-              },
+              }},
               "Effect": "Allow",
               "Sid": "getVaultItems"
-            },
-            {
+            }},
+            {{
               "Action": [
                 "s3:ListBucket"
               ],
-              "Resource": {
+              "Resource": {{
                 "Fn::Join": [
                   "",
                   [
                     "arn:aws:s3:::",
-                    {
+                    {{
                       "Ref": "paramBucketName"
-                    }
+                    }}
                   ]
                 ]
-              },
+              }},
               "Effect": "Allow",
               "Sid": "listVault"
-            },
-            {
+            }},
+            {{
               "Action": [
                 "cloudformation:DescribeStacks"
               ],
-              "Resource": {
-                "Fn::Sub": "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/${AWS::StackName}/*"
-              },
+              "Resource": {{
+                "Fn::Sub": "arn:aws:cloudformation:${{AWS::Region}}:${{AWS::AccountId}}:stack/${{AWS::StackName}}/*"
+              }},
               "Effect": "Allow",
               "Sid": "describeVault"
-            },
-            {
+            }},
+            {{
               "Action": [
                 "kms:Decrypt"
               ],
-              "Resource": {
+              "Resource": {{
                 "Fn::GetAtt": [
                   "kmsKey",
                   "Arn"
                 ]
-              },
+              }},
               "Effect": "Allow",
               "Sid": "allowDecrypt"
-            },
-            {
+            }},
+            {{
               "Sid": "InvokeLambdaPermission",
               "Effect": "Allow",
               "Action": [
                 "lambda:InvokeFunction"
               ],
-              "Resource": {
+              "Resource": {{
                 "Fn::GetAtt": [
                   "lambdaDecrypter",
                   "Arn"
                 ]
-              }
-            }
+              }}
+            }}
           ]
-        },
+        }},
         "Description": "Policy to allow decrypting vault secrets",
         "Roles": [
-          {
+          {{
             "Ref": "resourceDecryptRole"
-          },
-          {
+          }},
+          {{
             "Ref": "resourceLambdaRole"
-          }
+          }}
         ]
-      }
-    },
-    "lambdaDecrypter": {
+      }}
+    }},
+    "lambdaDecrypter": {{
       "Type": "AWS::Lambda::Function",
-      "Properties": {
-        "Description": {
-          "Fn::Sub": "Nitor Vault ${AWS::StackName} Decrypter"
-        },
+      "Properties": {{
+        "Description": {{
+          "Fn::Sub": "Nitor Vault ${{AWS::StackName}} Decrypter"
+        }},
         "Handler": "index.handler",
         "MemorySize": 128,
         "Runtime": "python3.8",
         "Timeout": 300,
-        "Role": {
+        "Role": {{
           "Fn::GetAtt": [
             "resourceLambdaRole",
             "Arn"
           ]
-        },
-        "FunctionName": {
-          "Fn::Sub": "${AWS::StackName}-decrypter"
-        },
-        "Code": {
-          "ZipFile": {
+        }},
+        "FunctionName": {{
+          "Fn::Sub": "${{AWS::StackName}}-decrypter"
+        }},
+        "Code": {{
+          "ZipFile": {{
             "Fn::Join": [
               "\\n",
               [
@@ -336,7 +336,7 @@ TEMPLATE_STRING = """{
                 "FAILED = 'FAILED'",
                 "def handler(event, context):",
                 "  ciphertext = event['ResourceProperties']['Ciphertext']",
-                "  responseData = {}",
+                "  responseData = {{}}",
                 "  try:",
                 "    responseData['Plaintext'] = kms.decrypt(CiphertextBlob=base64.b64decode(ciphertext)).get('Plaintext').decode()",
                 "    log.info('Decrypt successful!')",
@@ -348,166 +348,166 @@ TEMPLATE_STRING = """{
                 "    raise Exception(error_msg)"
               ]
             ]
-          }
-        }
-      }
-    }
-  },
-  "Outputs": {
-    "vaultBucketName": {
+          }}
+        }}
+      }}
+    }}
+  }},
+  "Outputs": {{
+    "vaultBucketName": {{
       "Description": "Vault Bucket",
-      "Value": {
+      "Value": {{
         "Ref": "vaultBucket"
-      },
-      "Export": {
-        "Name": {
+      }},
+      "Export": {{
+        "Name": {{
           "Fn::Join": [
             ":",
             [
-              {
+              {{
                 "Ref": "AWS::StackName"
-              },
+              }},
               "vaultBucketName"
             ]
           ]
-        }
-      }
-    },
-    "kmsKeyArn": {
+        }}
+      }}
+    }},
+    "kmsKeyArn": {{
       "Description": "KMS key Arn",
-      "Value": {
+      "Value": {{
         "Fn::GetAtt": [
           "kmsKey",
           "Arn"
         ]
-      },
-      "Export": {
-        "Name": {
+      }},
+      "Export": {{
+        "Name": {{
           "Fn::Join": [
             ":",
             [
-              {
+              {{
                 "Ref": "AWS::StackName"
-              },
+              }},
               "kmsKeyArn"
             ]
           ]
-        }
-      }
-    },
-    "decryptRole": {
+        }}
+      }}
+    }},
+    "decryptRole": {{
       "Description": "The role for decrypting",
-      "Value": {
+      "Value": {{
         "Ref": "resourceDecryptRole"
-      },
-      "Export": {
-        "Name": {
+      }},
+      "Export": {{
+        "Name": {{
           "Fn::Join": [
             ":",
             [
-              {
+              {{
                 "Ref": "AWS::StackName"
-              },
+              }},
               "decryptRole"
             ]
           ]
-        }
-      }
-    },
-    "encryptRole": {
+        }}
+      }}
+    }},
+    "encryptRole": {{
       "Description": "The role for encrypting",
-      "Value": {
+      "Value": {{
         "Ref": "resourceEncryptRole"
-      },
-      "Export": {
-        "Name": {
+      }},
+      "Export": {{
+        "Name": {{
           "Fn::Join": [
             ":",
             [
-              {
+              {{
                 "Ref": "AWS::StackName"
-              },
+              }},
               "encryptRole"
             ]
           ]
-        }
-      }
-    },
-    "decryptPolicy": {
+        }}
+      }}
+    }},
+    "decryptPolicy": {{
       "Description": "The policy for decrypting",
-      "Value": {
+      "Value": {{
         "Ref": "iamPolicyDecrypt"
-      },
-      "Export": {
-        "Name": {
+      }},
+      "Export": {{
+        "Name": {{
           "Fn::Join": [
             ":",
             [
-              {
+              {{
                 "Ref": "AWS::StackName"
-              },
+              }},
               "decryptPolicy"
             ]
           ]
-        }
-      }
-    },
-    "encryptPolicy": {
+        }}
+      }}
+    }},
+    "encryptPolicy": {{
       "Description": "The policy for decrypting",
-      "Value": {
+      "Value": {{
         "Ref": "iamPolicyEncrypt"
-      },
-      "Export": {
-        "Name": {
+      }},
+      "Export": {{
+        "Name": {{
           "Fn::Join": [
             ":",
             [
-              {
+              {{
                 "Ref": "AWS::StackName"
-              },
+              }},
               "encryptPolicy"
             ]
           ]
-        }
-      }
-    },
-    "vaultStackVersion": {
+        }}
+      }}
+    }},
+    "vaultStackVersion": {{
       "Description": "The version of the currently deployed vault stack template",
-      "Value": "%(version)s",
-      "Export": {
-        "Name": {
+      "Value": "{version}",
+      "Export": {{
+        "Name": {{
           "Fn::Join": [
             ":",
             [
-              {
+              {{
                 "Ref": "AWS::StackName"
-              },
+              }},
               "vaultStackVersion"
             ]
           ]
-        }
-      }
-    },
-    "lambdaDecrypterArn": {
+        }}
+      }}
+    }},
+    "lambdaDecrypterArn": {{
       "Description": "Decrypter Lambda function ARN",
-      "Value": {
-        "Fn::Sub": "${lambdaDecrypter.Arn}"
-      },
-      "Export": {
-        "Name": {
+      "Value": {{
+        "Fn::Sub": "${{lambdaDecrypter.Arn}}"
+      }},
+      "Export": {{
+        "Name": {{
           "Fn::Join": [
             ":",
             [
-              {
+              {{
                 "Ref": "AWS::StackName"
-              },
+              }},
               "lambdaDecrypterArn"
             ]
           ]
-        }
-      }
-    }
-  }
-}""" % {
-    "version": VAULT_STACK_VERSION
-}
+        }}
+      }}
+    }}
+  }}
+}}""".format(
+    version=VAULT_STACK_VERSION
+)
