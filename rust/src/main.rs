@@ -68,13 +68,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let args: Args = parse_args().await;
 
     // how to implement this better
-    let client = match Vault::new(None, args.region.as_deref()).await {
-        Ok(vault) => vault,
-        Err(error) => return Ok(println!("Error creating vault:\n{error}")),
-    };
-
+    let client = Vault::new(None, args.region.as_deref()).await?;
     if args.all {
-        list_all(&client).await;
+        list_all(&client).await?;
         return Ok(());
     } else if args.describestack {
         println!("{:#?}", client.stack_info());
@@ -84,22 +80,22 @@ async fn main() -> Result<(), Box<dyn Error>> {
         return Ok(());
     }
 
-    if let Some(key) = args.lookup.as_deref() {
-        print!("{}", client.lookup(key).await.unwrap());
+    if let Some(name) = args.lookup.as_deref() {
+        print!("{}", client.lookup(name).await?);
         return Ok(());
     }
 
     match &args.command {
         Some(Commands::List {}) => {
-            list_all(&client).await;
+            list_all(&client).await?;
             Ok(())
         }
         Some(Commands::Load { key }) => {
-            print!("{}", client.lookup(key).await.unwrap());
+            print!("{}", client.lookup(key).await?);
             Ok(())
         }
         Some(Commands::Store { key, value }) => {
-            client.store(key, value).await.unwrap();
+            client.store(key, value).await?;
             Ok(())
         }
         None => Ok(()),
@@ -110,9 +106,6 @@ async fn parse_args() -> Args {
     Args::parse()
 }
 
-async fn list_all(vault: &Vault) {
-    match vault.all().await {
-        Ok(all) => println!("{}", all.join("\n")),
-        Err(error) => println!("error occurred: {}", error),
-    }
+async fn list_all(vault: &Vault) -> Result<(), nitor_vault::errors::VaultError> {
+    Ok(println!("{}", vault.all().await?.join("\n")))
 }
