@@ -1,8 +1,6 @@
-use std::error::Error;
-
-use nitor_vault::Vault;
-
+use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
+use nitor_vault::Vault;
 
 #[derive(Parser)]
 #[command(
@@ -64,14 +62,15 @@ enum Commands {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn Error>> {
+async fn main() -> Result<()> {
     let args: Args = parse_args().await;
 
-    // how to implement this better
-    let client = Vault::new(None, args.region.as_deref()).await?;
+    let client = Vault::new(None, args.region.as_deref())
+        .await
+        .with_context(|| format!("error creating vault."))?;
+
     if args.all {
-        list_all(&client).await?;
-        return Ok(());
+        return list_all(&client).await;
     } else if args.describestack {
         println!("{:#?}", client.stack_info());
         return Ok(());
@@ -80,24 +79,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
         return Ok(());
     }
 
-    if let Some(name) = args.lookup.as_deref() {
-        print!("{}", client.lookup(name).await?);
-        return Ok(());
+    if let Some(key) = args.lookup.as_deref() {
+        return lookup(&client, key).await;
     }
 
     match &args.command {
-        Some(Commands::List {}) => {
-            list_all(&client).await?;
-            Ok(())
-        }
-        Some(Commands::Load { key }) => {
-            print!("{}", client.lookup(key).await?);
-            Ok(())
-        }
-        Some(Commands::Store { key, value }) => {
-            client.store(key, value).await?;
-            Ok(())
-        }
+        Some(Commands::List {}) => list_all(&client).await,
+        Some(Commands::Load { key }) => lookup(&client, key).await,
+        Some(Commands::Store { key, value }) => store(&client, key, value).await,
         None => Ok(()),
     }
 }
@@ -106,6 +95,24 @@ async fn parse_args() -> Args {
     Args::parse()
 }
 
-async fn list_all(vault: &Vault) -> Result<(), nitor_vault::errors::VaultError> {
-    Ok(println!("{}", vault.all().await?.join("\n")))
+async fn store(vault: &Vault, key: &str, value: &Vec<u8>) -> Result<()> {
+    vault
+        .store(key, &value)
+        .await
+        .with_context(|| format!("Error saving key {}", key))
+}
+
+async fn lookup(vault: &Vault, key: &str) -> Result<()> {
+    vault
+        .lookup(key)
+        .await
+        .with_context(|| format!("Error looking up key {}.", key))
+        .map(|res| print!("{res}"))
+}
+async fn list_all(vault: &Vault) -> Result<()> {
+    vault
+        .all()
+        .await
+        .with_context(|| format!("Error listing all keys"))
+        .map(|list| println!("{}", list.join("\n")))
 }
