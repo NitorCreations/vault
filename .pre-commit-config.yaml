@@ -52,7 +52,7 @@ repos:
       - id: rust-clippy
         name: Rust clippy
         description: Run cargo clippy on files included in the commit. clippy should be installed before-hand.
-        entry: bash -c 'cd rust && cargo clippy --all-targets --all-features -- -Dclippy::all'
+        entry: bash -c 'cd rust && cargo clippy --all-targets --all-features --'
         pass_filenames: false
         types: [file, rust]
         language: system

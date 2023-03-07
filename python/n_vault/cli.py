@@ -74,8 +74,8 @@ def main():
     store_data.add_argument(
         "-f",
         "--file",
-        help="File to store. If no -s argument given, the name of the file is used as the default name. " +
-        "Give - for stdin",
+        help="File to store. If no -s argument given, the name of the file is used as the default name. "
+        + "Give - for stdin",
     )
     parser.add_argument(
         "-o",
