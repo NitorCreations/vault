@@ -58,7 +58,14 @@ enum Commands {
     /// Print secret value for given key
     Load { key: String },
     /// Store new key-value pair
-    Store { key: String, value: Vec<u8> },
+    Store {
+        key: String,
+        value: String,
+        #[arg(short = 'w', long, help = "Overwrite existing key", value_name = "KEY")]
+        overwrite: bool,
+    },
+    /// check if key exists
+    Exists { key: String },
 }
 
 #[tokio::main]
@@ -86,7 +93,12 @@ async fn main() -> Result<()> {
     match &args.command {
         Some(Commands::List {}) => list_all(&client).await,
         Some(Commands::Load { key }) => lookup(&client, key).await,
-        Some(Commands::Store { key, value }) => store(&client, key, value).await,
+        Some(Commands::Store {
+            key,
+            value,
+            overwrite,
+        }) => store(&client, key, value, overwrite).await,
+        Some(Commands::Exists { key }) => exists(&client, key).await,
         None => Ok(()),
     }
 }
@@ -95,16 +107,31 @@ async fn parse_args() -> Args {
     Args::parse()
 }
 
-async fn store(vault: &Vault, key: &str, value: &[u8]) -> Result<()> {
-    if key.trim().is_empty() { anyhow::bail!("Empty key '{}'", key) }
-    vault
-        .store(key, value)
-        .await
-        .with_context(|| format!("Error saving key '{}'", key))
+async fn store(vault: &Vault, key: &str, value: &str, overwrite: &bool) -> Result<()> {
+    if key.trim().is_empty() {
+        anyhow::bail!("Empty key '{}'", key)
+    }
+    if !overwrite
+        && vault
+            .exists(key)
+            .await
+            .with_context(|| format!("Error checking if key {key} exists"))?
+    {
+        anyhow::bail!(
+            "Error saving key, it already exists and you did not provide \x1b[33m-w\x1b[0m flag for overwriting"
+        )
+    } else {
+        vault
+            .store(key, &value.as_bytes())
+            .await
+            .with_context(|| format!("Error saving key {}", key))
+    }
 }
 
 async fn lookup(vault: &Vault, key: &str) -> Result<()> {
-    if key.trim().is_empty() { anyhow::bail!("Empty key '{}'", key) }
+    if key.trim().is_empty() {
+        anyhow::bail!("Empty key '{}'", key)
+    }
     vault
         .lookup(key)
         .await
@@ -118,4 +145,18 @@ async fn list_all(vault: &Vault) -> Result<()> {
         .await
         .with_context(|| "Error listing all keys".to_string())
         .map(|list| println!("{}", list.join("\n")))
+}
+
+async fn exists(vault: &Vault, key: &str) -> Result<()> {
+    if key.trim().is_empty() {
+        anyhow::bail!("Empty key '{}'", key)
+    }
+    vault
+        .exists(key)
+        .await
+        .with_context(|| format!("Error checking if key {key} exists"))
+        .map(|result| match result {
+            true => println!("key {key} exists"),
+            false => println!("key {key} doesn't exist"),
+        })
 }
