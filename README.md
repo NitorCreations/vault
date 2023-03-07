@@ -1,6 +1,6 @@
 # nitor-vault
 
-Command line tools and libraries for encrypting keys and values using client-side encryption with AWS KMS keys.
+Command line tools and libraries for encrypting keys and values using client-side encryption with [AWS KMS](https://aws.amazon.com/kms/) keys.
 
 ## Installation
 
@@ -14,7 +14,8 @@ Javascript and java versions are available from npm and maven central respective
 
 ## Example usage
 
-Initialize vault bucket and other infrastructure: `vault --init`. Will create a CloudFormation stack.
+Initialize a vault bucket and other infrastructure: `vault --init`.
+This will create a CloudFormation stack.
 
 Encrypt a file and store in vault bucket: `vault -s my-key -f <file>`
 
