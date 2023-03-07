@@ -99,14 +99,14 @@ async fn store(vault: &Vault, key: &str, value: &[u8]) -> Result<()> {
     vault
         .store(key, value)
         .await
-        .with_context(|| format!("Error saving key {}", key))
+        .with_context(|| format!("Error saving key '{}'", key))
 }
 
 async fn lookup(vault: &Vault, key: &str) -> Result<()> {
     vault
         .lookup(key)
         .await
-        .with_context(|| format!("Error looking up key {}.", key))
+        .with_context(|| format!("Error looking up key '{}'.", key))
         .map(|res| print!("{res}"))
 }
 
