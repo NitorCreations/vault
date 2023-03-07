@@ -1,3 +1,5 @@
+use std::io::{stdin, BufRead};
+
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use nitor_vault::Vault;
@@ -66,7 +68,7 @@ enum Commands {
         #[arg(
             short,
             long,
-            help = "point to a file that will be stored",
+            help = "point to a file that will be stored, - for stdin",
             value_name = "filename",
             conflicts_with = "value"
         )]
@@ -127,7 +129,10 @@ async fn store(
         if let Some(key) = key {
             key
         } else if let Some(file_name) = file {
-            file_name
+            match file_name.as_str() {
+                "-" => anyhow::bail!("Key cannot be empty when reading from stdin"),
+                _ => file_name,
+            }
         } else {
             anyhow::bail!(
                 "Empty key and no \x1b[33m-f\x1b[0m flag provided, provide at least one of these"
@@ -138,9 +143,19 @@ async fn store(
         if let Some(value) = value {
             value.to_owned()
         } else if let Some(path) = file {
-            let file = std::fs::read_to_string(path)
-                .with_context(|| format!("Error reading file '{path}'"))?;
-            file
+            match path.as_str() {
+                "-" => {
+                    println!("Reading from stdin, empty line stops reading");
+                    stdin()
+                        .lock()
+                        .lines()
+                        .map(|l| l.unwrap())
+                        .take_while(|l| !l.trim().is_empty())
+                        .fold(String::new(), |acc, line| acc + &line + "\n")
+                }
+                _ => std::fs::read_to_string(path)
+                    .with_context(|| format!("Error reading file '{path}'"))?,
+            }
         } else {
             anyhow::bail!("No value or filename provided")
         }
