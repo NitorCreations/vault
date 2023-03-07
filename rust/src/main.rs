@@ -41,9 +41,6 @@ struct Args {
     #[arg(short, long, help = "Specify region for the bucket")]
     region: Option<String>,
 
-    #[arg(short, long, help = "Store new key", value_name = "KEY", num_args = 2)]
-    store: Option<String>,
-
     // TODO
     //#[arg(
     //    short,
@@ -53,7 +50,7 @@ struct Args {
     //)]
     //update: Option<String>,
     #[command(subcommand)]
-    command: Commands,
+    command: Option<Commands>,
 }
 
 #[derive(Subcommand)]
@@ -62,6 +59,8 @@ enum Commands {
     List {},
     /// Print secret value for given key
     Load { key: String },
+    /// Store new key-value pair
+    Store { key: String, value: Vec<u8> },
 }
 
 #[tokio::main]
@@ -90,16 +89,20 @@ async fn main() -> Result<(), Box<dyn Error>> {
         return Ok(());
     }
 
-    // handle commands first
     match &args.command {
-        Commands::List {} => {
+        Some(Commands::List {}) => {
             list_all(&client).await;
             Ok(())
         }
-        Commands::Load { key } => {
+        Some(Commands::Load { key }) => {
             print!("{}", client.lookup(key).await.unwrap());
             Ok(())
         }
+        Some(Commands::Store { key, value }) => {
+            client.store(key, value).await.unwrap();
+            Ok(())
+        }
+        None => Ok(()),
     }
 }
 
