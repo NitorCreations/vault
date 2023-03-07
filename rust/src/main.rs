@@ -2,7 +2,7 @@ use std::error::Error;
 
 use nitor_vault::Vault;
 
-use clap::Parser;
+use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
 #[command(
@@ -11,7 +11,6 @@ use clap::Parser;
     about,
     long_about = "Nitor Vault, see https://github.com/nitorcreations/vault for usage examples"
 )] // Reads info from `Cargo.toml`
-
 struct Args {
     #[arg(short, long, help = "List available secrets")]
     all: bool,
@@ -41,9 +40,9 @@ struct Args {
     //overwrite: Option<String>,
     #[arg(short, long, help = "Specify region for the bucket")]
     region: Option<String>,
-    // TODO
-    //#[arg(short, long, help = "Store new key", value_name = "KEY", num_args = 2)]
-    //store: Option<String>,
+
+    #[arg(short, long, help = "Store new key", value_name = "KEY", num_args = 2)]
+    store: Option<String>,
 
     // TODO
     //#[arg(
@@ -53,6 +52,16 @@ struct Args {
     //    value_name = "KEY"
     //)]
     //update: Option<String>,
+    #[command(subcommand)]
+    command: Commands,
+}
+
+#[derive(Subcommand)]
+enum Commands {
+    /// List available secrets
+    List {},
+    /// Print secret value for given key
+    Load { key: String },
 }
 
 #[tokio::main]
@@ -62,8 +71,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
     // how to implement this better
     let client = match Vault::new(None, args.region.as_deref()).await {
         Ok(vault) => vault,
-        Err(error) => return Ok(println!("Error creating vault:\n {error}")),
+        Err(error) => return Ok(println!("Error creating vault:\n{error}")),
     };
+
     if args.all {
         list_all(&client).await;
         return Ok(());
@@ -75,12 +85,22 @@ async fn main() -> Result<(), Box<dyn Error>> {
         return Ok(());
     }
 
-    if let Some(name) = args.lookup.as_deref() {
-        print!("{}", client.lookup(name).await.unwrap());
+    if let Some(key) = args.lookup.as_deref() {
+        print!("{}", client.lookup(key).await.unwrap());
         return Ok(());
     }
 
-    Ok(())
+    // handle commands first
+    match &args.command {
+        Commands::List {} => {
+            list_all(&client).await;
+            Ok(())
+        }
+        Commands::Load { key } => {
+            print!("{}", client.lookup(key).await.unwrap());
+            Ok(())
+        }
+    }
 }
 
 async fn parse_args() -> Args {
