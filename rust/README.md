@@ -1,6 +1,6 @@
 # nitor-vault
 
-Library for encrypting keys and values using client-side encryption with AWS KMS keys.
+CLI and library for encrypting keys and values using client-side encryption with AWS KMS keys.
 
 ## Build
 
@@ -17,7 +17,7 @@ cargo run --release
 
 Using [rustfmt](https://github.com/rust-lang/rustfmt)
 
-```console
+```shell
 cargo fmt
 ```
 
@@ -25,13 +25,13 @@ cargo fmt
 
 Using [Clippy](https://github.com/rust-lang/rust-clippy)
 
-```console
+```shell
 cargo clippy
 cargo clippy --fix
 ```
 
 ## Update dependencies
 
-```console
+```shell
 cargo update
 ```

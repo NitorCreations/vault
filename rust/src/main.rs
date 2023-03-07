@@ -15,7 +15,7 @@ struct Args {
 
     #[arg(
         long,
-        help = "Describe Cloudformation stack params for current configuration"
+        help = "Describe CloudFormation stack params for current configuration"
     )]
     describestack: bool,
 

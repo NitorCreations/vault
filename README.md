@@ -41,8 +41,8 @@ UNENCRYPTED_SECRET="$(vault -y $MY_ENCRYPTED_SECRET)"
 ```
 
 Obviously you need to make sure that in the context of running the vault,
-there is some sort of way for providing kms permissions by for example adding the decryptPolicy managed policy
-from the vault Cloudformation stack to the ec2 instance or whatever runs the code.
+there is some sort of way for providing KMS permissions by for example adding the decryptPolicy managed policy
+from the vault Cloudformation stack to the EC2 instance or whatever runs the code.
 
 To decrypt the parameter value at stack creation or update time, use a custom resource:
 
