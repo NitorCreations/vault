@@ -213,6 +213,26 @@ impl Vault {
             .await?)
     }
 
+    // somewhat bad implementation, can fail for other reasons as well?
+    pub async fn exists(&self, name: &str) -> Result<bool, VaultError> {
+        if let Err(e) = self
+            .s3
+            .head_object()
+            .bucket(self.cf_params.bucket_name.to_owned())
+            .key(format!("{name}.key"))
+            .send()
+            .await
+        {
+            let service_error = e.into_service_error();
+            if service_error.is_not_found() {
+                Ok(false)
+            } else {
+                Err(VaultError::S3HeadObjectError(service_error))
+            }
+        } else {
+            Ok(true)
+        }
+    }
     pub async fn store(&self, name: &str, data: &[u8]) -> Result<(), VaultError> {
         let encrypted = self.encrypt(data).await?;
         self.put_s3_obj(

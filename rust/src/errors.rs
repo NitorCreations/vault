@@ -33,6 +33,8 @@ pub enum VaultError {
     EncryptObjectMetaToJsonError(#[from] serde_json::Error),
     #[error("Failed getting object from S3")]
     S3GetObjectError(#[from] SdkError<aws_sdk_s3::error::GetObjectError>),
+    #[error("Failed getting head-object from S3")]
+    S3HeadObjectError(#[from] aws_sdk_s3::error::HeadObjectError),
     #[error("Error decrypting S3-object body")]
     S3GetObjectBodyError,
     #[error("Error putting object to S3")]
