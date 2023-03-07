@@ -76,6 +76,9 @@ enum Commands {
     },
     /// check if key exists
     Exists { key: String },
+    /// Describe CloudFormation stack params for current configuration.
+    /// This value is useful for Lambdas as you can load the CfParams from env rather than from CloudFormation.
+    DescribeStack {},
 }
 
 #[tokio::main]
@@ -110,6 +113,7 @@ async fn main() -> Result<()> {
             file,
         }) => store(&client, key, value, file, overwrite).await,
         Some(Commands::Exists { key }) => exists(&client, key).await,
+        Some(Commands::DescribeStack {}) => Ok(println!("{:#?}", client.stack_info())),
         None => Ok(()),
     }
 }
