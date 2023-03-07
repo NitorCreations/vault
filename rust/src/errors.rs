@@ -2,6 +2,7 @@ use std::string::FromUtf8Error;
 
 use aws_sdk_cloudformation::types::SdkError;
 use thiserror::Error;
+
 #[derive(Debug, Error)]
 pub enum VaultError {
     #[error("Describe CloudFormation Stack failed")]
@@ -30,18 +31,18 @@ pub enum VaultError {
     CiphertextEncryptionError,
     #[error("Error parsing meta with serde")]
     EncryptObjectMetaToJsonError(#[from] serde_json::Error),
-    #[error("failed getting object from S3")]
+    #[error("Failed getting object from S3")]
     S3GetObjectError(#[from] SdkError<aws_sdk_s3::error::GetObjectError>),
-    #[error("error decrypting S3-object body")]
+    #[error("Error decrypting S3-object body")]
     S3GetObjectBodyError,
-    #[error("error putting object to S3")]
+    #[error("Error putting object to S3")]
     S3PutObjectError(#[from] SdkError<aws_sdk_s3::error::PutObjectError>),
-    #[error("error listing S3 objects")]
+    #[error("Error listing S3 objects")]
     S3ListObjectsError(#[from] SdkError<aws_sdk_s3::error::ListObjectsV2Error>),
     #[error("No contents found from S3")]
     S3NoContentsError,
-    #[error("error getting region")]
+    #[error("Error getting region")]
     NoRegionError,
-    #[error("error parsing Nonce from base64")]
+    #[error("Error parsing Nonce from base64")]
     NonceParseError(#[from] base64::DecodeError),
 }

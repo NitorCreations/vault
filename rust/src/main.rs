@@ -67,7 +67,7 @@ async fn main() -> Result<()> {
 
     let client = Vault::new(None, args.region.as_deref())
         .await
-        .with_context(|| format!("error creating vault."))?;
+        .with_context(|| "Failed to create vault.".to_string())?;
 
     if args.all {
         return list_all(&client).await;
@@ -95,9 +95,9 @@ async fn parse_args() -> Args {
     Args::parse()
 }
 
-async fn store(vault: &Vault, key: &str, value: &Vec<u8>) -> Result<()> {
+async fn store(vault: &Vault, key: &str, value: &[u8]) -> Result<()> {
     vault
-        .store(key, &value)
+        .store(key, value)
         .await
         .with_context(|| format!("Error saving key {}", key))
 }
@@ -109,10 +109,11 @@ async fn lookup(vault: &Vault, key: &str) -> Result<()> {
         .with_context(|| format!("Error looking up key {}.", key))
         .map(|res| print!("{res}"))
 }
+
 async fn list_all(vault: &Vault) -> Result<()> {
     vault
         .all()
         .await
-        .with_context(|| format!("Error listing all keys"))
+        .with_context(|| "Error listing all keys".to_string())
         .map(|list| println!("{}", list.join("\n")))
 }
