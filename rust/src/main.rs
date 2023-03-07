@@ -96,6 +96,7 @@ async fn parse_args() -> Args {
 }
 
 async fn store(vault: &Vault, key: &str, value: &[u8]) -> Result<()> {
+    if key.trim().is_empty() { anyhow::bail!("Empty key '{}'", key) }
     vault
         .store(key, value)
         .await
@@ -103,6 +104,7 @@ async fn store(vault: &Vault, key: &str, value: &[u8]) -> Result<()> {
 }
 
 async fn lookup(vault: &Vault, key: &str) -> Result<()> {
+    if key.trim().is_empty() { anyhow::bail!("Empty key '{}'", key) }
     vault
         .lookup(key)
         .await
