@@ -59,10 +59,18 @@ enum Commands {
     Load { key: String },
     /// Store new key-value pair
     Store {
-        key: String,
-        value: String,
-        #[arg(short = 'w', long, help = "Overwrite existing key", value_name = "KEY")]
+        key: Option<String>,
+        #[arg(short = 'w', long, help = "Overwrite existing key")]
         overwrite: bool,
+        value: Option<String>,
+        #[arg(
+            short,
+            long,
+            help = "point to a file that will be stored",
+            value_name = "filename",
+            conflicts_with = "value"
+        )]
+        file: Option<String>,
     },
     /// check if key exists
     Exists { key: String },
@@ -97,7 +105,8 @@ async fn main() -> Result<()> {
             key,
             value,
             overwrite,
-        }) => store(&client, key, value, overwrite).await,
+            file,
+        }) => store(&client, key, value, file, overwrite).await,
         Some(Commands::Exists { key }) => exists(&client, key).await,
         None => Ok(()),
     }
@@ -107,10 +116,35 @@ async fn parse_args() -> Args {
     Args::parse()
 }
 
-async fn store(vault: &Vault, key: &str, value: &str, overwrite: &bool) -> Result<()> {
-    if key.trim().is_empty() {
-        anyhow::bail!("Empty key '{}'", key)
-    }
+async fn store(
+    vault: &Vault,
+    key: &Option<String>,
+    value: &Option<String>,
+    file: &Option<String>,
+    overwrite: &bool,
+) -> Result<()> {
+    let key = {
+        if let Some(key) = key {
+            key
+        } else if let Some(file_name) = file {
+            file_name
+        } else {
+            anyhow::bail!(
+                "Empty key and no \x1b[33m-f\x1b[0m flag provided, provide at least one of these"
+            )
+        }
+    };
+    let data = {
+        if let Some(value) = value {
+            value.to_owned()
+        } else if let Some(path) = file {
+            let file = std::fs::read_to_string(path)
+                .with_context(|| format!("Error reading file '{path}'"))?;
+            file
+        } else {
+            anyhow::bail!("No value or filename provided")
+        }
+    };
     if !overwrite
         && vault
             .exists(key)
@@ -120,12 +154,11 @@ async fn store(vault: &Vault, key: &str, value: &str, overwrite: &bool) -> Resul
         anyhow::bail!(
             "Error saving key, it already exists and you did not provide \x1b[33m-w\x1b[0m flag for overwriting"
         )
-    } else {
-        vault
-            .store(key, &value.as_bytes())
-            .await
-            .with_context(|| format!("Error saving key {}", key))
     }
+    vault
+        .store(key, data.as_bytes())
+        .await
+        .with_context(|| format!("Error saving key {}", key))
 }
 
 async fn lookup(vault: &Vault, key: &str) -> Result<()> {
