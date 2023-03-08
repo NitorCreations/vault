@@ -1,0 +1,35 @@
+name: cargo
+
+# Run either when pushing directly to main/master or in a PR targeting main/master
+on:
+  push:
+    branches:
+      - master
+      - main
+    paths:
+      - "**.rs"
+  pull_request:
+    branches:
+      - master
+      - main
+    paths:
+      - "**.rs"
+
+# https://github.com/actions-rs/cargo
+jobs:
+  cargo:
+    name: Rust-cargo
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          working-directory: rust
+      - uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          working-directory: rust
