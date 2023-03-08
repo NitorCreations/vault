@@ -27,4 +27,7 @@ jobs:
           toolchain: stable
       - name: fmt
         working-directory: rust
+        # workaround for color output
+        env:
+          TERM: xterm-256color
         run: cargo fmt --check --verbose
