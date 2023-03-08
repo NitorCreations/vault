@@ -169,7 +169,8 @@ async fn store(
         }
     };
 
-    if !overwrite && vault
+    if !overwrite
+        && vault
             .exists(key)
             .await
             .with_context(|| format!("Error checking if key {key} exists"))?
