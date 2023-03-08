@@ -146,6 +146,7 @@ async fn store(
             )
         }
     };
+
     let data = {
         if let Some(value) = value {
             value.to_owned()
@@ -167,8 +168,8 @@ async fn store(
             anyhow::bail!("No value or filename provided")
         }
     };
-    if !overwrite
-        && vault
+
+    if !overwrite && vault
             .exists(key)
             .await
             .with_context(|| format!("Error checking if key {key} exists"))?
@@ -177,11 +178,13 @@ async fn store(
             "Error saving key, it already exists and you did not provide \x1b[33m-w\x1b[0m flag for overwriting"
         )
     }
+
     vault
         .store(key, data.as_bytes())
         .await
         .with_context(|| format!("Error saving key {}", key))
 }
+
 async fn delete(vault: &Vault, key: &str) -> Result<()> {
     if key.trim().is_empty() {
         anyhow::bail!("Empty key '{}'", key)
@@ -191,6 +194,7 @@ async fn delete(vault: &Vault, key: &str) -> Result<()> {
         .await
         .with_context(|| format!("Error deleting key '{}'.", key))
 }
+
 async fn lookup(vault: &Vault, key: &str) -> Result<()> {
     if key.trim().is_empty() {
         anyhow::bail!("Empty key '{}'", key)

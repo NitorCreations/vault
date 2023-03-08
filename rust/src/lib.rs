@@ -233,6 +233,7 @@ impl Vault {
             Ok(true)
         }
     }
+
     pub async fn store(&self, name: &str, data: &[u8]) -> Result<(), VaultError> {
         let encrypted = self.encrypt(data).await?;
         self.put_s3_obj(
@@ -281,6 +282,7 @@ impl Vault {
             .await?;
         Ok(())
     }
+
     pub async fn lookup(&self, name: &str) -> Result<String, VaultError> {
         let key = name;
         let data_key = self.get_s3_obj_as_vec(format!("{key}.key"));
