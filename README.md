@@ -1,6 +1,6 @@
 # nitor-vault
 
-Command line tools and libraries for encrypting keys and values using client-side encryption with AWS KMS keys.
+Command line tools and libraries for encrypting keys and values using client-side encryption with [AWS KMS](https://aws.amazon.com/kms/) keys.
 
 ## Installation
 
@@ -14,7 +14,8 @@ Javascript and java versions are available from npm and maven central respective
 
 ## Example usage
 
-Initialize vault bucket and other infrastructure: `vault --init`. Will create a CloudFormation stack.
+Initialize a vault bucket and other infrastructure: `vault --init`.
+This will create a CloudFormation stack.
 
 Encrypt a file and store in vault bucket: `vault -s my-key -f <file>`
 
@@ -41,8 +42,8 @@ UNENCRYPTED_SECRET="$(vault -y $MY_ENCRYPTED_SECRET)"
 ```
 
 Obviously you need to make sure that in the context of running the vault,
-there is some sort of way for providing kms permissions by for example adding the decryptPolicy managed policy
-from the vault cloudformation stack to the ec2 instance or whatever runs the code.
+there is some sort of way for providing KMS permissions by for example adding the decryptPolicy managed policy
+from the vault Cloudformation stack to the EC2 instance or whatever runs the code.
 
 To decrypt the parameter value at stack creation or update time, use a custom resource:
 

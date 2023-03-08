@@ -79,11 +79,13 @@ class Vault:
                 self._stack = "vault"
         else:
             self._stack = vault_stack
+
         # Either use given vault iam credentials or assume that the environment has
         # some usable credentials (either through env vars or instance profile)
         if vault_iam_id and vault_iam_secret:
             self._session = session(aws_access_key_id=vault_iam_id, aws_secret_access_key=vault_iam_secret)
         self._c_args = {"session": self._session, "region": self._region}
+
         # Either use given vault kms key and/or vault bucket or look them up from a
         # cloudformation stack
         if vault_key:
@@ -94,6 +96,7 @@ class Vault:
             self._vault_bucket = vault_bucket
         elif "VAULT_BUCKET" in os.environ:
             self._vault_bucket = os.environ["VAULT_BUCKET"]
+
         # If not given in constructor or environment, resolve from CloudFormation
         if not (self._vault_key and self._vault_bucket):
             if not vault_init:
