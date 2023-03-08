@@ -1,0 +1,35 @@
+name: Black
+
+# Run either when pushing directly to main/master or in a PR targeting main/master
+on:
+  push:
+    branches:
+      - master
+      - main
+    paths:
+      - "**.py"
+  pull_request:
+    branches:
+      - master
+      - main
+    paths:
+      - "**.py"
+
+# https://github.com/psf/black
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    name: Python-format
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python environment
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Black
+        uses: psf/black@stable
+        with:
+          options: "--check --verbose --diff --color"

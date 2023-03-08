@@ -1,7 +1,7 @@
 exclude: ^(.idea|.vscode)/
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.0.1
+    rev: v4.4.0
     # https://github.com/pre-commit/pre-commit-hooks
     hooks:
       - id: check-added-large-files
@@ -20,39 +20,43 @@ repos:
     rev: 23.1.0
     hooks:
       - id: black
+        name: python black
         language_version: python3.11
         files: ^python/
   - repo: https://github.com/pycqa/flake8
     rev: 6.0.0
     hooks:
       - id: flake8
+        name: python flake8
         files: ^python/
         args: [--config, python/setup.cfg]
   - repo: https://github.com/pycqa/isort
     rev: 5.12.0
     hooks:
       - id: isort
+        name: python isort
         files: ^python/
   - repo: https://github.com/asottile/pyupgrade
     rev: v3.3.1
     hooks:
       - id: pyupgrade
+        name: python pyupgrade
         files: ^python/
         args: [--py36-plus]
   - repo: local
     hooks:
       - id: rust-fmt
-        name: Rust linting
+        name: rust format
         description: Run cargo fmt on files included in the commit. rustfmt should be installed before-hand.
-        entry: bash -c 'cd rust && cargo fmt --all --'
+        entry: bash -c 'cd rust && cargo fmt'
         pass_filenames: true
         types: [file, rust]
         language: system
         files: ^rust/
       - id: rust-clippy
-        name: Rust clippy
+        name: rust lint
         description: Run cargo clippy on files included in the commit. clippy should be installed before-hand.
-        entry: bash -c 'cd rust && cargo clippy --all-targets --all-features --'
+        entry: bash -c 'cd rust && cargo clippy'
         pass_filenames: false
         types: [file, rust]
         language: system

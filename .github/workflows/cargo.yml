@@ -1,0 +1,33 @@
+name: Rust
+
+# Run either when pushing directly to main/master or in a PR targeting main/master
+on:
+  push:
+    branches:
+      - master
+      - main
+    paths:
+      - "**.rs"
+  pull_request:
+    branches:
+      - master
+      - main
+    paths:
+      - "**.rs"
+
+# https://github.com/actions-rs/cargo
+jobs:
+  cargo:
+    name: cargo
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - name: fmt
+        working-directory: rust
+        # workaround for color output
+        env:
+          TERM: xterm-256color
+        run: cargo fmt --check --verbose
