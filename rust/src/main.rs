@@ -68,15 +68,15 @@ enum Commands {
         #[arg(
             short,
             long,
-            help = "point to a file that will be stored, - for stdin",
+            help = "Point to a file that will be stored, - for stdin",
             value_name = "filename",
             conflicts_with = "value"
         )]
         file: Option<String>,
     },
-    /// delete an existing key from the store
+    /// Delete an existing key from the store
     Delete { key: String },
-    /// check if key exists
+    /// Check if a key exists
     Exists { key: String },
     /// Describe CloudFormation stack params for current configuration.
     /// This value is useful for Lambdas as you can load the CfParams from env rather than from CloudFormation.
