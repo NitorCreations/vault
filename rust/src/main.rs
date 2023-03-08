@@ -74,6 +74,8 @@ enum Commands {
         )]
         file: Option<String>,
     },
+    /// delete an existing key from the store
+    Delete { key: String },
     /// check if key exists
     Exists { key: String },
     /// Describe CloudFormation stack params for current configuration.
@@ -114,6 +116,7 @@ async fn main() -> Result<()> {
         }) => store(&client, key, value, file, overwrite).await,
         Some(Commands::Exists { key }) => exists(&client, key).await,
         Some(Commands::DescribeStack {}) => Ok(println!("{:#?}", client.stack_info())),
+        Some(Commands::Delete { key }) => delete(&client, key).await,
         None => Ok(()),
     }
 }
@@ -179,7 +182,15 @@ async fn store(
         .await
         .with_context(|| format!("Error saving key {}", key))
 }
-
+async fn delete(vault: &Vault, key: &str) -> Result<()> {
+    if key.trim().is_empty() {
+        anyhow::bail!("Empty key '{}'", key)
+    }
+    vault
+        .delete(key)
+        .await
+        .with_context(|| format!("Error deleting key '{}'.", key))
+}
 async fn lookup(vault: &Vault, key: &str) -> Result<()> {
     if key.trim().is_empty() {
         anyhow::bail!("Empty key '{}'", key)

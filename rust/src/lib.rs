@@ -255,7 +255,32 @@ impl Vault {
 
         Ok(())
     }
+    pub async fn delete(&self, name: &str) -> Result<(), VaultError> {
+        if !self.exists(name).await? {
+            return Err(VaultError::S3DeleteObjectKeyMissingError);
+        }
+        self.s3
+            .delete_object()
+            .bucket(&self.cf_params.bucket_name)
+            .key(format!("{name}.aesgcm.encrypted"))
+            .send()
+            .await?;
 
+        self.s3
+            .delete_object()
+            .bucket(&self.cf_params.bucket_name)
+            .key(format!("{name}.key"))
+            .send()
+            .await?;
+
+        self.s3
+            .delete_object()
+            .bucket(&self.cf_params.bucket_name)
+            .key(format!("{name}.meta"))
+            .send()
+            .await?;
+        Ok(())
+    }
     pub async fn lookup(&self, name: &str) -> Result<String, VaultError> {
         let key = name;
         let data_key = self.get_s3_obj_as_vec(format!("{key}.key"));
