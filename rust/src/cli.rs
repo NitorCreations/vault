@@ -75,7 +75,7 @@ pub enum Command {
     /// Check if a key exists
     Exists { key: String },
     /// Describe CloudFormation stack params for current configuration.
-    /// This value is useful for Lambdas as you can load the CfParams from env rather than from CloudFormation.
+    /// This value is useful for Lambdas as you can load the CloudFormation parameters from env.
     DescribeStack {},
 }
 
