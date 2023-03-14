@@ -86,10 +86,15 @@ pub enum Command {
     },
 }
 
+/// Parse command line arguments.
+///
+/// See Clap `Derive` documentation for details:
+/// https://docs.rs/clap/latest/clap/_derive/index.html
 pub async fn parse_args() -> Args {
     Args::parse()
 }
 
+/// Store key-value pair
 pub async fn store(
     vault: &Vault,
     key: &Option<String>,
