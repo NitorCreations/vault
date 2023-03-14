@@ -13,8 +13,10 @@ use rand::Rng;
 use serde::{Deserialize, Serialize};
 
 pub mod errors;
+
 #[derive(Debug)]
 pub struct Vault {
+    /// AWS region to use with Vault. Will fallback to default provider if nothing is specified.
     region: Region,
     cf_params: CfParams,
     s3: s3Client,
