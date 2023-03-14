@@ -9,7 +9,9 @@ use nitor_vault::Vault;
     author,
     version,
     about,
-    long_about = "Nitor Vault, see https://github.com/nitorcreations/vault for usage examples"
+    long_about = "Nitor Vault, see https://github.com/nitorcreations/vault for usage examples",
+    subcommand_required = true,
+    arg_required_else_help = true
 )] // Reads info from `Cargo.toml`
 pub struct Args {
     /// List all available secrets
@@ -54,8 +56,8 @@ pub enum Command {
     /// Delete an existing key from the store
     Delete { key: String },
 
-    /// Describe CloudFormation stack params for current configuration.
-    /// This value is useful for Lambdas as you can load the CloudFormation parameters from env.
+    /// Describe CloudFormation stack parameters for current configuration.
+    // This value is useful for Lambdas as you can load the CloudFormation parameters from env.
     DescribeStack {},
 
     /// Check if a key exists
