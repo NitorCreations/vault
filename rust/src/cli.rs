@@ -51,10 +51,22 @@ pub struct Args {
 
 #[derive(Subcommand)]
 pub enum Command {
+    /// Delete an existing key from the store
+    Delete { key: String },
+
+    /// Describe CloudFormation stack params for current configuration.
+    /// This value is useful for Lambdas as you can load the CloudFormation parameters from env.
+    DescribeStack {},
+
+    /// Check if a key exists
+    Exists { key: String },
+
     /// List available secrets
     List {},
+
     /// Print secret value for given key
     Load { key: String },
+
     /// Store new key-value pair
     Store {
         key: Option<String>,
@@ -70,13 +82,6 @@ pub enum Command {
         )]
         file: Option<String>,
     },
-    /// Delete an existing key from the store
-    Delete { key: String },
-    /// Check if a key exists
-    Exists { key: String },
-    /// Describe CloudFormation stack params for current configuration.
-    /// This value is useful for Lambdas as you can load the CloudFormation parameters from env.
-    DescribeStack {},
 }
 
 pub async fn parse_args() -> Args {
