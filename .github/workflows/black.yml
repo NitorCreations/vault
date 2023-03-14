@@ -32,4 +32,5 @@ jobs:
       - name: Black
         uses: psf/black@stable
         with:
-          options: "--check --verbose --diff --color"
+          options: "--check --verbose --diff --color --config python/pyproject.toml"
+          src: "python/"
