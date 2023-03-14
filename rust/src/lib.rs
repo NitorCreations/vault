@@ -30,6 +30,19 @@ pub struct CloudFormationParams {
     // deployed_version: Option<String>,
 }
 
+#[derive(Serialize, Deserialize)]
+struct Meta {
+    alg: String,
+    nonce: String,
+}
+
+#[derive(Debug)]
+struct EncryptObject {
+    data_key: Vec<u8>,
+    aes_gcm_ciphertext: Vec<u8>,
+    meta: String,
+}
+
 impl CloudFormationParams {
     pub fn from(bucket_name: &str, key_arn: Option<&str>) -> CloudFormationParams {
         CloudFormationParams {
@@ -37,18 +50,6 @@ impl CloudFormationParams {
             key_arn: key_arn.map(|x| x.to_owned()),
         }
     }
-}
-
-#[derive(Serialize, Deserialize)]
-struct Meta {
-    alg: String,
-    nonce: String,
-}
-
-fn get_region_provider(region_opt: Option<&str>) -> RegionProviderChain {
-    RegionProviderChain::first_try(region_opt.map(|r| Region::new(r.to_owned())))
-        .or_default_provider()
-        .or_else("eu-west-1")
 }
 
 impl Vault {
@@ -216,7 +217,7 @@ impl Vault {
             .await?)
     }
 
-    // somewhat bad implementation, can fail for other reasons as well?
+    // TODO: somewhat bad implementation, can fail for other reasons as well?
     pub async fn exists(&self, name: &str) -> Result<bool, VaultError> {
         if let Err(e) = self
             .s3
@@ -259,6 +260,7 @@ impl Vault {
 
         Ok(())
     }
+
     pub async fn delete(&self, name: &str) -> Result<(), VaultError> {
         if !self.exists(name).await? {
             return Err(VaultError::S3DeleteObjectKeyMissingError);
@@ -309,18 +311,6 @@ impl Vault {
     }
 }
 
-struct EncryptObject {
-    data_key: Vec<u8>,
-    aes_gcm_ciphertext: Vec<u8>,
-    meta: String,
-}
-
-fn parse_output_value_from_key(key: &str, out: &[Output]) -> Option<String> {
-    out.iter()
-        .find(|output| output.output_key() == Some(key))
-        .map(|output| output.output_value().unwrap_or_default().to_owned())
-}
-
 async fn get_cloudformation_params(
     config: &SdkConfig,
     stack: &str,
@@ -342,4 +332,16 @@ async fn get_cloudformation_params(
         key_arn: parse_output_value_from_key("kmsKeyArn", &stack_output),
         // deployed_version: parse_output_value_from_key("vaultStackVersion", &stack_output),
     })
+}
+
+fn get_region_provider(region_opt: Option<&str>) -> RegionProviderChain {
+    RegionProviderChain::first_try(region_opt.map(|r| Region::new(r.to_owned())))
+        .or_default_provider()
+        .or_else("eu-west-1")
+}
+
+fn parse_output_value_from_key(key: &str, out: &[Output]) -> Option<String> {
+    out.iter()
+        .find(|output| output.output_key() == Some(key))
+        .map(|output| output.output_value().unwrap_or_default().to_owned())
 }
