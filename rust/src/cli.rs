@@ -25,7 +25,7 @@ pub struct Args {
 
     /// Delete key
     #[arg(short, long, help = "Delete key", value_name = "KEY")]
-    pub delete: String,
+    pub delete: Option<String>,
 
     /// Print debug information
     #[arg(long, help = "Print information")]
