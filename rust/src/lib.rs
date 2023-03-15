@@ -11,30 +11,24 @@ use base64::{engine::general_purpose, Engine as _};
 use errors::VaultError;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
+use std::fmt;
 
 pub mod errors;
+
 #[derive(Debug)]
 pub struct Vault {
+    /// AWS region to use with Vault. Will fallback to default provider if nothing is specified.
     region: Region,
-    cf_params: CfParams,
+    cloudformation_params: CloudFormationParams,
     s3: s3Client,
     kms: kmsClient,
 }
 
 #[derive(Debug, Clone)]
-pub struct CfParams {
+pub struct CloudFormationParams {
     bucket_name: String,
     key_arn: Option<String>,
     // deployed_version: Option<String>,
-}
-
-impl CfParams {
-    pub fn from(bucket_name: &str, key_arn: Option<&str>) -> CfParams {
-        CfParams {
-            bucket_name: bucket_name.to_owned(),
-            key_arn: key_arn.map(|x| x.to_owned()),
-        }
-    }
 }
 
 #[derive(Serialize, Deserialize)]
@@ -43,10 +37,34 @@ struct Meta {
     nonce: String,
 }
 
-fn get_region_provider(region_opt: Option<&str>) -> RegionProviderChain {
-    RegionProviderChain::first_try(region_opt.map(|r| Region::new(r.to_owned())))
-        .or_default_provider()
-        .or_else("eu-west-1")
+#[derive(Debug)]
+struct EncryptObject {
+    data_key: Vec<u8>,
+    aes_gcm_ciphertext: Vec<u8>,
+    meta: String,
+}
+
+impl CloudFormationParams {
+    pub fn from(bucket_name: &str, key_arn: Option<&str>) -> CloudFormationParams {
+        CloudFormationParams {
+            bucket_name: bucket_name.to_owned(),
+            key_arn: key_arn.map(|x| x.to_owned()),
+        }
+    }
+}
+
+impl fmt::Display for CloudFormationParams {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "bucket: {}\nkey: {}",
+            self.bucket_name,
+            match &self.key_arn {
+                None => "None".to_string(),
+                Some(k) => k.to_string(),
+            }
+        )
+    }
 }
 
 impl Vault {
@@ -58,17 +76,18 @@ impl Vault {
             .region(get_region_provider(region_opt))
             .load()
             .await;
-        let cf_params = get_cf_params(&config, vault_stack.unwrap_or("vault")).await?;
+        let cloudformation_params =
+            get_cloudformation_params(&config, vault_stack.unwrap_or("vault")).await?;
         Ok(Vault {
             region: config.region().unwrap().to_owned(),
-            cf_params,
+            cloudformation_params,
             s3: s3Client::new(&config),
             kms: kmsClient::new(&config),
         })
     }
 
     pub async fn from_params(
-        cf_params: CfParams,
+        cloudformation_params: CloudFormationParams,
         region_opt: Option<&str>,
     ) -> Result<Vault, VaultError> {
         let config = aws_config::from_env()
@@ -77,24 +96,26 @@ impl Vault {
             .await;
         Ok(Vault {
             region: config.region().ok_or(VaultError::NoRegionError)?.to_owned(),
-            cf_params,
+            cloudformation_params,
             s3: s3Client::new(&config),
             kms: kmsClient::new(&config),
         })
     }
 
+    /// Print debug information: region, CloudFormation parameters and S3 client.
     pub fn test(&self) {
         println!(
             "region: {}\nvault_stack: {:#?}\ns3: {:#?}",
-            self.region, self.cf_params, self.s3
+            self.region, self.cloudformation_params, self.s3
         );
     }
 
+    /// Get all available secrets
     pub async fn all(&self) -> Result<Vec<String>, VaultError> {
         let output = self
             .s3
             .list_objects_v2()
-            .bucket(&self.cf_params.bucket_name)
+            .bucket(&self.cloudformation_params.bucket_name)
             .send()
             .await?;
         output
@@ -119,16 +140,18 @@ impl Vault {
             .ok_or(VaultError::S3NoContentsError)
     }
 
-    pub fn stack_info(&self) -> CfParams {
-        self.cf_params.to_owned()
+    /// Get CloudFormation stack information
+    pub fn stack_info(&self) -> CloudFormationParams {
+        self.cloudformation_params.to_owned()
     }
 
+    /// Encrypt data
     async fn encrypt(&self, data: &[u8]) -> Result<EncryptObject, VaultError> {
         let key_dict = self
             .kms
             .generate_data_key()
             .key_id(
-                self.cf_params
+                self.cloudformation_params
                     .key_arn
                     .to_owned()
                     .ok_or(VaultError::KeyARNMissingError)?,
@@ -172,10 +195,11 @@ impl Vault {
         })
     }
 
-    async fn get_s3_obj_as_vec(&self, key: String) -> Result<Vec<u8>, VaultError> {
+    /// Get S3 Object data for given key as a vec of bytes
+    async fn get_s3_object(&self, key: String) -> Result<Vec<u8>, VaultError> {
         self.s3
             .get_object()
-            .bucket(self.cf_params.bucket_name.to_owned())
+            .bucket(self.cloudformation_params.bucket_name.to_owned())
             .key(&key)
             .send()
             .await?
@@ -186,6 +210,7 @@ impl Vault {
             .map(|bytes| bytes.to_vec())
     }
 
+    /// Get decrypted data
     async fn direct_decrypt(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, VaultError> {
         self.kms
             .decrypt()
@@ -197,7 +222,8 @@ impl Vault {
             .ok_or(VaultError::KMSDataKeyPlainTextMissingError)
     }
 
-    async fn put_s3_obj(
+    /// Send PUT request with the given byte data
+    async fn put_s3_object(
         &self,
         body: aws_sdk_s3::types::ByteStream,
         key: &str,
@@ -205,7 +231,7 @@ impl Vault {
         Ok(self
             .s3
             .put_object()
-            .bucket(&self.cf_params.bucket_name)
+            .bucket(&self.cloudformation_params.bucket_name)
             .key(key)
             .acl(aws_sdk_s3::model::ObjectCannedAcl::Private)
             .body(body)
@@ -213,12 +239,13 @@ impl Vault {
             .await?)
     }
 
-    // somewhat bad implementation, can fail for other reasons as well?
+    /// Check if key already exists in bucket
+    // TODO: somewhat bad implementation, can fail for other reasons as well?
     pub async fn exists(&self, name: &str) -> Result<bool, VaultError> {
         if let Err(e) = self
             .s3
             .head_object()
-            .bucket(self.cf_params.bucket_name.to_owned())
+            .bucket(self.cloudformation_params.bucket_name.to_owned())
             .key(format!("{name}.key"))
             .send()
             .await
@@ -234,60 +261,48 @@ impl Vault {
         }
     }
 
+    /// Store encrypted data in S3
     pub async fn store(&self, name: &str, data: &[u8]) -> Result<(), VaultError> {
         let encrypted = self.encrypt(data).await?;
-        self.put_s3_obj(
+        self.put_s3_object(
             ByteStream::from(encrypted.aes_gcm_ciphertext),
-            &format!("{}.aesgcm.encrypted", name),
+            &format!("{name}.aesgcm.encrypted"),
         )
         .await?;
 
-        self.put_s3_obj(
-            ByteStream::from(encrypted.data_key),
-            &format!("{}.key", name),
-        )
-        .await?;
+        self.put_s3_object(ByteStream::from(encrypted.data_key), &format!("{name}.key"))
+            .await?;
 
-        self.put_s3_obj(
+        self.put_s3_object(
             ByteStream::from(encrypted.meta.as_bytes().to_owned()),
-            &format!("{}.meta", name),
+            &format!("{name}.meta"),
         )
         .await?;
 
         Ok(())
     }
+
+    /// Delete data in S3 for given key
     pub async fn delete(&self, name: &str) -> Result<(), VaultError> {
         if !self.exists(name).await? {
             return Err(VaultError::S3DeleteObjectKeyMissingError);
         }
-        self.s3
-            .delete_object()
-            .bucket(&self.cf_params.bucket_name)
-            .key(format!("{name}.aesgcm.encrypted"))
-            .send()
-            .await?;
-
-        self.s3
-            .delete_object()
-            .bucket(&self.cf_params.bucket_name)
-            .key(format!("{name}.key"))
-            .send()
-            .await?;
-
-        self.s3
-            .delete_object()
-            .bucket(&self.cf_params.bucket_name)
-            .key(format!("{name}.meta"))
-            .send()
-            .await?;
+        for key in get_s3_data_keys(name) {
+            self.s3
+                .delete_object()
+                .bucket(&self.cloudformation_params.bucket_name)
+                .key(key)
+                .send()
+                .await?;
+        }
         Ok(())
     }
 
     pub async fn lookup(&self, name: &str) -> Result<String, VaultError> {
         let key = name;
-        let data_key = self.get_s3_obj_as_vec(format!("{key}.key"));
-        let ciphertext = self.get_s3_obj_as_vec(format!("{key}.aesgcm.encrypted"));
-        let meta_add = self.get_s3_obj_as_vec(format!("{key}.meta")).await?;
+        let data_key = self.get_s3_object(format!("{key}.key"));
+        let ciphertext = self.get_s3_object(format!("{key}.aesgcm.encrypted"));
+        let meta_add = self.get_s3_object(format!("{key}.meta")).await?;
         let meta: Meta = serde_json::from_slice(&meta_add)?;
         let cipher: AesGcm<Aes256, typenum::U12> =
             AesGcm::new_from_slice(self.direct_decrypt(&data_key.await?).await?.as_slice())?;
@@ -306,19 +321,10 @@ impl Vault {
     }
 }
 
-struct EncryptObject {
-    data_key: Vec<u8>,
-    aes_gcm_ciphertext: Vec<u8>,
-    meta: String,
-}
-
-fn parse_output_value_from_key(key: &str, out: &[Output]) -> Option<String> {
-    out.iter()
-        .find(|output| output.output_key() == Some(key))
-        .map(|output| output.output_value().unwrap_or_default().to_owned())
-}
-
-async fn get_cf_params(config: &SdkConfig, stack: &str) -> Result<CfParams, VaultError> {
+async fn get_cloudformation_params(
+    config: &SdkConfig,
+    stack: &str,
+) -> Result<CloudFormationParams, VaultError> {
     let stack_output = cfClient::new(config)
         .describe_stacks()
         .stack_name(stack)
@@ -330,10 +336,31 @@ async fn get_cf_params(config: &SdkConfig, stack: &str) -> Result<CfParams, Vaul
         .ok_or(VaultError::StackOutputsMissingError)?
         .to_owned();
 
-    Ok(CfParams {
+    Ok(CloudFormationParams {
         bucket_name: parse_output_value_from_key("vaultBucketName", &stack_output)
             .ok_or(VaultError::BucketNameMissingError)?,
         key_arn: parse_output_value_from_key("kmsKeyArn", &stack_output),
         // deployed_version: parse_output_value_from_key("vaultStackVersion", &stack_output),
     })
+}
+
+fn get_region_provider(region_opt: Option<&str>) -> RegionProviderChain {
+    RegionProviderChain::first_try(region_opt.map(|r| Region::new(r.to_owned())))
+        .or_default_provider()
+        .or_else("eu-west-1")
+}
+
+fn parse_output_value_from_key(key: &str, out: &[Output]) -> Option<String> {
+    out.iter()
+        .find(|output| output.output_key() == Some(key))
+        .map(|output| output.output_value().unwrap_or_default().to_owned())
+}
+
+/// Helper function to get all three key names for S3 data
+fn get_s3_data_keys(name: &str) -> [String; 3] {
+    [
+        format!("{name}.aesgcm.encrypted"),
+        format!("{name}.key"),
+        format!("{name}.meta"),
+    ]
 }

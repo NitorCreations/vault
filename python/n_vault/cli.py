@@ -39,8 +39,16 @@ def main():
         nargs="?",
         default="",
     )
-    action.add_argument("-l", "--lookup", help="Name of element to lookup")
-    action.add_argument("-c", "--recrypt", help="Recrypt entry with AESGCM for added security")
+    action.add_argument(
+        "-l",
+        "--lookup",
+        help="Name of element to lookup",
+    )
+    action.add_argument(
+        "-c",
+        "--recrypt",
+        help="Recrypt entry with AESGCM for added security",
+    )
     action.add_argument(
         "-i",
         "--init",
@@ -55,10 +63,27 @@ def main():
         action="store_true",
         help="Updates the CloudFormation stack which declares all resources needed by the vault.",
     )
-    action.add_argument("-d", "--delete", help="Name of element to delete")
-    action.add_argument("-a", "--all", action="store_true", help="List available secrets")
-    action.add_argument("-e", "--encrypt", help="Directly encrypt given value")
-    action.add_argument("-y", "--decrypt", help="Directly decrypt given value")
+    action.add_argument(
+        "-d",
+        "--delete",
+        help="Name of element to delete",
+    )
+    action.add_argument(
+        "-a",
+        "--all",
+        action="store_true",
+        help="List available secrets",
+    )
+    action.add_argument(
+        "-e",
+        "--encrypt",
+        help="Directly encrypt given value",
+    )
+    action.add_argument(
+        "-y",
+        "--decrypt",
+        help="Directly decrypt given value",
+    )
     parser.add_argument(
         "-w",
         "--overwrite",
