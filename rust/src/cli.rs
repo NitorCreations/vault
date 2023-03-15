@@ -152,7 +152,7 @@ pub async fn store(
     vault
         .store(key, data.as_bytes())
         .await
-        .with_context(|| format!("Error saving key {key}"))
+        .with_context(|| format!("Error saving key '{key}'"))
 }
 
 pub async fn delete(vault: &Vault, key: &str) -> Result<()> {
@@ -162,7 +162,7 @@ pub async fn delete(vault: &Vault, key: &str) -> Result<()> {
     vault
         .delete(key)
         .await
-        .with_context(|| format!("Error deleting key '{key}'."))
+        .with_context(|| format!("Error deleting key '{key}'"))
 }
 
 pub async fn lookup(vault: &Vault, key: &str) -> Result<()> {
