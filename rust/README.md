@@ -1,6 +1,6 @@
 # nitor-vault
 
-CLI and library for encrypting keys and values using client-side encryption with AWS KMS keys.
+CLI and library for encrypting keys and values using client-side encryption with [AWS KMS](https://aws.amazon.com/kms/) keys.
 
 ## Build
 
@@ -32,7 +32,8 @@ so from the repo root you would do:
 cargo install --path rust/
 ```
 
-Cargo will put the binary under `$HOME/.cargo/bin` by default, which you should add to PATH if you don't have it there,
+Cargo will put the binary under `$HOME/.cargo/bin` by default,
+which you should add to PATH if you don't have it there,
 so the binaries installed through Cargo will be found.
 
 ## Format code
@@ -43,7 +44,7 @@ Using [rustfmt](https://github.com/rust-lang/rustfmt)
 cargo fmt
 ```
 
-## Lint
+## Lint code
 
 Using [Clippy](https://github.com/rust-lang/rust-clippy)
 

@@ -67,16 +67,16 @@ git push origin "$NEW_VERSION"
 rm -rf dist
 
 if [ -n "$(command -v python3)" ]; then
-    PYTHON=$(which python3)
+  PYTHON=$(which python3)
 else
-    PYTHON=$(which python)
+  PYTHON=$(which python)
 fi
 
 if [ ! -e "$PYTHON" ]; then
-    echo "Python executable not found: $PYTHON"
-    exit 1
+  echo "Python executable not found: $PYTHON"
+  exit 1
 else
-    echo "Using $PYTHON $($PYTHON --version)"
+  echo "Using $PYTHON $($PYTHON --version)"
 fi
 
 $PYTHON setup.py sdist bdist_wheel
