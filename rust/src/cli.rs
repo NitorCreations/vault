@@ -142,7 +142,7 @@ pub async fn store(
         && vault
             .exists(key)
             .await
-            .with_context(|| format!("Error checking if key {key} exists"))?
+            .with_context(|| format!("Error checking if key '{key}' exists"))?
     {
         anyhow::bail!(
             "Error saving key, it already exists and you did not provide \x1b[33m-w\x1b[0m flag for overwriting"
@@ -152,27 +152,27 @@ pub async fn store(
     vault
         .store(key, data.as_bytes())
         .await
-        .with_context(|| format!("Error saving key {}", key))
+        .with_context(|| format!("Error saving key {key}"))
 }
 
 pub async fn delete(vault: &Vault, key: &str) -> Result<()> {
     if key.trim().is_empty() {
-        anyhow::bail!("Empty key '{}'", key)
+        anyhow::bail!("Empty key '{key}'")
     }
     vault
         .delete(key)
         .await
-        .with_context(|| format!("Error deleting key '{}'.", key))
+        .with_context(|| format!("Error deleting key '{key}'."))
 }
 
 pub async fn lookup(vault: &Vault, key: &str) -> Result<()> {
     if key.trim().is_empty() {
-        anyhow::bail!("Empty key '{}'", key)
+        anyhow::bail!("Empty key '{key}'")
     }
     vault
         .lookup(key)
         .await
-        .with_context(|| format!("Error looking up key '{}'.", key))
+        .with_context(|| format!("Error looking up key '{key}'"))
         .map(|res| print!("{res}"))
 }
 
@@ -186,12 +186,12 @@ pub async fn list_all(vault: &Vault) -> Result<()> {
 
 pub async fn exists(vault: &Vault, key: &str) -> Result<()> {
     if key.trim().is_empty() {
-        anyhow::bail!("Empty key '{}'", key)
+        anyhow::bail!("Empty key '{key}'")
     }
     vault
         .exists(key)
         .await
-        .with_context(|| format!("Error checking if key {key} exists"))
+        .with_context(|| format!("Error checking if key '{key}' exists"))
         .map(|result| match result {
             true => println!("key {key} exists"),
             false => println!("key {key} doesn't exist"),
