@@ -17,7 +17,7 @@ async fn main() -> Result<()> {
     if args.all {
         return cli::list_all(&client).await;
     } else if args.describe {
-        println!("{:#?}", client.stack_info());
+        println!("{}", client.stack_info());
         return Ok(());
     } else if args.info {
         client.test();
@@ -31,7 +31,7 @@ async fn main() -> Result<()> {
     // Handle subcommands
     match &args.command {
         Some(Command::Delete { key }) => cli::delete(&client, key).await,
-        Some(Command::Describe {}) => Ok(println!("{:#?}", client.stack_info())),
+        Some(Command::Describe {}) => Ok(println!("{}", client.stack_info())),
         Some(Command::Exists { key }) => cli::exists(&client, key).await,
         Some(Command::List {}) => cli::list_all(&client).await,
         Some(Command::Load { key }) => cli::lookup(&client, key).await,

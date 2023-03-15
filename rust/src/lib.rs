@@ -11,6 +11,7 @@ use base64::{engine::general_purpose, Engine as _};
 use errors::VaultError;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
+use std::fmt;
 
 pub mod errors;
 
@@ -49,6 +50,20 @@ impl CloudFormationParams {
             bucket_name: bucket_name.to_owned(),
             key_arn: key_arn.map(|x| x.to_owned()),
         }
+    }
+}
+
+impl fmt::Display for CloudFormationParams {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "bucket: {}\nkey: {}",
+            self.bucket_name,
+            match &self.key_arn {
+                None => "None".to_string(),
+                Some(k) => k.to_string(),
+            }
+        )
     }
 }
 
