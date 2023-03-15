@@ -25,7 +25,7 @@ depending on which build profile is used.
 ## Install
 
 You can install a release binary locally using [cargo install](https://doc.rust-lang.org/cargo/commands/cargo-install.html).
-Note that you need to specify the path to the directory containing [Cargo.toml](./Cargo.toml),
+Note that you need to specify the path to the directory containing [Cargo.toml](/Cargo.toml),
 so from the repo root you would do:
 
 ```shell

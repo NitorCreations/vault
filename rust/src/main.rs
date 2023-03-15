@@ -1,8 +1,7 @@
 use anyhow::{Context, Result};
 
-use nitor_vault::Vault;
-
 use cli::{Args, Command};
+use nitor_vault::Vault;
 
 mod cli;
 
@@ -14,9 +13,10 @@ async fn main() -> Result<()> {
         .await
         .with_context(|| "Failed to create vault.".to_string())?;
 
+    // Handle args with no parameters
     if args.all {
         return cli::list_all(&client).await;
-    } else if args.describestack {
+    } else if args.describe {
         println!("{:#?}", client.stack_info());
         return Ok(());
     } else if args.info {
@@ -28,9 +28,10 @@ async fn main() -> Result<()> {
         return cli::lookup(&client, key).await;
     }
 
+    // Handle subcommands
     match &args.command {
         Some(Command::Delete { key }) => cli::delete(&client, key).await,
-        Some(Command::DescribeStack {}) => Ok(println!("{:#?}", client.stack_info())),
+        Some(Command::Describe {}) => Ok(println!("{:#?}", client.stack_info())),
         Some(Command::Exists { key }) => cli::exists(&client, key).await,
         Some(Command::List {}) => cli::list_all(&client).await,
         Some(Command::Load { key }) => cli::lookup(&client, key).await,

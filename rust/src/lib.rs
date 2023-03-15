@@ -87,6 +87,7 @@ impl Vault {
         })
     }
 
+    /// Print debug information: region, CloudFormation parameters and S3 client.
     pub fn test(&self) {
         println!(
             "region: {}\nvault_stack: {:#?}\ns3: {:#?}",
@@ -94,6 +95,7 @@ impl Vault {
         );
     }
 
+    /// Get all available secrets
     pub async fn all(&self) -> Result<Vec<String>, VaultError> {
         let output = self
             .s3
@@ -123,10 +125,12 @@ impl Vault {
             .ok_or(VaultError::S3NoContentsError)
     }
 
+    /// Get CloudFormation stack information
     pub fn stack_info(&self) -> CloudFormationParams {
         self.cloudformation_params.to_owned()
     }
 
+    /// Encrypt data
     async fn encrypt(&self, data: &[u8]) -> Result<EncryptObject, VaultError> {
         let key_dict = self
             .kms
@@ -176,7 +180,8 @@ impl Vault {
         })
     }
 
-    async fn get_s3_obj_as_vec(&self, key: String) -> Result<Vec<u8>, VaultError> {
+    /// Get S3 Object data for given key as a vec of bytes
+    async fn get_s3_object(&self, key: String) -> Result<Vec<u8>, VaultError> {
         self.s3
             .get_object()
             .bucket(self.cloudformation_params.bucket_name.to_owned())
@@ -190,6 +195,7 @@ impl Vault {
             .map(|bytes| bytes.to_vec())
     }
 
+    /// Get decrypted data
     async fn direct_decrypt(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, VaultError> {
         self.kms
             .decrypt()
@@ -201,7 +207,8 @@ impl Vault {
             .ok_or(VaultError::KMSDataKeyPlainTextMissingError)
     }
 
-    async fn put_s3_obj(
+    /// Send PUT request with the given byte data
+    async fn put_s3_object(
         &self,
         body: aws_sdk_s3::types::ByteStream,
         key: &str,
@@ -217,6 +224,7 @@ impl Vault {
             .await?)
     }
 
+    /// Check if key already exists in bucket
     // TODO: somewhat bad implementation, can fail for other reasons as well?
     pub async fn exists(&self, name: &str) -> Result<bool, VaultError> {
         if let Err(e) = self
@@ -238,61 +246,48 @@ impl Vault {
         }
     }
 
+    /// Store encrypted data in S3
     pub async fn store(&self, name: &str, data: &[u8]) -> Result<(), VaultError> {
         let encrypted = self.encrypt(data).await?;
-        self.put_s3_obj(
+        self.put_s3_object(
             ByteStream::from(encrypted.aes_gcm_ciphertext),
-            &format!("{}.aesgcm.encrypted", name),
+            &format!("{name}.aesgcm.encrypted"),
         )
         .await?;
 
-        self.put_s3_obj(
-            ByteStream::from(encrypted.data_key),
-            &format!("{}.key", name),
-        )
-        .await?;
+        self.put_s3_object(ByteStream::from(encrypted.data_key), &format!("{name}.key"))
+            .await?;
 
-        self.put_s3_obj(
+        self.put_s3_object(
             ByteStream::from(encrypted.meta.as_bytes().to_owned()),
-            &format!("{}.meta", name),
+            &format!("{name}.meta"),
         )
         .await?;
 
         Ok(())
     }
 
+    /// Delete data in S3 for given key
     pub async fn delete(&self, name: &str) -> Result<(), VaultError> {
         if !self.exists(name).await? {
             return Err(VaultError::S3DeleteObjectKeyMissingError);
         }
-        self.s3
-            .delete_object()
-            .bucket(&self.cloudformation_params.bucket_name)
-            .key(format!("{name}.aesgcm.encrypted"))
-            .send()
-            .await?;
-
-        self.s3
-            .delete_object()
-            .bucket(&self.cloudformation_params.bucket_name)
-            .key(format!("{name}.key"))
-            .send()
-            .await?;
-
-        self.s3
-            .delete_object()
-            .bucket(&self.cloudformation_params.bucket_name)
-            .key(format!("{name}.meta"))
-            .send()
-            .await?;
+        for key in get_s3_data_keys(name) {
+            self.s3
+                .delete_object()
+                .bucket(&self.cloudformation_params.bucket_name)
+                .key(key)
+                .send()
+                .await?;
+        }
         Ok(())
     }
 
     pub async fn lookup(&self, name: &str) -> Result<String, VaultError> {
         let key = name;
-        let data_key = self.get_s3_obj_as_vec(format!("{key}.key"));
-        let ciphertext = self.get_s3_obj_as_vec(format!("{key}.aesgcm.encrypted"));
-        let meta_add = self.get_s3_obj_as_vec(format!("{key}.meta")).await?;
+        let data_key = self.get_s3_object(format!("{key}.key"));
+        let ciphertext = self.get_s3_object(format!("{key}.aesgcm.encrypted"));
+        let meta_add = self.get_s3_object(format!("{key}.meta")).await?;
         let meta: Meta = serde_json::from_slice(&meta_add)?;
         let cipher: AesGcm<Aes256, typenum::U12> =
             AesGcm::new_from_slice(self.direct_decrypt(&data_key.await?).await?.as_slice())?;
@@ -344,4 +339,13 @@ fn parse_output_value_from_key(key: &str, out: &[Output]) -> Option<String> {
     out.iter()
         .find(|output| output.output_key() == Some(key))
         .map(|output| output.output_value().unwrap_or_default().to_owned())
+}
+
+/// Helper function to get all three key names for S3 data
+fn get_s3_data_keys(name: &str) -> [String; 3] {
+    [
+        format!("{name}.aesgcm.encrypted"),
+        format!("{name}.key"),
+        format!("{name}.meta"),
+    ]
 }

@@ -10,7 +10,6 @@ use nitor_vault::Vault;
     version,
     about,
     long_about = "Nitor Vault, see https://github.com/nitorcreations/vault for usage examples",
-    subcommand_required = true,
     arg_required_else_help = true
 )] // Reads info from `Cargo.toml`
 pub struct Args {
@@ -23,7 +22,7 @@ pub struct Args {
         long,
         help = "Describe CloudFormation stack parameters for current configuration"
     )]
-    pub describestack: bool,
+    pub describe: bool,
 
     /// Delete key
     #[arg(short, long, help = "Delete key", value_name = "KEY")]
@@ -58,7 +57,7 @@ pub enum Command {
 
     /// Describe CloudFormation stack parameters for current configuration.
     // This value is useful for Lambdas as you can load the CloudFormation parameters from env.
-    DescribeStack {},
+    Describe {},
 
     /// Check if a key exists
     Exists { key: String },
