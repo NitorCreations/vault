@@ -4,7 +4,7 @@ version = "0.2.0"
 edition = "2021"
 authors = ["Kalle Ahlström <kalle.ahlstrom@nitor.com", "Akseli Lukkarila <akseli.lukkarila@nitor.com>"]
 description = "Encrypted AWS key-value storage"
-license ="Apache-2.0"
+license = "Apache-2.0"
 repository = "https://github.com/nitorcreations/vault"
 keywords = ["secrets","s3"]
 
