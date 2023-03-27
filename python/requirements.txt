@@ -4,7 +4,7 @@
 #
 #    pip-compile setup.py
 #
-argcomplete==3.0.0
+argcomplete==3.0.5
     # via nitor-vault (setup.py)
 boto3==1.26.99
     # via threadlocal-aws
