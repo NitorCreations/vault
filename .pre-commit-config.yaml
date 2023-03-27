@@ -42,7 +42,7 @@ repos:
       - id: pyupgrade
         name: python pyupgrade
         files: ^python/
-        args: [--py36-plus]
+        args: [--py37-plus]
   - repo: local
     hooks:
       - id: rust-fmt

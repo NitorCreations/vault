@@ -10,7 +10,7 @@ The easiest installation method is the Python package from PyPI:
 pip install nitor-vault
 ```
 
-Javascript and java versions are available from npm and maven central respectively and installation will depend on your needs.
+Javascript and Java versions are available from npm and maven central respectively and installation will depend on your needs.
 
 ## Example usage
 
@@ -27,7 +27,7 @@ Decrypt a single value `vault -l my-key`
 
 ### Using encrypted CloudFormation stack parameters
 
-Encrypt a value like this: `$ vault -e 'My secret value'`
+Encrypt a value like this: `vault -e 'My secret value'`
 
 The command above will print the base64 encoded value encrypted with your vault KMS key.
 Use that value in a CF parameter.
