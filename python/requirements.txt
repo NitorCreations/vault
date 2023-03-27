@@ -6,7 +6,7 @@
 #
 argcomplete==3.0.0
     # via nitor-vault (setup.py)
-boto3==1.26.94
+boto3==1.26.99
     # via threadlocal-aws
 botocore==1.29.94
     # via
