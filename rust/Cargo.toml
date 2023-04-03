@@ -14,7 +14,7 @@ anyhow = "1.0.70"
 aws-config = "0.54.1"
 aws-sdk-cloudformation = "0.24.0"
 aws-sdk-kms = "0.24.0"
-aws-sdk-s3 = "0.24.0"
+aws-sdk-s3 = "0.25.0"
 aws-sdk-sts = "0.24.0"
 base64 = "0.21.0"
 clap = { version = "4.1.11", features = ["derive"] }
