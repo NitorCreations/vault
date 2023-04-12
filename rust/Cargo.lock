@@ -107,7 +107,7 @@ dependencies = [
  "aws-credential-types 0.54.1",
  "aws-http 0.54.1",
  "aws-sdk-sso",
- "aws-sdk-sts",
+ "aws-sdk-sts 0.24.0",
  "aws-smithy-async 0.54.4",
  "aws-smithy-client 0.54.4",
  "aws-smithy-http 0.54.4",
@@ -235,7 +235,7 @@ dependencies = [
  "aws-smithy-http 0.54.4",
  "aws-smithy-http-tower 0.54.4",
  "aws-smithy-json 0.54.4",
- "aws-smithy-query",
+ "aws-smithy-query 0.54.4",
  "aws-smithy-types 0.54.4",
  "aws-smithy-xml 0.54.4",
  "aws-types 0.54.1",
@@ -344,10 +344,36 @@ dependencies = [
  "aws-smithy-http 0.54.4",
  "aws-smithy-http-tower 0.54.4",
  "aws-smithy-json 0.54.4",
- "aws-smithy-query",
+ "aws-smithy-query 0.54.4",
  "aws-smithy-types 0.54.4",
  "aws-smithy-xml 0.54.4",
  "aws-types 0.54.1",
+ "bytes",
+ "http",
+ "regex",
+ "tower",
+ "tracing",
+]
+
+[[package]]
+name = "aws-sdk-sts"
+version = "0.25.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2493efc64aa1c6469a252c221c335ccdcebfcc556c81b1efaee051c6ddc3dd99"
+dependencies = [
+ "aws-credential-types 0.55.0",
+ "aws-endpoint 0.55.0",
+ "aws-http 0.55.0",
+ "aws-sig-auth 0.55.0",
+ "aws-smithy-async 0.55.0",
+ "aws-smithy-client 0.55.0",
+ "aws-smithy-http 0.55.0",
+ "aws-smithy-http-tower 0.55.0",
+ "aws-smithy-json 0.55.0",
+ "aws-smithy-query 0.55.0",
+ "aws-smithy-types 0.55.0",
+ "aws-smithy-xml 0.55.0",
+ "aws-types 0.55.0",
  "bytes",
  "http",
  "regex",
@@ -629,6 +655,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2f0445dafe9d2cd50b44339ae3c3ed46549aad8ac696c52ad660b3e7ae8682b"
 dependencies = [
  "aws-smithy-types 0.54.4",
+ "urlencoding",
+]
+
+[[package]]
+name = "aws-smithy-query"
+version = "0.55.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b55358401b657d192f70f093927f01d73cc4859e2907956b20c4043c76624006"
+dependencies = [
+ "aws-smithy-types 0.55.0",
  "urlencoding",
 ]
 
@@ -1332,7 +1368,7 @@ dependencies = [
  "aws-sdk-cloudformation",
  "aws-sdk-kms",
  "aws-sdk-s3",
- "aws-sdk-sts",
+ "aws-sdk-sts 0.25.1",
  "base64",
  "clap",
  "rand",
