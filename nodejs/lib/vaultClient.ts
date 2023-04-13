@@ -87,7 +87,7 @@ const writeObject = (
     Body: value,
     ACL: "private",
   });
-export default {
+export const vault = {
   lookup: async (name: string, options: Options) => {
     const { bucketName } = options;
 

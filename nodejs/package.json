@@ -1,6 +1,6 @@
 {
   "name": "@nitor/aws-vault",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "author": {
     "name": "Nitor Creations",
     "email": "",
@@ -11,6 +11,10 @@
     "Jouni Tenhunen <jouni.tenhunen@nitor.com>"
   ],
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "bin": {
     "vault": "dist/cli/vault.js"
   },

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import sade from "sade";
 import { loadOptions } from "../lib/loadOptions";
-import client from "../lib/vaultClient";
+import { vault as client } from "../lib/vaultClient";
 
 const DEFAULT_STACK_NAME = "vault";
 
@@ -49,7 +49,16 @@ prog
   )
   .action((name, value, options) => {
     loadOptions(options)
-      .then((options) => client.store(name, value, options))
+      .then(async (loadedOptions) => {
+        if (!options.overwrite) {
+          if (await client.exists(name, loadedOptions)) {
+            console.log(
+              "Error storing key, it already exists and you did not provide \x1b[33m-w\x1b[0m flag for overwriting"
+            );
+          }
+        }
+        client.store(name, value, loadedOptions);
+      })
       .catch(handleRejection);
   })
   .command("lookup <name>")
