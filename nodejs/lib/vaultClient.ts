@@ -88,7 +88,7 @@ const writeObject = (
     ACL: "private",
   });
 
-class VaultClient {
+export class VaultClient {
   private options: Options;
   constructor(options: Options) {
     this.options = options;
