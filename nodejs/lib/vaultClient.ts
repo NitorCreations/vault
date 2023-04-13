@@ -63,21 +63,20 @@ const createDecipher = async (
   meta: GetObjectCommandOutput | string,
   decryptedKey: crypto.CipherKey,
   authTag: NodeJS.ArrayBufferView
-) =>
-  meta === nometa || typeof meta === "string"
-    ? crypto.createDecipheriv(ALGORITHMS.crypto, decryptedKey, STATIC_IV)
-    : crypto
-        .createDecipheriv(
-          ALGORITHMS.authCrypto,
-          decryptedKey,
-          Buffer.from(
-            JSON.parse(await meta.Body!.transformToString()).nonce,
-            "base64"
-          )
-        )
-        .setAAD(await meta.Body!.transformToByteArray())
-        .setAuthTag(authTag);
-
+) => {
+  if (meta === nometa || typeof meta === "string") {
+    return crypto.createDecipheriv(ALGORITHMS.crypto, decryptedKey, STATIC_IV);
+  }
+  const metaIVs = await meta.Body?.transformToString();
+  return crypto
+    .createDecipheriv(
+      ALGORITHMS.authCrypto,
+      decryptedKey,
+      Buffer.from(JSON.parse(metaIVs!).nonce, "base64")
+    )
+    .setAAD(metaIVs as unknown as Uint8Array)
+    .setAuthTag(authTag);
+};
 const writeObject = (
   s3: S3,
   base: RequestObject,
@@ -95,17 +94,15 @@ export default {
     const s3 = new S3({});
 
     const kms = new KMS({});
-
     const [decryptedKeyRes, encryptedValRes, meta] = await Promise.all([
       s3
         .getObject(createKeyRequestObject(bucketName, name))
-        .then((encryptedKey) => {
+        .then(async (encryptedKey) => {
           if (!encryptedKey) {
             throw Error("");
           }
-
           return kms.decrypt({
-            CiphertextBlob: encryptedKey.Body as unknown as Uint8Array,
+            CiphertextBlob: await encryptedKey.Body?.transformToByteArray(),
           });
         }),
       s3
@@ -121,13 +118,19 @@ export default {
     if (!decryptedKey) {
       throw Error(`Error getting decryptedKey ${bucketName}/${name}`);
     }
-    const encryptedValueBody = await encryptedValRes.Body?.transformToString();
-    if (!encryptedValueBody || typeof encryptedValueBody !== "string") {
+    const encryptedValueBody =
+      await encryptedValRes.Body?.transformToByteArray();
+
+    if (!encryptedValueBody) {
       throw Error(`Error getting encryptedValue ${bucketName}/${name}`);
     }
-    const encryptedValue = encryptedValueBody?.slice(0, -16);
-    const authTag = new TextEncoder().encode(encryptedValueBody?.slice(-16));
-    const decipher = await createDecipher(meta, decryptedKey, authTag);
+    const encryptedValue = encryptedValueBody.slice(0, -16);
+    const authTag = encryptedValueBody.slice(-16);
+    const decipher = await createDecipher(
+      meta,
+      decryptedKey,
+      authTag as unknown as any
+    );
     const value = decipher.update(encryptedValue, undefined, ENCODING);
     try {
       decipher.final(ENCODING);
@@ -156,8 +159,7 @@ export default {
         nonce: nonce.toString("base64"),
       })
     );
-    if (typeof dataKey.Plaintext !== "string") {
-      console.log(typeof dataKey.Plaintext);
+    if (!dataKey.Plaintext) {
       throw Error("an Error occurred");
     }
     const cipher = crypto
