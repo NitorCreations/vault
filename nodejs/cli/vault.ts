@@ -1,9 +1,6 @@
 #!/usr/bin/env node
 import sade from "sade";
-import { loadOptions } from "../lib/loadOptions";
 import { vault } from "../lib/vaultClient";
-
-const DEFAULT_STACK_NAME = "vault";
 
 const handleRejection = (err: string) => {
   console.error(err);
@@ -14,8 +11,7 @@ const prog = sade("vault");
 
 prog.option(
   "--vaultstack",
-  "Optional CloudFormation stack to lookup key and bucket.",
-  DEFAULT_STACK_NAME
+  "Optional CloudFormation stack to lookup key and bucket."
 );
 prog.option(
   "-p, --prefix",

@@ -6,10 +6,13 @@ export interface OptionsInput {
   b: string | undefined;
   r: string | undefined;
 }
+
+const DEFAULT_STACK_NAME = "vault";
+
 export const loadOptions = async (options: OptionsInput) => {
   const describeStackOutput = await new CloudFormation({
     region: options.r,
-  }).describeStacks({ StackName: options.vaultstack });
+  }).describeStacks({ StackName: options.vaultstack || DEFAULT_STACK_NAME });
   const { describeStackOutput: describeStackOutput_1 } = await Promise.resolve({
     describeStackOutput,
   });
