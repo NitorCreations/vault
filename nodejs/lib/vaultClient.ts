@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { Options } from "./loadOptions";
+import { OptionsInput, Options, loadOptions } from "./loadOptions";
 import {
   GetObjectCommandOutput,
   PutObjectCommandInput,
@@ -87,9 +87,15 @@ const writeObject = (
     Body: value,
     ACL: "private",
   });
-export const vault = {
-  lookup: async (name: string, options: Options) => {
-    const { bucketName } = options;
+
+class VaultClient {
+  options: Options;
+  constructor(options: Options) {
+    this.options = options;
+  }
+
+  async lookup(name: string) {
+    const { bucketName } = this.options;
 
     const s3 = new S3({});
 
@@ -138,10 +144,10 @@ export const vault = {
       return Promise.reject(e);
     }
     return await Promise.resolve(value);
-  },
+  }
 
-  store: async (name: string, data: string, options: Options) => {
-    const { region, vaultKey, bucketName } = options;
+  async store(name: string, data: string) {
+    const { region, vaultKey, bucketName } = this.options;
     const kms = new KMS({
       region,
     });
@@ -197,10 +203,10 @@ export const vault = {
         keyAndValue.meta
       ),
     ]);
-  },
+  }
 
-  delete: (name: string, options: Options) => {
-    const { region, bucketName } = options;
+  async delete(name: string) {
+    const { region, bucketName } = this.options;
     const s3 = new S3({
       region,
     });
@@ -214,10 +220,10 @@ export const vault = {
         .deleteObject(createMetaRequestObject(bucketName, name))
         .catch((e) => e),
     ]);
-  },
+  }
 
-  exists: (name: string, options: Options) => {
-    const { region, bucketName } = options;
+  async exists(name: string) {
+    const { region, bucketName } = this.options;
     const s3 = new S3({
       region,
     });
@@ -227,10 +233,10 @@ export const vault = {
         () => Promise.resolve(true),
         () => Promise.resolve(false)
       );
-  },
+  }
 
-  all: async (options: Options) => {
-    const { region, bucketName } = options;
+  async all() {
+    const { region, bucketName } = this.options;
     const s3 = new S3({
       region,
     });
@@ -253,5 +259,8 @@ export const vault = {
         )
       ),
     ]);
-  },
-};
+  }
+}
+
+export const vault = async (config: OptionsInput) =>
+  new VaultClient(await loadOptions(config));

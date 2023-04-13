@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import sade from "sade";
 import { loadOptions } from "../lib/loadOptions";
-import { vault as client } from "../lib/vaultClient";
+import { vault } from "../lib/vaultClient";
 
 const DEFAULT_STACK_NAME = "vault";
 
@@ -47,48 +47,46 @@ prog
     "Overwrite the current value if it already exists",
     false
   )
-  .action((name, value, options) => {
-    loadOptions(options)
-      .then(async (loadedOptions) => {
+  .action(async (name, value, options) => {
+    vault(options)
+      .then(async (client) => {
         if (!options.overwrite) {
-          if (await client.exists(name, loadedOptions)) {
+          if (await client.exists(name)) {
             console.log(
               "Error storing key, it already exists and you did not provide \x1b[33m-w\x1b[0m flag for overwriting"
             );
           }
         }
-        client.store(name, value, loadedOptions);
+        client.store(name, value);
       })
       .catch(handleRejection);
   })
   .command("lookup <name>")
   .describe("Look up data from the vault")
-  .action((name, options) => {
-    loadOptions(options)
-      .then((options) => client.lookup(name, options))
-      .then(console.log)
-      .catch(handleRejection);
+  .action(async (name, options) => {
+    const client = await vault(options);
+    client.lookup(name).then(console.log).catch(handleRejection);
   })
   .command("delete <name>")
   .describe("Delete data from the vault")
   .action((name, options) => {
-    loadOptions(options)
-      .then((options) => client.delete(name, options))
+    vault(options)
+      .then((client) => client.delete(name))
       .catch(handleRejection);
   })
   .command("exists <name>")
   .describe("Check if the vault contains data")
   .action((name, options) => {
-    loadOptions(options)
-      .then((options) => client.exists(name, options))
+    vault(options)
+      .then((client) => client.exists(name))
       .then(console.log)
       .catch(handleRejection);
   })
   .command("all")
   .describe("List all keys the vault contains")
   .action((options) => {
-    loadOptions(options)
-      .then((options) => client.all(options))
+    vault(options)
+      .then((client) => client.all())
       .then((res) => console.log(res.join("\n")))
       .catch(handleRejection);
   });

@@ -1,6 +1,6 @@
 import { CloudFormation } from "@aws-sdk/client-cloudformation";
 
-interface OptionsInput {
+export interface OptionsInput {
   vaultstack: string | undefined;
   k: string | undefined;
   b: string | undefined;
