@@ -89,7 +89,7 @@ const writeObject = (
   });
 
 class VaultClient {
-  options: Options;
+  private options: Options;
   constructor(options: Options) {
     this.options = options;
   }
