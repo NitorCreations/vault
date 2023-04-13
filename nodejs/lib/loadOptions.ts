@@ -1,10 +1,10 @@
 import { CloudFormation } from "@aws-sdk/client-cloudformation";
 
 export interface OptionsInput {
-  vaultstack: string | undefined;
-  k: string | undefined;
-  b: string | undefined;
-  r: string | undefined;
+  vaultstack?: string;
+  k?: string;
+  b?: string;
+  r?: string;
 }
 
 const DEFAULT_STACK_NAME = "vault";
