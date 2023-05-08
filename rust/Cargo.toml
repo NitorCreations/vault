@@ -15,7 +15,7 @@ aws-config = "0.55.1"
 aws-sdk-cloudformation = "0.26.0"
 aws-sdk-kms = "0.26.0"
 aws-sdk-s3 = "0.26.0"
-aws-sdk-sts = "0.26.0"
+aws-sdk-sts = "0.27.0"
 base64 = "0.21.0"
 clap = { version = "4.2.5", features = ["derive"] }
 rand = "0.8.5"
