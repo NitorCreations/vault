@@ -4,9 +4,11 @@ use aes_gcm::{
     AesGcm, KeyInit, Nonce,
 };
 use aws_config::{meta::region::RegionProviderChain, SdkConfig};
-use aws_sdk_cloudformation::{model::Output, Client as cfClient};
-use aws_sdk_kms::{model::DataKeySpec, types::Blob, Client as kmsClient};
-use aws_sdk_s3::{types::ByteStream, Client as s3Client, Region};
+use aws_sdk_cloudformation::{types::Output, Client as cfClient};
+use aws_sdk_kms::primitives::Blob;
+use aws_sdk_kms::{types::DataKeySpec, Client as kmsClient};
+use aws_sdk_s3::operation::put_object::PutObjectOutput;
+use aws_sdk_s3::{config::Region, primitives::ByteStream, Client as s3Client};
 use base64::{engine::general_purpose, Engine as _};
 use errors::VaultError;
 use rand::Rng;
@@ -225,15 +227,15 @@ impl Vault {
     /// Send PUT request with the given byte data
     async fn put_s3_object(
         &self,
-        body: aws_sdk_s3::types::ByteStream,
+        body: ByteStream,
         key: &str,
-    ) -> Result<aws_sdk_s3::output::PutObjectOutput, VaultError> {
+    ) -> Result<PutObjectOutput, VaultError> {
         Ok(self
             .s3
             .put_object()
             .bucket(&self.cloudformation_params.bucket_name)
             .key(key)
-            .acl(aws_sdk_s3::model::ObjectCannedAcl::Private)
+            .acl(aws_sdk_s3::types::ObjectCannedAcl::Private)
             .body(body)
             .send()
             .await?)
