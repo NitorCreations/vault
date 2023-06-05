@@ -1,4 +1,5 @@
-#!/bin/bash -x
+#!/bin/bash
+set -exo pipefail
 
 # Copyright 2016-2023 Nitor Creations Oy
 #
@@ -14,25 +15,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Check platform
-case "$(uname -s)" in
-  "Darwin")
-    PLATFORM="mac"
-    ;;
-  "MINGW"*)
-    PLATFORM="windows"
-    ;;
-  *)
-    PLATFORM="linux"
-    ;;
-esac
-
-# BSD sed on MacOS works differently
-if [ "$PLATFORM" = mac ]; then
-  SED_COMMAND=(sed -i '')
-else
-  SED_COMMAND=(sed -i)
-fi
+# Import common functions
+DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+# shellcheck source=../common.sh
+source "$DIR/../common.sh"
 
 VERSION=$(grep '^VERSION' n_vault/__init__.py | cut -d\" -f 2)
 MAJOR=${VERSION//.*/}
@@ -66,18 +52,6 @@ git tag "$NEW_VERSION" -m "$MESSAGE"
 git push origin "$NEW_VERSION"
 rm -rf dist
 
-if [ -n "$(command -v python3)" ]; then
-  PYTHON=$(which python3)
-else
-  PYTHON=$(which python)
-fi
-
-if [ ! -e "$PYTHON" ]; then
-  echo "Python executable not found: $PYTHON"
-  exit 1
-else
-  echo "Using $PYTHON $($PYTHON --version)"
-fi
-
+check_and_set_python
 $PYTHON setup.py sdist bdist_wheel
 twine upload dist/*
