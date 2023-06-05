@@ -36,7 +36,7 @@ requests==2.31.0
     # via
     #   nitor-vault (setup.py)
     #   threadlocal-aws
-s3transfer==0.6.0
+s3transfer==0.6.1
     # via boto3
 six==1.16.0
     # via python-dateutil
