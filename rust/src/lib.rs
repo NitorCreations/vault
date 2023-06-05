@@ -1,14 +1,17 @@
-use aes_gcm::{
-    aead::{Aead, Payload},
-    aes::{cipher::typenum, Aes256},
-    AesGcm, KeyInit, Nonce,
-};
-use aws_config::{meta::region::RegionProviderChain, SdkConfig};
-use aws_sdk_cloudformation::{types::Output, Client as cfClient};
+use aes_gcm::aead::{Aead, Payload};
+use aes_gcm::aes::{cipher::typenum, Aes256};
+use aes_gcm::{AesGcm, KeyInit, Nonce};
+use aws_config::meta::region::RegionProviderChain;
+use aws_config::SdkConfig;
+use aws_sdk_cloudformation::types::Output;
+use aws_sdk_cloudformation::Client as CloudFormationClient;
 use aws_sdk_kms::primitives::Blob;
-use aws_sdk_kms::{types::DataKeySpec, Client as kmsClient};
+use aws_sdk_kms::types::DataKeySpec;
+use aws_sdk_kms::Client as kmsClient;
+use aws_sdk_s3::config::Region;
 use aws_sdk_s3::operation::put_object::PutObjectOutput;
-use aws_sdk_s3::{config::Region, primitives::ByteStream, Client as s3Client};
+use aws_sdk_s3::primitives::ByteStream;
+use aws_sdk_s3::Client as s3Client;
 use base64::{engine::general_purpose, Engine as _};
 use errors::VaultError;
 use rand::Rng;
@@ -327,7 +330,7 @@ async fn get_cloudformation_params(
     config: &SdkConfig,
     stack: &str,
 ) -> Result<CloudFormationParams, VaultError> {
-    let stack_output = cfClient::new(config)
+    let stack_output = CloudFormationClient::new(config)
         .describe_stacks()
         .stack_name(stack)
         .send()
