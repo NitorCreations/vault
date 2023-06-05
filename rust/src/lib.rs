@@ -1,5 +1,5 @@
 use aes_gcm::aead::{Aead, Payload};
-use aes_gcm::aes::{cipher::typenum, Aes256};
+use aes_gcm::aes::{cipher, Aes256};
 use aes_gcm::{AesGcm, KeyInit, Nonce};
 use aws_config::meta::region::RegionProviderChain;
 use aws_config::SdkConfig;
@@ -168,7 +168,7 @@ impl Vault {
         let plaintext = key_dict
             .plaintext()
             .ok_or(VaultError::KMSDataKeyPlainTextMissingError)?;
-        let aesgcm_cipher: AesGcm<Aes256, typenum::U12> =
+        let aesgcm_cipher: AesGcm<Aes256, cipher::typenum::U12> =
             AesGcm::new_from_slice(plaintext.as_ref())?;
         let mut nonce: [u8; 12] = [0; 12];
         let mut rng = rand::thread_rng();
@@ -309,7 +309,7 @@ impl Vault {
         let ciphertext = self.get_s3_object(format!("{key}.aesgcm.encrypted"));
         let meta_add = self.get_s3_object(format!("{key}.meta")).await?;
         let meta: Meta = serde_json::from_slice(&meta_add)?;
-        let cipher: AesGcm<Aes256, typenum::U12> =
+        let cipher: AesGcm<Aes256, cipher::typenum::U12> =
             AesGcm::new_from_slice(self.direct_decrypt(&data_key.await?).await?.as_slice())?;
         let nonce = general_purpose::STANDARD.decode(meta.nonce)?;
         let nonce = Nonce::from_slice(nonce.as_slice());
