@@ -8,7 +8,7 @@ argcomplete==3.0.8
     # via nitor-vault (setup.py)
 boto3==1.26.146
     # via threadlocal-aws
-botocore==1.29.118
+botocore==1.29.146
     # via
     #   boto3
     #   s3transfer
