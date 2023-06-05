@@ -1,12 +1,19 @@
+use aws_sdk_cloudformation::error::SdkError;
+use aws_sdk_cloudformation::operation::describe_stacks::DescribeStacksError;
+use aws_sdk_kms::operation::decrypt::DecryptError;
+use aws_sdk_kms::operation::generate_data_key::GenerateDataKeyError;
+use aws_sdk_s3::operation::delete_object::DeleteObjectError;
+use aws_sdk_s3::operation::get_object::GetObjectError;
+use aws_sdk_s3::operation::head_object::HeadObjectError;
+use aws_sdk_s3::operation::list_objects_v2::ListObjectsV2Error;
+use aws_sdk_s3::operation::put_object::PutObjectError;
 use std::string::FromUtf8Error;
-
-use aws_sdk_cloudformation::types::SdkError;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum VaultError {
     #[error("Describe CloudFormation Stack failed")]
-    DescribeStackError(#[from] SdkError<aws_sdk_cloudformation::error::DescribeStacksError>),
+    DescribeStackError(#[from] SdkError<DescribeStacksError>),
     #[error("CloudFormation Stack outputs missing")]
     StackOutputsMissingError,
     #[error("Error getting bucket name from stack")]
@@ -14,9 +21,9 @@ pub enum VaultError {
     #[error("No KEY_ARN provided, can't encrypt")]
     KeyARNMissingError,
     #[error("Error Generating KMS Data key")]
-    KMSGenerateDataKeyError(#[from] SdkError<aws_sdk_kms::error::GenerateDataKeyError>),
+    KMSGenerateDataKeyError(#[from] SdkError<GenerateDataKeyError>),
     #[error("Error decrypting Ciphertext with KMS")]
-    KMSDecryptError(#[from] SdkError<aws_sdk_kms::error::DecryptError>),
+    KMSDecryptError(#[from] SdkError<DecryptError>),
     #[error("No Plaintext for generated datakey")]
     KMSDataKeyPlainTextMissingError,
     #[error("No ciphertextBlob for generated datakey")]
@@ -32,19 +39,19 @@ pub enum VaultError {
     #[error("Error parsing meta with serde")]
     EncryptObjectMetaToJsonError(#[from] serde_json::Error),
     #[error("Failed getting object from S3")]
-    S3GetObjectError(#[from] SdkError<aws_sdk_s3::error::GetObjectError>),
+    S3GetObjectError(#[from] SdkError<GetObjectError>),
     #[error("Failed deleting object from S3")]
-    S3DeleteObjectError(#[from] SdkError<aws_sdk_s3::error::DeleteObjectError>),
+    S3DeleteObjectError(#[from] SdkError<DeleteObjectError>),
     #[error("Key not existing in S3")]
     S3DeleteObjectKeyMissingError,
     #[error("Failed getting head-object from S3")]
-    S3HeadObjectError(#[from] aws_sdk_s3::error::HeadObjectError),
+    S3HeadObjectError(#[from] HeadObjectError),
     #[error("Error decrypting S3-object body")]
     S3GetObjectBodyError,
     #[error("Error putting object to S3")]
-    S3PutObjectError(#[from] SdkError<aws_sdk_s3::error::PutObjectError>),
+    S3PutObjectError(#[from] SdkError<PutObjectError>),
     #[error("Error listing S3 objects")]
-    S3ListObjectsError(#[from] SdkError<aws_sdk_s3::error::ListObjectsV2Error>),
+    S3ListObjectsError(#[from] SdkError<ListObjectsV2Error>),
     #[error("No contents found from S3")]
     S3NoContentsError,
     #[error("Error getting region")]

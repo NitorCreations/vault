@@ -1,12 +1,17 @@
-use aes_gcm::{
-    aead::{Aead, Payload},
-    aes::{cipher::typenum, Aes256},
-    AesGcm, KeyInit, Nonce,
-};
-use aws_config::{meta::region::RegionProviderChain, SdkConfig};
-use aws_sdk_cloudformation::{model::Output, Client as cfClient};
-use aws_sdk_kms::{model::DataKeySpec, types::Blob, Client as kmsClient};
-use aws_sdk_s3::{types::ByteStream, Client as s3Client, Region};
+use aes_gcm::aead::{Aead, Payload};
+use aes_gcm::aes::{cipher, Aes256};
+use aes_gcm::{AesGcm, KeyInit, Nonce};
+use aws_config::meta::region::RegionProviderChain;
+use aws_config::SdkConfig;
+use aws_sdk_cloudformation::types::Output;
+use aws_sdk_cloudformation::Client as CloudFormationClient;
+use aws_sdk_kms::primitives::Blob;
+use aws_sdk_kms::types::DataKeySpec;
+use aws_sdk_kms::Client as kmsClient;
+use aws_sdk_s3::config::Region;
+use aws_sdk_s3::operation::put_object::PutObjectOutput;
+use aws_sdk_s3::primitives::ByteStream;
+use aws_sdk_s3::Client as s3Client;
 use base64::{engine::general_purpose, Engine as _};
 use errors::VaultError;
 use rand::Rng;
@@ -163,7 +168,7 @@ impl Vault {
         let plaintext = key_dict
             .plaintext()
             .ok_or(VaultError::KMSDataKeyPlainTextMissingError)?;
-        let aesgcm_cipher: AesGcm<Aes256, typenum::U12> =
+        let aesgcm_cipher: AesGcm<Aes256, cipher::typenum::U12> =
             AesGcm::new_from_slice(plaintext.as_ref())?;
         let mut nonce: [u8; 12] = [0; 12];
         let mut rng = rand::thread_rng();
@@ -225,15 +230,15 @@ impl Vault {
     /// Send PUT request with the given byte data
     async fn put_s3_object(
         &self,
-        body: aws_sdk_s3::types::ByteStream,
+        body: ByteStream,
         key: &str,
-    ) -> Result<aws_sdk_s3::output::PutObjectOutput, VaultError> {
+    ) -> Result<PutObjectOutput, VaultError> {
         Ok(self
             .s3
             .put_object()
             .bucket(&self.cloudformation_params.bucket_name)
             .key(key)
-            .acl(aws_sdk_s3::model::ObjectCannedAcl::Private)
+            .acl(aws_sdk_s3::types::ObjectCannedAcl::Private)
             .body(body)
             .send()
             .await?)
@@ -304,7 +309,7 @@ impl Vault {
         let ciphertext = self.get_s3_object(format!("{key}.aesgcm.encrypted"));
         let meta_add = self.get_s3_object(format!("{key}.meta")).await?;
         let meta: Meta = serde_json::from_slice(&meta_add)?;
-        let cipher: AesGcm<Aes256, typenum::U12> =
+        let cipher: AesGcm<Aes256, cipher::typenum::U12> =
             AesGcm::new_from_slice(self.direct_decrypt(&data_key.await?).await?.as_slice())?;
         let nonce = general_purpose::STANDARD.decode(meta.nonce)?;
         let nonce = Nonce::from_slice(nonce.as_slice());
@@ -325,7 +330,7 @@ async fn get_cloudformation_params(
     config: &SdkConfig,
     stack: &str,
 ) -> Result<CloudFormationParams, VaultError> {
-    let stack_output = cfClient::new(config)
+    let stack_output = CloudFormationClient::new(config)
         .describe_stacks()
         .stack_name(stack)
         .send()

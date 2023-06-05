@@ -1,5 +1,4 @@
 use anyhow::{Context, Result};
-
 use cli::{Args, Command};
 use nitor_vault::Vault;
 
