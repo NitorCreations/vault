@@ -17,6 +17,7 @@ use errors::VaultError;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::fmt;
+use tokio::try_join;
 
 pub mod errors;
 
@@ -231,7 +232,7 @@ impl Vault {
     async fn put_s3_object(
         &self,
         body: ByteStream,
-        key: &str,
+        key: String,
     ) -> Result<PutObjectOutput, VaultError> {
         Ok(self
             .s3
@@ -269,20 +270,17 @@ impl Vault {
     /// Store encrypted data in S3
     pub async fn store(&self, name: &str, data: &[u8]) -> Result<(), VaultError> {
         let encrypted = self.encrypt(data).await?;
-        self.put_s3_object(
+        let first = self.put_s3_object(
             ByteStream::from(encrypted.aes_gcm_ciphertext),
-            &format!("{name}.aesgcm.encrypted"),
-        )
-        .await?;
-
-        self.put_s3_object(ByteStream::from(encrypted.data_key), &format!("{name}.key"))
-            .await?;
-
-        self.put_s3_object(
+            format!("{name}.aesgcm.encrypted"),
+        );
+        let second =
+            self.put_s3_object(ByteStream::from(encrypted.data_key), format!("{name}.key"));
+        let third = self.put_s3_object(
             ByteStream::from(encrypted.meta.as_bytes().to_owned()),
-            &format!("{name}.meta"),
-        )
-        .await?;
+            format!("{name}.meta"),
+        );
+        try_join!(first, second, third)?;
 
         Ok(())
     }
@@ -307,17 +305,18 @@ impl Vault {
         let key = name;
         let data_key = self.get_s3_object(format!("{key}.key"));
         let ciphertext = self.get_s3_object(format!("{key}.aesgcm.encrypted"));
-        let meta_add = self.get_s3_object(format!("{key}.meta")).await?;
+        let meta_add = self.get_s3_object(format!("{key}.meta"));
+        let (data_key, ciphertext, meta_add) = try_join!(data_key, ciphertext, meta_add)?;
         let meta: Meta = serde_json::from_slice(&meta_add)?;
         let cipher: AesGcm<Aes256, cipher::typenum::U12> =
-            AesGcm::new_from_slice(self.direct_decrypt(&data_key.await?).await?.as_slice())?;
+            AesGcm::new_from_slice(self.direct_decrypt(&data_key).await?.as_slice())?;
         let nonce = general_purpose::STANDARD.decode(meta.nonce)?;
         let nonce = Nonce::from_slice(nonce.as_slice());
         let res = cipher
             .decrypt(
                 nonce,
                 Payload {
-                    msg: &ciphertext.await?,
+                    msg: &ciphertext,
                     aad: &meta_add,
                 },
             )
