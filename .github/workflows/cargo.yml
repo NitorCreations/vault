@@ -18,16 +18,25 @@ on:
 # https://github.com/actions-rs/cargo
 jobs:
   cargo:
-    name: cargo
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
+      - name: Check out source repository
+        uses: actions/checkout@v3
+
+      - name: Set up Rust toolchain
+        uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+
       - name: fmt
         working-directory: rust
         # workaround for color output
         env:
           TERM: xterm-256color
         run: cargo fmt --check --verbose
+
+      - name: clippy
+        working-directory: rust
+        env:
+          TERM: xterm-256color
+        run: cargo clippy
