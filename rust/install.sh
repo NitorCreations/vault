@@ -22,4 +22,5 @@ fi
 
 print_magenta "Checking version..."
 
-echo "$(vault --version) from $(which vault)"
+echo "First in path: $(vault --version) from $(which vault)"
+echo "Rust binary:   $("$HOME/.cargo/bin/vault" --version) from $(which "$HOME/.cargo/bin/vault")"
