@@ -1,6 +1,8 @@
 #!/bin/bash
 set -eo pipefail
 
+# Build the Rust vault binary.
+
 # Import common functions
 DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 # shellcheck source=../common.sh

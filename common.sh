@@ -3,7 +3,7 @@ set -eo pipefail
 
 # Common shell functions and definitions
 
-REPO_ROOT=$(git rev-parse --show-toplevel || (cd "$(dirname "${BASH_SOURCE[0]}")" && pwd))
+export REPO_ROOT=$(git rev-parse --show-toplevel || (cd "$(dirname "${BASH_SOURCE[0]}")" && pwd))
 
 # Check platform
 case "$(uname -s)" in

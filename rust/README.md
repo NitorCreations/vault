@@ -4,6 +4,16 @@ CLI and library for encrypting keys and values using client-side encryption with
 
 ## Build
 
+Using the shell script:
+
+```shell
+./build.sh
+```
+
+Note: works on Windows too, just use Git for Windows Bash to run it.
+
+Manually from terminal:
+
 ```shell
 # debug
 cargo build
@@ -35,6 +45,15 @@ cargo install --path rust/
 Cargo will put the binary under `$HOME/.cargo/bin` by default,
 which you should add to PATH if you don't have it there,
 so the binaries installed through Cargo will be found.
+
+Using the shell script:
+
+```shell
+./install.sh
+```
+
+If you still get another version when using vault,
+you will need to put the cargo binary path `$HOME/.cargo/bin` first in path.
 
 ## Format code
 
