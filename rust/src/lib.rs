@@ -351,7 +351,6 @@ async fn get_cloudformation_params(
 fn get_region_provider(region_opt: Option<&str>) -> RegionProviderChain {
     RegionProviderChain::first_try(region_opt.map(|r| Region::new(r.to_owned())))
         .or_default_provider()
-        .or_else("eu-west-1")
 }
 
 fn parse_output_value_from_key(key: &str, out: &[Output]) -> Option<String> {
