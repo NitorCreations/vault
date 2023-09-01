@@ -1,0 +1,34 @@
+name: Python dependencies
+
+# Run either when pushing directly to main/master or in a PR targeting main/master
+on:
+  push:
+    branches:
+      - master
+      - main
+    paths:
+      - "python/requirements.txt"
+  pull_request:
+    branches:
+      - master
+      - main
+    paths:
+      - "python/requirements.txt"
+
+# https://github.com/py-actions/py-dependency-install
+jobs:
+  pip:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python environment
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install Python dependencies
+        uses: py-actions/py-dependency-install@v4
+        with:
+          path: "python/requirements.txt"
