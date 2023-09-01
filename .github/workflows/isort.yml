@@ -7,19 +7,18 @@ on:
       - master
       - main
     paths:
-      - '**.py'
+      - "**.py"
   pull_request:
     branches:
       - master
       - main
     paths:
-      - '**.py'
+      - "**.py"
 
 # https://github.com/marketplace/actions/python-isort
 jobs:
   format:
     runs-on: ubuntu-latest
-    name: Python-imports
     steps:
       - name: Check out source repository
         uses: actions/checkout@v3
@@ -27,7 +26,7 @@ jobs:
       - name: Set up Python environment
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: isort
         uses: isort/isort-action@v1.1.0
