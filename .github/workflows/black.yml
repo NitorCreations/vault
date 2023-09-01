@@ -1,4 +1,4 @@
-name: Black
+name: Python black
 
 # Run either when pushing directly to main/master or in a PR targeting main/master
 on:

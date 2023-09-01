@@ -17,21 +17,21 @@ repos:
       - id: mixed-line-ending
       - id: trailing-whitespace
 
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: v0.0.286
+    hooks:
+      - id: ruff
+        name: python ruff
+        files: ^python/
+        args: [--fix, --exit-non-zero-on-fix, --config, python/pyproject.toml]
+
   - repo: https://github.com/psf/black
-    rev: 23.3.0
+    rev: 23.7.0
     hooks:
       - id: black
         name: python black
         language_version: python3.11
         files: ^python/
-
-  - repo: https://github.com/pycqa/flake8
-    rev: 6.0.0
-    hooks:
-      - id: flake8
-        name: python flake8
-        files: ^python/
-        args: [--config, python/setup.cfg]
 
   - repo: https://github.com/pycqa/isort
     rev: 5.12.0
@@ -41,12 +41,12 @@ repos:
         files: ^python/
 
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.4.0
+    rev: v3.10.1
     hooks:
       - id: pyupgrade
         name: python pyupgrade
         files: ^python/
-        args: [--py37-plus]
+        args: [--py38-plus]
 
   - repo: local
     hooks:
@@ -58,6 +58,7 @@ repos:
         types: [file, rust]
         language: system
         files: ^rust/
+
       - id: rust-clippy
         name: rust lint
         description: Run cargo clippy on files included in the commit. clippy should be installed before-hand.
