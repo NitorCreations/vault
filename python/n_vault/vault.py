@@ -86,8 +86,7 @@ class Vault:
             self._session = session(aws_access_key_id=vault_iam_id, aws_secret_access_key=vault_iam_secret)
         self._c_args = {"session": self._session, "region": self._region}
 
-        # Either use given vault kms key and/or vault bucket or look them up from a
-        # cloudformation stack
+        # Either use given vault kms key and/or vault bucket or look them up from a CloudFormation stack
         if vault_key:
             self._vault_key = vault_key
         elif "VAULT_KEY" in os.environ:
