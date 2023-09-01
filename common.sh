@@ -75,7 +75,7 @@ check_and_set_python() {
 # if DRYRUN or DRY_RUN has been set, only print commands instead of running them
 run_command() {
   if [ "$DRY_RUN" = true ] || [ "$DRYRUN" = true ]; then
-    echo "DRYRUN: $*"
+    print_yellow "DRYRUN: $*"
   else
     echo "Running: $*"
     "$@"

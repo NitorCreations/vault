@@ -92,8 +92,9 @@ git commit -m "$MESSAGE" n_vault/__init__.py setup.cfg
 git tag "$NEW_VERSION" -m "$MESSAGE"
 run_command git push origin "$NEW_VERSION"
 
-print_magenta "Uploading package..."
+print_magenta "Building package..."
 check_and_set_python
 rm -rf dist
 $PYTHON setup.py sdist bdist_wheel
+print_magenta "Uploading package..."
 run_command twine upload dist/*
