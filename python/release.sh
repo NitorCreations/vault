@@ -20,9 +20,9 @@ USAGE="Usage: $(basename "$0") [OPTIONS] [MESSAGE]
 OPTIONS: All options are optional
   -h | --help                 Display these instructions.
   -d | --dryrun               Only print commands instead of executing them.
-  -x | --verbose              Display commands being executed.
   -m | --major                Increment major version and reset minor version to 0.
   -v | --version [VERSION]    Set the new version explicitly.
+  -x | --verbose              Display commands being executed.
   [MESSAGE]                   Optional commit message for git commit (default is the new version).
 
 Example Usage:
