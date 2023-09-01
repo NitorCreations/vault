@@ -1,4 +1,4 @@
-name: Python dependencies
+name: Python pip
 
 # Run either when pushing directly to main/master or in a PR targeting main/master
 on:
@@ -17,7 +17,7 @@ on:
 
 # https://github.com/py-actions/py-dependency-install
 jobs:
-  pip:
+  dependencies:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
