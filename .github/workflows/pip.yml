@@ -1,4 +1,4 @@
-name: Python black
+name: Python pip
 
 # Run either when pushing directly to main/master or in a PR targeting main/master
 on:
@@ -7,17 +7,17 @@ on:
       - master
       - main
     paths:
-      - "**.py"
+      - "python/requirements.txt"
   pull_request:
     branches:
       - master
       - main
     paths:
-      - "**.py"
+      - "python/requirements.txt"
 
-# https://github.com/psf/black
+# https://github.com/py-actions/py-dependency-install
 jobs:
-  format:
+  dependencies:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -28,8 +28,7 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Black
-        uses: psf/black@stable
+      - name: Install Python dependencies
+        uses: py-actions/py-dependency-install@v4
         with:
-          options: "--check --verbose --diff --color --config python/pyproject.toml"
-          src: "python/"
+          path: "python/requirements.txt"

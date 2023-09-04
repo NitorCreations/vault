@@ -134,7 +134,11 @@ def main():
         "--secret",
         help="Give an IAM secret access key to override those defined by environment",
     )
-    parser.add_argument("-r", "--region", help="Give a region for the stack and bucket")
+    parser.add_argument(
+        "-r",
+        "--region",
+        help="Give a region for the stack and bucket",
+    )
 
     if "_ARGCOMPLETE" in os.environ:
         argcomplete.autocomplete(parser)

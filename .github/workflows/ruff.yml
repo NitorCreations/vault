@@ -1,4 +1,4 @@
-name: flake8
+name: Python ruff
 
 # Run either when pushing directly to main/master or in a PR targeting main/master
 on:
@@ -15,11 +15,10 @@ on:
     paths:
       - "**.py"
 
-# https://github.com/py-actions/flake8
+# https://github.com/chartboost/ruff-action
 jobs:
   lint:
     runs-on: ubuntu-latest
-    name: Python-lint
     steps:
       - name: Check out source repository
         uses: actions/checkout@v3
@@ -29,8 +28,7 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: flake8 lint
-        uses: py-actions/flake8@v2
+      - name: ruff
+        uses: chartboost/ruff-action@v1
         with:
-          path: python
-          args: "--config python/setup.cfg"
+          src: "./python"
