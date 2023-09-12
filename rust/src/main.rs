@@ -8,7 +8,7 @@ mod cli;
 async fn main() -> Result<()> {
     let args: Args = cli::parse_args().await;
 
-    let client = Vault::new(None, args.region.as_deref())
+    let client = Vault::new(args.vault_stack.as_deref(), args.region.as_deref())
         .await
         .with_context(|| "Failed to create vault.".to_string())?;
 

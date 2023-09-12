@@ -17,6 +17,10 @@ pub struct Args {
     #[arg(short, long, help = "List available secrets")]
     pub all: bool,
 
+    /// Override the bucket name
+    #[arg(short, long, env = "VAULT_BUCKET")]
+    pub bucket: Option<String>,
+
     /// Describe CloudFormation stack parameters
     #[arg(
         long,
@@ -48,6 +52,10 @@ pub struct Args {
     /// Available subcommands
     #[command(subcommand)]
     pub command: Option<Command>,
+
+    /// Optional CloudFormation stack to lookup key and bucket
+    #[arg(long, env)]
+    pub vault_stack: Option<String>,
 }
 
 #[derive(Subcommand)]
