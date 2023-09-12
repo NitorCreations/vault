@@ -31,7 +31,11 @@ SYS_ENCODING = locale.getpreferredencoding()
 def main():
     parser = argparse.ArgumentParser(description="Store and lookup locally encrypted data stored in S3")
     action = parser.add_mutually_exclusive_group(required=True)
-    action.add_argument("--version", action="store_true", help="Print vault version")
+    action.add_argument(
+        "--version",
+        action="store_true",
+        help="Print vault version",
+    )
     action.add_argument(
         "-s",
         "--store",
