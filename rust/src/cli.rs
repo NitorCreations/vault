@@ -36,6 +36,10 @@ pub struct Args {
     #[arg(long, help = "Print information")]
     pub info: bool,
 
+    /// Override the KMS key arn for storing or looking up
+    #[arg(short, long, env = "VAULT_KEY")]
+    pub key_arn: Option<String>,
+
     /// Print secret value for given key
     #[arg(
         short,

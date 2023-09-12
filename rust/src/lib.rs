@@ -77,13 +77,18 @@ impl Vault {
     pub async fn new(
         vault_stack: Option<&str>,
         region_opt: Option<&str>,
+        bucket: Option<&str>,
+        key: Option<&str>,
     ) -> Result<Vault, VaultError> {
         let config = aws_config::from_env()
             .region(get_region_provider(region_opt))
             .load()
             .await;
-        let cloudformation_params =
-            get_cloudformation_params(&config, vault_stack.unwrap_or("vault")).await?;
+        let cloudformation_params = if bucket.is_some() && key.is_some() {
+            CloudFormationParams::from(bucket.unwrap(), key)
+        } else {
+            get_cloudformation_params(&config, vault_stack.unwrap_or("vault")).await?
+        };
         Ok(Vault {
             region: config.region().unwrap().to_owned(),
             cloudformation_params,
