@@ -84,23 +84,23 @@ impl Vault {
             .load()
             .await;
 
-        // Check env variables, these have been handled in the CLI already,
-        // but need to check again if this is used as a library directly...
+        // Check env variables directly in case library is not used through the CLI.
+        // These are also handled in the CLI so they are documented in the CLI help.
         let vault_stack_from_env = get_env_variable("VAULT_STACK");
         let vault_bucket_from_env = get_env_variable("VAULT_BUCKET");
         let vault_key_from_env = get_env_variable("VAULT_KEY");
 
-        let cloudformation_params = if vault_stack.is_some() {
-            get_cloudformation_params(&config, vault_stack.unwrap()).await?
-        } else if vault_stack_from_env.is_some() {
-            get_cloudformation_params(&config, vault_stack_from_env.unwrap().as_str()).await?
-        } else if vault_bucket_from_env.is_some() && vault_key_from_env.is_some() {
-            CloudFormationParams::from(
-                vault_bucket_from_env.unwrap().as_str(),
-                vault_key_from_env.as_deref(),
-            )
-        } else {
-            get_cloudformation_params(&config, "vault").await?
+        let cloudformation_params = match (vault_bucket_from_env, vault_key_from_env) {
+            (Some(bucket), Some(key)) => {
+                CloudFormationParams::from(bucket.as_str(), Some(key.as_str()))
+            }
+            (_, _) => {
+                let stack_name = vault_stack_from_env
+                    .as_deref()
+                    .or(vault_stack)
+                    .unwrap_or("vault");
+                get_cloudformation_params(&config, stack_name).await?
+            }
         };
 
         Ok(Vault {
