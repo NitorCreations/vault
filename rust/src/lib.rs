@@ -16,6 +16,7 @@ use base64::{engine::general_purpose, Engine as _};
 use errors::VaultError;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
+use std::env;
 use std::fmt;
 use tokio::try_join;
 
@@ -77,18 +78,31 @@ impl Vault {
     pub async fn new(
         vault_stack: Option<&str>,
         region_opt: Option<&str>,
-        bucket: Option<&str>,
-        key: Option<&str>,
     ) -> Result<Vault, VaultError> {
         let config = aws_config::from_env()
             .region(get_region_provider(region_opt))
             .load()
             .await;
-        let cloudformation_params = if bucket.is_some() && key.is_some() {
-            CloudFormationParams::from(bucket.unwrap(), key)
+
+        // Check env variables, these have been handled in the CLI already,
+        // but need to check again if this is used as a library directly...
+        let vault_stack_from_env = get_env_variable("VAULT_STACK");
+        let vault_bucket_from_env = get_env_variable("VAULT_BUCKET");
+        let vault_key_from_env = get_env_variable("VAULT_KEY");
+
+        let cloudformation_params = if vault_stack.is_some() {
+            get_cloudformation_params(&config, vault_stack.unwrap()).await?
+        } else if vault_stack_from_env.is_some() {
+            get_cloudformation_params(&config, vault_stack_from_env.unwrap().as_str()).await?
+        } else if vault_bucket_from_env.is_some() && vault_key_from_env.is_some() {
+            CloudFormationParams::from(
+                vault_bucket_from_env.unwrap().as_str(),
+                vault_key_from_env.as_deref(),
+            )
         } else {
-            get_cloudformation_params(&config, vault_stack.unwrap_or("vault")).await?
+            get_cloudformation_params(&config, "vault").await?
         };
+
         Ok(Vault {
             region: config.region().unwrap().to_owned(),
             cloudformation_params,
@@ -371,4 +385,12 @@ fn get_s3_data_keys(name: &str) -> [String; 3] {
         format!("{name}.key"),
         format!("{name}.meta"),
     ]
+}
+
+/// Return possible env variable value as Option
+fn get_env_variable(name: &str) -> Option<String> {
+    match env::var(name) {
+        Ok(value) => Some(value),
+        Err(_) => None,
+    }
 }
