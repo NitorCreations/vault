@@ -389,8 +389,5 @@ fn get_s3_data_keys(name: &str) -> [String; 3] {
 
 /// Return possible env variable value as Option
 fn get_env_variable(name: &str) -> Option<String> {
-    match env::var(name) {
-        Ok(value) => Some(value),
-        Err(_) => None,
-    }
+    env::var(name).ok()
 }
