@@ -16,6 +16,7 @@ use base64::{engine::general_purpose, Engine as _};
 use errors::VaultError;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
+use std::env;
 use std::fmt;
 use tokio::try_join;
 
@@ -82,8 +83,26 @@ impl Vault {
             .region(get_region_provider(region_opt))
             .load()
             .await;
-        let cloudformation_params =
-            get_cloudformation_params(&config, vault_stack.unwrap_or("vault")).await?;
+
+        // Check env variables directly in case library is not used through the CLI.
+        // These are also handled in the CLI so they are documented in the CLI help.
+        let vault_stack_from_env = get_env_variable("VAULT_STACK");
+        let vault_bucket_from_env = get_env_variable("VAULT_BUCKET");
+        let vault_key_from_env = get_env_variable("VAULT_KEY");
+
+        let cloudformation_params = match (vault_bucket_from_env, vault_key_from_env) {
+            (Some(bucket), Some(key)) => {
+                CloudFormationParams::from(bucket.as_str(), Some(key.as_str()))
+            }
+            (_, _) => {
+                let stack_name = vault_stack_from_env
+                    .as_deref()
+                    .or(vault_stack)
+                    .unwrap_or("vault");
+                get_cloudformation_params(&config, stack_name).await?
+            }
+        };
+
         Ok(Vault {
             region: config.region().unwrap().to_owned(),
             cloudformation_params,
@@ -366,4 +385,9 @@ fn get_s3_data_keys(name: &str) -> [String; 3] {
         format!("{name}.key"),
         format!("{name}.meta"),
     ]
+}
+
+/// Return possible env variable value as Option
+fn get_env_variable(name: &str) -> Option<String> {
+    env::var(name).ok()
 }
