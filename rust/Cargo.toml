@@ -9,7 +9,7 @@ repository = "https://github.com/nitorcreations/vault"
 keywords = ["secrets","s3"]
 
 [dependencies]
-aes-gcm = "0.10.1"
+aes-gcm = "0.10.3"
 anyhow = "1.0.75"
 aws-config = "0.55.3"
 aws-sdk-cloudformation = "0.28.0"
