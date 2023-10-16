@@ -254,29 +254,27 @@ dependencies = [
 
 [[package]]
 name = "aws-sdk-cloudformation"
-version = "0.28.0"
+version = "0.33.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2f32bb66da99e2955ce49e346200cb14421784755a39c74fe2c043536b2d57ba"
+checksum = "c107b81e30e61d76ed8be6f12fd4afa40d3182054404b7a436febae27db5c6ac"
 dependencies = [
- "aws-credential-types 0.55.3",
- "aws-endpoint",
- "aws-http 0.55.3",
- "aws-sig-auth",
- "aws-smithy-async 0.55.3",
- "aws-smithy-client 0.55.3",
- "aws-smithy-http 0.55.3",
- "aws-smithy-http-tower 0.55.3",
- "aws-smithy-json 0.55.3",
- "aws-smithy-query 0.55.3",
- "aws-smithy-types 0.55.3",
- "aws-smithy-xml 0.55.3",
- "aws-types 0.55.3",
- "bytes",
- "fastrand 1.9.0",
+ "aws-credential-types 0.56.1",
+ "aws-http 0.56.1",
+ "aws-runtime",
+ "aws-smithy-async 0.56.1",
+ "aws-smithy-client 0.56.1",
+ "aws-smithy-http 0.56.1",
+ "aws-smithy-json 0.56.1",
+ "aws-smithy-query 0.56.1",
+ "aws-smithy-runtime",
+ "aws-smithy-runtime-api",
+ "aws-smithy-types 0.56.1",
+ "aws-smithy-xml 0.56.1",
+ "aws-types 0.56.1",
+ "fastrand 2.0.0",
  "http",
  "regex",
  "tokio-stream",
- "tower",
  "tracing",
 ]
 
