@@ -1,6 +1,6 @@
 # flake8: noqa: E501
 VAULT_STACK_VERSION = 24
-TEMPLATE_STRING = """{{
+TEMPLATE_STRING = f"""{{
   "Parameters": {{
     "paramBucketName": {{
       "Default": "nitor-core-vault",
@@ -473,7 +473,7 @@ TEMPLATE_STRING = """{{
     }},
     "vaultStackVersion": {{
       "Description": "The version of the currently deployed vault stack template",
-      "Value": "{version}",
+      "Value": "{VAULT_STACK_VERSION}",
       "Export": {{
         "Name": {{
           "Fn::Join": [
@@ -508,6 +508,4 @@ TEMPLATE_STRING = """{{
       }}
     }}
   }}
-}}""".format(
-    version=VAULT_STACK_VERSION
-)
+}}"""
