@@ -8,12 +8,11 @@ on:
       - main
     paths:
       - "python/requirements.txt"
+      - ".github/workflows/pip.yml"
   pull_request:
     branches:
       - master
       - main
-    paths:
-      - "python/requirements.txt"
 
 # https://github.com/py-actions/py-dependency-install
 jobs:

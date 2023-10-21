@@ -8,12 +8,11 @@ on:
       - main
     paths:
       - "**.py"
+      - ".github/workflows/black.yml"
   pull_request:
     branches:
       - master
       - main
-    paths:
-      - "**.py"
 
 # https://github.com/psf/black
 jobs:
