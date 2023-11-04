@@ -38,7 +38,7 @@ pub struct CloudFormationParams {
     // deployed_version: Option<String>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 struct Meta {
     alg: String,
     nonce: String,
@@ -296,7 +296,7 @@ impl Vault {
         let second =
             self.put_s3_object(ByteStream::from(encrypted.data_key), format!("{name}.key"));
         let third = self.put_s3_object(
-            ByteStream::from(encrypted.meta.as_bytes().to_owned()),
+            ByteStream::from(encrypted.meta.into_bytes()),
             format!("{name}.meta"),
         );
         try_join!(first, second, third)?;
@@ -352,12 +352,12 @@ async fn get_cloudformation_params(
         .describe_stacks()
         .stack_name(stack)
         .send()
-        .await?
+        .await?;
+    let stack_output = stack_output
         .stacks()
         .and_then(|stacks| stacks.first())
         .and_then(|stack| stack.outputs())
-        .ok_or(VaultError::StackOutputsMissingError)?
-        .to_owned();
+        .ok_or(VaultError::StackOutputsMissingError)?;
 
     Ok(CloudFormationParams {
         bucket_name: parse_output_value_from_key("vaultBucketName", &stack_output)
