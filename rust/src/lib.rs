@@ -360,9 +360,9 @@ async fn get_cloudformation_params(
         .ok_or(VaultError::StackOutputsMissingError)?;
 
     Ok(CloudFormationParams {
-        bucket_name: parse_output_value_from_key("vaultBucketName", &stack_output)
+        bucket_name: parse_output_value_from_key("vaultBucketName", stack_output)
             .ok_or(VaultError::BucketNameMissingError)?,
-        key_arn: parse_output_value_from_key("kmsKeyArn", &stack_output),
+        key_arn: parse_output_value_from_key("kmsKeyArn", stack_output),
         // deployed_version: parse_output_value_from_key("vaultStackVersion", &stack_output),
     })
 }
