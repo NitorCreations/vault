@@ -110,4 +110,5 @@ node_modules/
 dependency-reduced-pom.xml
 
 # Go binary
-go/nitor-vault
+/go/nitor-vault
+/go/nitor_vault

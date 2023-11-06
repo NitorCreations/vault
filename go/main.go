@@ -101,7 +101,7 @@ func VersionInfo() string {
 				arch = setting.Value
 			}
 		}
-		return fmt.Sprintf("%s %s %s %s %s %s", VersionNumber, timestamp, GitBranch, commit, goVersion, arch)
+		return fmt.Sprintf("%s %s %s %s %s %s", vault.VersionNumber, timestamp, vault.GitBranch, commit, goVersion, arch)
 	}
 	return ""
 }

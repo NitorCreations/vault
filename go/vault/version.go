@@ -1,4 +1,4 @@
-package main
+package vault
 
 // Generated automatically; DO NOT EDIT MANUALLY.
 

@@ -15,7 +15,13 @@ Before you begin, ensure you have met the following requirements:
 To build the `nitor-vault` tool, follow these steps:
 
 ```shell
-go build -o nitor-vault ./cmd/nitor_vault
+./build.sh
+```
+
+Or manually:
+
+```shell
+go build -v -o nitor-vault
 ```
 
 ## Format code

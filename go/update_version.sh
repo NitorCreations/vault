@@ -46,7 +46,7 @@ init_options() {
 
 init_options "$@"
 
-VERSION_FILE="$DIR/cmd/nitor_vault/version.go"
+VERSION_FILE="$DIR/vault/version.go"
 
 CURRENT_VERSION="$(grep "const VersionNumber =" "$VERSION_FILE" | cut -d\" -f 2)"
 MAJOR=$(echo "$CURRENT_VERSION" | cut -d '.' -f 1)
@@ -76,7 +76,7 @@ fi
 
 set_version_info
 {
-  echo "package main"
+  echo "package vault"
   echo ""
   echo "// Generated automatically; DO NOT EDIT MANUALLY."
   echo ""
