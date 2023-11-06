@@ -25,3 +25,19 @@ Using [gofmt](https://pkg.go.dev/cmd/gofmt)
 ```shell
 gofmt -s -w .
 ```
+
+## Update version number
+
+Increment minor version:
+
+```shell
+./update_version.sh
+```
+
+Override version manually:
+
+```shell
+./update_version.sh --version 1.2.3
+# this also works
+VERSION=1.2.3 ./update_version.sh
+```

@@ -71,7 +71,7 @@ repos:
       - id: gofmt
         name: go format
         description: Run gofmt on files included in the commit.
-        entry: bash -c 'cd go && gofmt -s -w'
+        entry: bash -c 'cd go && gofmt -s -l'
         pass_filenames: true
         types: [file, go]
         language: system

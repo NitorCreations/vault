@@ -3,7 +3,8 @@ set -eo pipefail
 
 # Common shell functions and definitions
 
-export REPO_ROOT=$(git rev-parse --show-toplevel || (cd "$(dirname "${BASH_SOURCE[0]}")" && pwd))
+REPO_ROOT=$(git rev-parse --show-toplevel || (cd "$(dirname "${BASH_SOURCE[0]}")" && pwd))
+export REPO_ROOT
 
 # Check platform
 case "$(uname -s)" in
@@ -80,4 +81,12 @@ run_command() {
     echo "Running: $*"
     "$@"
   fi
+}
+
+# Set variables GIT_HASH and GIT_BRANCH
+set_version_info() {
+  GIT_HASH=$(git -C "$REPO_ROOT" rev-parse --short HEAD)
+  GIT_BRANCH=$(git -C "$REPO_ROOT" branch --show-current)
+  export GIT_HASH
+  export GIT_BRANCH
 }
