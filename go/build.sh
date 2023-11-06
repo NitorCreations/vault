@@ -59,10 +59,10 @@ build_project() {
 
 update_version_file() {
   set_version_info
-  VERSION_FILE="$PROJECT_PATH/vault/version.go"
+  VERSION_FILE="$PROJECT_PATH/cli/version.go"
   CURRENT_VERSION="$(grep "const VersionNumber =" "$VERSION_FILE" | cut -d\" -f 2)"
   {
-    echo "package vault"
+    echo "package cli"
     echo ""
     echo "// Generated automatically; DO NOT EDIT MANUALLY."
     echo ""
