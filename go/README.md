@@ -16,3 +16,12 @@ To build the `nitor-vault` tool, follow these steps:
 
 ```shell
 go build -o nitor-vault ./cmd/nitor_vault
+```
+
+## Format code
+
+Using [gofmt](https://pkg.go.dev/cmd/gofmt)
+
+```shell
+gofmt -s -w .
+```
