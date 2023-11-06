@@ -14,7 +14,7 @@ use nitor_vault::Vault;
 )] // Reads info from `Cargo.toml`
 pub struct Args {
     /// List all available secrets
-    #[arg(short, long, help = "List available secrets")]
+    #[arg(short, long, help = "List all available secrets")]
     pub all: bool,
 
     /// Override the bucket name

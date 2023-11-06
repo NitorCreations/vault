@@ -112,7 +112,7 @@ func getCloudformationParams(cfg *aws.Config, stackName string) (CloudFormationP
 }
 
 func (v Vault) All() ([]string, error) {
-	res := []string{}
+	var res []string
 
 	output, err := v.s3Client.ListObjectsV2(context.TODO(), &s3.ListObjectsV2Input{
 		Bucket: aws.String(v.cloudformationParams.BucketName),

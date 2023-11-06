@@ -1,51 +1,122 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"log"
 	"nitor_vault/vault"
 	"os"
 	"runtime/debug"
+
+	"github.com/spf13/cobra"
+)
+
+var (
+	aFlag       bool
+	lFlag       string
+	sFlag       string
+	vFlag       string
+	wFlag       bool
+	versionFlag bool
 )
 
 func main() {
-	// TODO: replace "flag" implementation with e.g. https://github.com/spf13/cobra
-	aFlag := flag.Bool("a", false, "list all flag")
-	lFlag := flag.String("l", "", "lookup flag, usage: -l <key>")
-	sFlag := flag.String("s", "", "store flag, usage together with -v: -s <key> -v <value string>")
-	vFlag := flag.String("v", "", "value used with store flag")
-	wFlag := flag.Bool("w", false, "overwrite flag used with store flag")
-	versionFlag := flag.Bool("version", false, "print version information and exit")
-	flag.Parse()
-
-	if *versionFlag {
-		fmt.Println(VersionInfo())
-		os.Exit(0)
-	}
-
-	// Check if the flags are provided and act accordingly
-	if *aFlag {
-		nVault := initVault()
-		all(nVault)
-	} else if *lFlag != "" {
-		nVault := initVault()
-		lookup(nVault, lFlag)
-	} else if *sFlag != "" && *vFlag != "" {
-		nVault := initVault()
-		if !*wFlag {
-			exists, err := nVault.Exists(*sFlag)
-			if err != nil {
-				log.Fatal(err)
-			}
-			if exists {
-				fmt.Printf("key %s already exists and -w flag not provided, provide it to confirm overwrite\n", *sFlag)
+	var rootCmd = &cobra.Command{
+		Use:   "nitor-vault",
+		Short: "Encrypted AWS key-value storage",
+		Long:  "Nitor Vault, see https://github.com/nitorcreations/vault for usage examples",
+		Run: func(cmd *cobra.Command, args []string) {
+			if versionFlag {
+				fmt.Println(VersionInfo())
 				return
 			}
-		}
-		store(nVault, sFlag, []byte(*vFlag))
-	} else {
-		flag.CommandLine.Usage()
+
+			if len(args) <= 0 || !cmd.Flags().HasFlags() {
+				cmd.Help()
+				os.Exit(0)
+			}
+
+			nVault := initVault()
+
+			switch {
+			case aFlag:
+				all(nVault)
+			case lFlag != "":
+				lookup(nVault, &lFlag)
+			case sFlag != "" && vFlag != "":
+				if !wFlag {
+					exists, err := nVault.Exists(sFlag)
+					if err != nil {
+						log.Fatal(err)
+					}
+					if exists {
+						fmt.Printf("Key %s already exists and -w flag not provided, provide it to confirm overwrite\n", sFlag)
+						return
+					}
+				}
+				store(nVault, &sFlag, []byte(vFlag))
+			default:
+				cmd.Help()
+			}
+		},
+	}
+
+	// Version command
+	var versionCmd = &cobra.Command{
+		Use:   "version",
+		Short: "Print version information and exit",
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println(VersionInfo())
+		},
+	}
+
+	// All command
+	var allCmd = &cobra.Command{
+		Use:   "all",
+		Short: "List all available secrets",
+		Run: func(cmd *cobra.Command, args []string) {
+			nVault := initVault()
+			all(nVault)
+		},
+	}
+
+	// Lookup command
+	var lookupCmd = &cobra.Command{
+		Use:   "lookup [key]",
+		Short: "Lookup secret value for key",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			nVault := initVault()
+			lookup(nVault, &args[0])
+		},
+	}
+
+	// Store command
+	var storeCmd = &cobra.Command{
+		Use:   "store [key] [value]",
+		Short: "Store an entry",
+		Args:  cobra.ExactArgs(2),
+		Run: func(cmd *cobra.Command, args []string) {
+			nVault := initVault()
+			store(nVault, &args[0], []byte(args[1]))
+		},
+	}
+
+	// Add overwrite flag to store command
+	storeCmd.Flags().BoolVarP(&wFlag, "overwrite", "w", false, "Overwrite the existing entry")
+
+	rootCmd.Flags().BoolVarP(&versionFlag, "version", "", false, "Print version information and exit")
+	rootCmd.Flags().BoolVarP(&aFlag, "all", "a", false, "List all available secrets")
+	rootCmd.Flags().StringVarP(&lFlag, "lookup", "l", "", "Lookup secret value for key, usage: -l <key>")
+	rootCmd.Flags().StringVarP(&sFlag, "store", "s", "", "Store flag, usage together with -v: -s <key> -v <value string>")
+	rootCmd.Flags().StringVarP(&vFlag, "value", "v", "", "Value used with store flag")
+	rootCmd.Flags().BoolVarP(&wFlag, "overwrite", "w", false, "Overwrite flag used with store flag")
+
+	// Add all subcommands to the root command
+	rootCmd.AddCommand(versionCmd, allCmd, lookupCmd, storeCmd)
+
+	// Execute the root command
+	if err := rootCmd.Execute(); err != nil {
+		log.Fatal(err)
 	}
 }
 
