@@ -46,7 +46,7 @@ init_options() {
 
 init_options "$@"
 
-VERSION_FILE="$DIR/vault/version.go"
+VERSION_FILE="$DIR/cli/version.go"
 
 CURRENT_VERSION="$(grep "const VersionNumber =" "$VERSION_FILE" | cut -d\" -f 2)"
 MAJOR=$(echo "$CURRENT_VERSION" | cut -d '.' -f 1)
@@ -76,7 +76,7 @@ fi
 
 set_version_info
 {
-  echo "package vault"
+  echo "package cli"
   echo ""
   echo "// Generated automatically; DO NOT EDIT MANUALLY."
   echo ""

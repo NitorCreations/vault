@@ -1,4 +1,4 @@
-package vault
+package cli
 
 // Generated automatically; DO NOT EDIT MANUALLY.
 

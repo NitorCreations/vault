@@ -1,107 +1,118 @@
 package main
 
 import (
-	"flag"
 	"fmt"
+	"github.com/spf13/cobra"
 	"log"
-	"nitor_vault/vault"
+	"nitor_vault/cli"
 	"os"
-	"runtime/debug"
+)
+
+var (
+	aFlag       bool
+	lFlag       string
+	sFlag       string
+	vFlag       string
+	wFlag       bool
+	versionFlag bool
 )
 
 func main() {
-	// TODO: replace "flag" implementation with e.g. https://github.com/spf13/cobra
-	aFlag := flag.Bool("a", false, "list all flag")
-	lFlag := flag.String("l", "", "lookup flag, usage: -l <key>")
-	sFlag := flag.String("s", "", "store flag, usage together with -v: -s <key> -v <value string>")
-	vFlag := flag.String("v", "", "value used with store flag")
-	wFlag := flag.Bool("w", false, "overwrite flag used with store flag")
-	versionFlag := flag.Bool("version", false, "print version information and exit")
-	flag.Parse()
-
-	if *versionFlag {
-		fmt.Println(VersionInfo())
-		os.Exit(0)
-	}
-
-	// Check if the flags are provided and act accordingly
-	if *aFlag {
-		nVault := initVault()
-		all(nVault)
-	} else if *lFlag != "" {
-		nVault := initVault()
-		lookup(nVault, lFlag)
-	} else if *sFlag != "" && *vFlag != "" {
-		nVault := initVault()
-		if !*wFlag {
-			exists, err := nVault.Exists(*sFlag)
-			if err != nil {
-				log.Fatal(err)
-			}
-			if exists {
-				fmt.Printf("key %s already exists and -w flag not provided, provide it to confirm overwrite\n", *sFlag)
+	var rootCmd = &cobra.Command{
+		Use:   "nitor-vault",
+		Short: "Encrypted AWS key-value storage",
+		Long:  "Nitor Vault, see https://github.com/nitorcreations/vault for usage examples",
+		Run: func(cmd *cobra.Command, args []string) {
+			if versionFlag {
+				fmt.Println(cli.VersionInfo())
 				return
 			}
-		}
-		store(nVault, sFlag, []byte(*vFlag))
-	} else {
-		flag.CommandLine.Usage()
-	}
-}
 
-// CLI helper functions
-func initVault() vault.Vault {
-	nVault, err := vault.LoadVault()
-	if err != nil {
-		log.Fatal(err)
-	}
-	return nVault
-}
-
-func all(vault vault.Vault) {
-	all, err := vault.All()
-	if err != nil {
-		log.Fatal(err)
-	}
-	for _, key := range all {
-		fmt.Println(key)
-	}
-}
-
-func lookup(vault vault.Vault, key *string) {
-	res, err := vault.Lookup(*key)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("%s", res)
-}
-
-func store(vault vault.Vault, key *string, value []byte) {
-	err := vault.Store(*key, value)
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-// VersionInfo Returns formatted build version info string.
-func VersionInfo() string {
-	if info, ok := debug.ReadBuildInfo(); ok {
-		goVersion := info.GoVersion
-		commit := "unknown"
-		timestamp := "unknown"
-		arch := "unknown"
-		for _, setting := range info.Settings {
-			if setting.Key == "vcs.revision" {
-				commit = setting.Value
+			if len(args) <= 0 || !cmd.Flags().HasFlags() {
+				cmd.Help()
+				os.Exit(0)
 			}
-			if setting.Key == "vcs.time" {
-				timestamp = setting.Value
+
+			nVault := cli.InitVault()
+
+			switch {
+			case aFlag:
+				cli.All(nVault)
+			case lFlag != "":
+				cli.Lookup(nVault, &lFlag)
+			case sFlag != "" && vFlag != "":
+				if !wFlag {
+					exists, err := nVault.Exists(sFlag)
+					if err != nil {
+						log.Fatal(err)
+					}
+					if exists {
+						fmt.Printf("Key '%s' already exists and -w flag not provided, provide it to confirm overwrite\n", sFlag)
+						return
+					}
+				}
+				cli.Store(nVault, &sFlag, []byte(vFlag))
+			default:
+				cmd.Help()
 			}
-			if setting.Key == "GOARCH" {
-				arch = setting.Value
-			}
-		}
-		return fmt.Sprintf("%s %s %s %s %s %s", vault.VersionNumber, timestamp, vault.GitBranch, commit, goVersion, arch)
+		},
 	}
-	return ""
+
+	// Version command
+	var versionCmd = &cobra.Command{
+		Use:   "version",
+		Short: "Print version information and exit",
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println(cli.VersionInfo())
+		},
+	}
+
+	// All command
+	var allCmd = &cobra.Command{
+		Use:   "all",
+		Short: "List all available secrets",
+		Run: func(cmd *cobra.Command, args []string) {
+			nVault := cli.InitVault()
+			cli.All(nVault)
+		},
+	}
+
+	// Lookup command
+	var lookupCmd = &cobra.Command{
+		Use:   "lookup [key]",
+		Short: "Lookup secret value for key",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			nVault := cli.InitVault()
+			cli.Lookup(nVault, &args[0])
+		},
+	}
+
+	// Store command
+	var storeCmd = &cobra.Command{
+		Use:   "store [key] [value]",
+		Short: "Store an entry",
+		Args:  cobra.ExactArgs(2),
+		Run: func(cmd *cobra.Command, args []string) {
+			nVault := cli.InitVault()
+			cli.Store(nVault, &args[0], []byte(args[1]))
+		},
+	}
+
+	// Add overwrite flag to store command
+	storeCmd.Flags().BoolVarP(&wFlag, "overwrite", "w", false, "Overwrite the existing entry")
+
+	rootCmd.Flags().BoolVarP(&versionFlag, "version", "", false, "Print version information and exit")
+	rootCmd.Flags().BoolVarP(&aFlag, "all", "a", false, "List all available secrets")
+	rootCmd.Flags().StringVarP(&lFlag, "lookup", "l", "", "Lookup secret value for key, usage: -l <key>")
+	rootCmd.Flags().StringVarP(&sFlag, "store", "s", "", "Store flag, usage together with -v: -s <key> -v <value string>")
+	rootCmd.Flags().StringVarP(&vFlag, "value", "v", "", "Value used with store flag")
+	rootCmd.Flags().BoolVarP(&wFlag, "overwrite", "w", false, "Overwrite flag used with store flag")
+
+	// Add all subcommands to the root command
+	rootCmd.AddCommand(versionCmd, allCmd, lookupCmd, storeCmd)
+
+	if err := rootCmd.Execute(); err != nil {
+		log.Fatal(err)
+	}
 }
