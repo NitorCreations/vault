@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"nitor_vault/vault"
+	"os"
+	"runtime/debug"
 )
 
 func main() {
@@ -14,19 +16,25 @@ func main() {
 	sFlag := flag.String("s", "", "store flag, usage together with -v: -s <key> -v <value string>")
 	vFlag := flag.String("v", "", "value used with store flag")
 	wFlag := flag.Bool("w", false, "overwrite flag used with store flag")
+	versionFlag := flag.Bool("version", false, "print version information and exit")
 	flag.Parse()
+
+	if *versionFlag {
+		fmt.Println(VersionInfo())
+		os.Exit(0)
+	}
 
 	// Check if the flags are provided and act accordingly
 	if *aFlag {
-		vault := initVault()
-		all(vault)
+		nVault := initVault()
+		all(nVault)
 	} else if *lFlag != "" {
-		vault := initVault()
-		lookup(vault, lFlag)
+		nVault := initVault()
+		lookup(nVault, lFlag)
 	} else if *sFlag != "" && *vFlag != "" {
-		vault := initVault()
+		nVault := initVault()
 		if !*wFlag {
-			exists, err := vault.Exists(*sFlag)
+			exists, err := nVault.Exists(*sFlag)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -35,7 +43,7 @@ func main() {
 				return
 			}
 		}
-		store(vault, sFlag, []byte(*vFlag))
+		store(nVault, sFlag, []byte(*vFlag))
 	} else {
 		flag.CommandLine.Usage()
 	}
@@ -43,11 +51,11 @@ func main() {
 
 // CLI helper functions
 func initVault() vault.Vault {
-	vault, err := vault.LoadVault()
+	nVault, err := vault.LoadVault()
 	if err != nil {
 		log.Fatal(err)
 	}
-	return vault
+	return nVault
 }
 
 func all(vault vault.Vault) {
@@ -73,4 +81,27 @@ func store(vault vault.Vault, key *string, value []byte) {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+// VersionInfo Returns formatted build version info string.
+func VersionInfo() string {
+	if info, ok := debug.ReadBuildInfo(); ok {
+		goVersion := info.GoVersion
+		commit := "unknown"
+		timestamp := "unknown"
+		arch := "unknown"
+		for _, setting := range info.Settings {
+			if setting.Key == "vcs.revision" {
+				commit = setting.Value
+			}
+			if setting.Key == "vcs.time" {
+				timestamp = setting.Value
+			}
+			if setting.Key == "GOARCH" {
+				arch = setting.Value
+			}
+		}
+		return fmt.Sprintf("%s %s %s %s %s %s", VersionNumber, timestamp, GitBranch, commit, goVersion, arch)
+	}
+	return ""
 }
