@@ -50,7 +50,7 @@ build_project() {
 
   pushd "$PROJECT_PATH" > /dev/null
   rm -f "$EXECUTABLE"
-  time go build -v -o nitor-vault
+  time go build -v -race -o nitor-vault
 
   file "$EXECUTABLE"
   ./"$EXECUTABLE" --version
