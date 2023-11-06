@@ -43,7 +43,7 @@ init_options() {
 build_project() {
   print_magenta "Building Nitor Vault (Go)..."
   if [ -z "$(command -v go)" ]; then
-      print_error_and_exit "go not found in path"
+    print_error_and_exit "go not found in path"
   else
     go version
   fi
