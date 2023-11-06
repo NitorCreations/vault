@@ -108,3 +108,7 @@ node_modules/
 *.versionsBackup
 *~
 dependency-reduced-pom.xml
+
+# Go binary
+/go/nitor-vault
+/go/nitor_vault

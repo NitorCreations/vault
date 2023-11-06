@@ -67,3 +67,12 @@ repos:
         types: [file, rust]
         language: system
         files: ^rust/
+
+      - id: gofmt
+        name: go format
+        description: Run gofmt on files included in the commit.
+        entry: bash -c 'cd go && gofmt -s -w .'
+        pass_filenames: false
+        types: [file, go]
+        language: system
+        files: ^go/
