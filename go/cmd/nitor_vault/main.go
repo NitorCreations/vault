@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	//TODO: replace "flag" implementation with e.g. https://github.com/spf13/cobra
+	// TODO: replace "flag" implementation with e.g. https://github.com/spf13/cobra
 	aFlag := flag.Bool("a", false, "list all flag")
 	lFlag := flag.String("l", "", "lookup flag, usage: -l <key>")
 	sFlag := flag.String("s", "", "store flag, usage together with -v: -s <key> -v <value string>")
@@ -41,7 +41,7 @@ func main() {
 	}
 }
 
-// CLI helper funcs
+// CLI helper functions
 func initVault() vault.Vault {
 	vault, err := vault.LoadVault()
 	if err != nil {
@@ -49,6 +49,7 @@ func initVault() vault.Vault {
 	}
 	return vault
 }
+
 func all(vault vault.Vault) {
 	all, err := vault.All()
 	if err != nil {
@@ -58,16 +59,16 @@ func all(vault vault.Vault) {
 		fmt.Println(key)
 	}
 }
-func lookup(vault vault.Vault, key *string) {
 
+func lookup(vault vault.Vault, key *string) {
 	res, err := vault.Lookup(*key)
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Printf("%s", res)
 }
-func store(vault vault.Vault, key *string, value []byte) {
 
+func store(vault vault.Vault, key *string, value []byte) {
 	err := vault.Store(*key, value)
 	if err != nil {
 		log.Fatal(err)

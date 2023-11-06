@@ -35,10 +35,12 @@ type CloudFormationParams struct {
 	BucketName string
 	KeyArn     string
 }
+
 type Meta struct {
 	Alg   string `json:"alg"`
 	Nonce string `json:"nonce"`
 }
+
 type EncryptedObject struct {
 	DataKey       []byte
 	EncryptedBlob []byte
@@ -108,6 +110,7 @@ func getCloudformationParams(cfg *aws.Config, stackName string) (CloudFormationP
 	}
 	return res, nil
 }
+
 func (v Vault) All() ([]string, error) {
 	res := []string{}
 
@@ -125,6 +128,7 @@ func (v Vault) All() ([]string, error) {
 	}
 	return res, nil
 }
+
 func (v Vault) getS3Object(key string) ([]byte, error) {
 	var res []byte
 	dataKey, err := v.s3Client.GetObject(context.TODO(), &s3.GetObjectInput{Bucket: &v.cloudformationParams.BucketName, Key: &key})
@@ -138,6 +142,7 @@ func (v Vault) getS3Object(key string) ([]byte, error) {
 	}
 	return res, nil
 }
+
 func (v Vault) Lookup(key string) (string, error) {
 	res := ""
 	dataKeyBlob, err := v.getS3Object(fmt.Sprintf("%s.key", key))
@@ -183,6 +188,7 @@ func (v Vault) Lookup(key string) (string, error) {
 	}
 	return string(plaintext), nil
 }
+
 func (v Vault) Exists(key string) (bool, error) {
 	keyName := fmt.Sprintf("%s.key", key)
 	_, err := v.s3Client.HeadObject(context.TODO(), &s3.HeadObjectInput{Bucket: &v.cloudformationParams.BucketName, Key: &keyName})
@@ -195,6 +201,7 @@ func (v Vault) Exists(key string) (bool, error) {
 	}
 	return true, nil
 }
+
 func (v Vault) putS3Object(key string, value io.Reader, c chan error) {
 	_, err := v.s3Client.PutObject(context.TODO(), &s3.PutObjectInput{Bucket: &v.cloudformationParams.BucketName, Key: &key, Body: value})
 	if err != nil {
@@ -203,6 +210,7 @@ func (v Vault) putS3Object(key string, value io.Reader, c chan error) {
 	}
 	c <- nil
 }
+
 func (v Vault) Store(key string, value []byte) error {
 	encrypted, err := v.encrypt(value)
 	if err != nil {
