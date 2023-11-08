@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        goos: [linux, darwin, windows]
+        goos: [linux, windows]
         goarch: [amd64, arm64]
     steps:
       - uses: actions/checkout@v4
@@ -29,6 +29,6 @@ jobs:
           GOOS: ${{matrix.goos}}
       - uses: Shopify/upload-to-release@v1.0.1
         with:
-          name: vault-${{matrix.goos}}-${{matrix.goarch}}-${{github.ref}}${{matrix.goos == 'windows' && '.exe' ||''}}
+          name: vault-${{matrix.goos}}-${{matrix.goarch}}-${{github.ref_name}}${{matrix.goos == 'windows' && '.exe' ||''}}
           path: go/nitor-vault
           repo-token: ${{ secrets.GITHUB_TOKEN }}
