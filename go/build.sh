@@ -53,7 +53,6 @@ build_project() {
   time go build -v -o nitor-vault
 
   file "$EXECUTABLE"
-  ./"$EXECUTABLE" --version
   popd > /dev/null
 }
 
