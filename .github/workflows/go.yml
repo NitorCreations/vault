@@ -1,0 +1,34 @@
+name: Go build
+
+# Run either when pushing directly to main/master or in a PR targeting main/master
+on:
+  push:
+    branches:
+      - master
+      - main
+    paths:
+      - "**.go"
+      - "go/go.mod"
+      - "go/go.sum"
+      - ".github/workflows/go.yml"
+  pull_request:
+    branches:
+      - master
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.21.x"
+      - name: Install dependencies
+        run: go get .
+      - name: Build
+        run: go build -v ./...
+      - name: Test with the Go CLI
+        run: go test
