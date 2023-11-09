@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"log"
 	"nitor_vault/cli"
 	"os"
+
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -28,7 +29,7 @@ func main() {
 				return
 			}
 
-			if len(args) <= 0 || !cmd.Flags().HasFlags() {
+			if !cmd.Flags().HasFlags() {
 				cmd.Help()
 				os.Exit(0)
 			}
