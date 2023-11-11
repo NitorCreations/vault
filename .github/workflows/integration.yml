@@ -21,8 +21,6 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      VAULT_STACK: nitor-vault-integration-testing
     strategy:
       matrix:
         lang: [go, rust]
@@ -52,12 +50,14 @@ jobs:
         with:
           name: ${{matrix.lang}}
           path: ${{matrix.lang}}/vault
-  create_keys:
+  tests:
     needs: build
     runs-on: ubuntu-latest
     env:
+      # VAULT_STACK overwrites default 'vault' for vaults
       VAULT_STACK: nitor-vault-integration-testing
-
+    # at the moment we store to the values to fixed keys so this needs to have limited concurrency
+    concurrency: 1
     steps:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -73,12 +73,22 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-      - name: install python vault to path
+      - name: install python vault
         run: python -m pip install .
         working-directory: python
-      - name: run version for all version
+      - name: add execute rights & run --version for all versions
         run: |
           chmod +x bin/go/vault bin/rust/vault
           vault --version
           bin/go/vault --version
           bin/rust/vault --version
+      - name: store secret with each version
+        run: |
+          vault -s 'secret-python' -v 'sha-${{github.refs.sha}}' -w
+          bin/go/vault -s 'secret-go' -v 'sha-${{github.refs.sha}}' -w
+          bin/rust/vault -s 'secret-rust' -v 'sha-${{github.refs.sha}}' -w
+      - name: validate secrets equality cross-client
+        run: |
+          diff <(vault -l secret-go) <(vault -l secret-rust)
+          diff <(bin/go/vault -l secret-rust) <(bin/go/vault -l secret-python)
+          diff <(bin/rust/vault -l secret-go) <(bin/rust/vault -l secret-python)
