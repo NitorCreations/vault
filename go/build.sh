@@ -34,9 +34,9 @@ init_options() {
   PROJECT_PATH="$REPO_ROOT/go"
 
   if [ "$PLATFORM" = windows ]; then
-    EXECUTABLE="nitor-vault.exe"
+    EXECUTABLE="vault.exe"
   else
-    EXECUTABLE="nitor-vault"
+    EXECUTABLE="vault"
   fi
 }
 
@@ -50,7 +50,7 @@ build_project() {
 
   pushd "$PROJECT_PATH" > /dev/null
   rm -f "$EXECUTABLE"
-  time go build -v -o nitor-vault
+  time go build -v -o vault
 
   file "$EXECUTABLE"
   popd > /dev/null
