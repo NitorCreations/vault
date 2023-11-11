@@ -68,7 +68,7 @@ jobs:
       - name: Download reports' artifacts
         uses: actions/download-artifact@v3
         with:
-          path: /bin/
+          path: bin
       - uses: actions/setup-python@v4
         if: ${{ matrix.lang == 'python'}}
         with:
@@ -80,5 +80,5 @@ jobs:
       - name: run version for all version
         run: |
           vault --version
-          go-vault --version
-          rust-vault --version
+          bin/go-vault --version
+          bin/rust-vault --version
