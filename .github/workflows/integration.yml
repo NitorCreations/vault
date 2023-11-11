@@ -83,9 +83,22 @@ jobs:
         run: bin/go/vault -s 'secret-go' -v 'sha-${{github.sha}}' -w
       - name: store secret with rust
         run: bin/rust/vault -s 'secret-rust' -v 'sha-${{github.sha}}' -w
+      - name: validate storing worked fine python
+        run: diff <(vault -l secret-python) <(echo -n sha-${{github.sha}})
       - name: validate go and rust secret equality with python
         run: diff <(vault -l secret-go) <(vault -l secret-rust)
       - name: validate python and rust secret equality with go
         run: diff <(bin/go/vault -l secret-rust) <(bin/go/vault -l secret-python)
       - name: validate go and python secret equality with rust
         run: diff <(bin/rust/vault -l secret-go) <(bin/rust/vault -l secret-python)
+      - name: delete secret with python
+        run: vault -d 'secret-python'
+      - name: delete secret with go
+        run: bin/go/vault -s 'secret-go'
+      - name: delete secret with rust
+        run: bin/rust/vault -s 'secret-rust'
+      - name: verify that keys have been deleted
+        run: |
+          bin/rust/vault --exists secret-python | grep doesn\'t
+          bin/rust/vault --exists secret-go | grep doesn\'t
+          bin/rust/vault --exists secret-rust | grep doesn\'t
