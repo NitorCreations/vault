@@ -1,0 +1,78 @@
+name: Integration Tests between the different implementations
+
+# Run either when pushing directly to main/master or in a PR targeting main/master
+on:
+  push:
+    branches:
+      - master
+      - main
+    paths:
+      - "**.go"
+      - "go/go.mod"
+      - "go/go.sum"
+      - ".github/workflows/integration.yml"
+  pull_request:
+    branches:
+      - master
+      - main
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      VAULT_STACK: nitor-vault-integration-testing
+    strategy:
+      matrix:
+        lang: [go, rust]
+      fail-fast: true
+    defaults:
+      run:
+        working-directory: ${{matrix.lang}}
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{secrets.AWS_CI_ROLE}}
+          aws-region: eu-west-1
+      - uses: actions/checkout@v4
+      - uses: actions-rs/toolchain@v1
+        if: ${{ matrix.lang == 'rust'}}
+        with:
+          toolchain: stable
+      - uses: actions-rs/toolchain@v1
+        if: ${{ matrix.lang == 'rust'}}
+        with:
+          toolchain: stable
+      - uses: actions/setup-go@v4
+        if: ${{ matrix.lang == 'go'}}
+        with:
+          go-version: ">=1.21.0"
+      - name: Run build script for compiled languages
+        if: ${{ hashFiles(join(matrix.lang,'build.sh')) != '' }}
+        run: "./build.sh"
+      - name: Archive code coverage results
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{matrix.lang}}-binary
+          path: ${{matrix.lang}}/vault
+  # create_keys:
+  #   runs-on: ubuntu-latest
+  #   env:
+  #     VAULT_STACK: nitor-vault-integration-testing
+  #   strategy:
+  #     matrix:
+  #       lang: [go, rust]
+  #     fail-fast: true
+  #   defaults:
+  #     run:
+  #       working-directory: ${{matrix.lang}}
+  #   steps:
+  #     - name: Configure AWS Credentials
+  #       uses: aws-actions/configure-aws-credentials@v4
+  #       with:
+  #         role-to-assume: ${{secrets.AWS_CI_ROLE}}
+  #         aws-region: eu-west-1
+  #     - uses: actions/checkout@v4
+  #     - uses: actions/setup-python@v4
+  #       if: ${{ matrix.lang == 'go'}}
+  #       with:
+  #         python-version: "3.12"
