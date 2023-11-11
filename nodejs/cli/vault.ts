@@ -36,8 +36,7 @@ prog.option(
 prog.option("-r, --region", "Give a region for the stack and the bucket");
 
 prog
-  .command("store <name> <value>")
-  .describe("Store data in the vault")
+  .command("store <name> <value>", "Store data in the vault", { alias: "s" })
   .option(
     "-w, --overwrite",
     "Overwrite the current value if it already exists",
@@ -57,29 +56,25 @@ prog
       })
       .catch(handleRejection);
   })
-  .command("lookup <name>")
-  .describe("Look up data from the vault")
+  .command("lookup <name>", "Look up data from the vault", { alias: "l" })
   .action(async (name, options) => {
     const client = await vault(options);
     client.lookup(name).then(console.log).catch(handleRejection);
   })
-  .command("delete <name>")
-  .describe("Delete data from the vault")
+  .command("delete <name>", "Delete data from the vault", { alias: "d" })
   .action((name, options) => {
     vault(options)
       .then((client) => client.delete(name))
       .catch(handleRejection);
   })
-  .command("exists <name>")
-  .describe("Check if the vault contains data")
+  .command("exists <name>", "Check if the vault contains data", { alias: "e" })
   .action((name, options) => {
     vault(options)
       .then((client) => client.exists(name))
       .then(console.log)
       .catch(handleRejection);
   })
-  .command("all")
-  .describe("List all keys the vault contains")
+  .command("all", "List all keys the vault contains", { alias: "a" })
   .action((options) => {
     vault(options)
       .then((client) => client.all())
