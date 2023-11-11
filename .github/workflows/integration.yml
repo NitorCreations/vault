@@ -15,6 +15,9 @@ on:
     branches:
       - master
       - main
+permissions:
+  id-token: write
+  contents: read
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -23,16 +26,10 @@ jobs:
     strategy:
       matrix:
         lang: [go, rust]
-      fail-fast: true
     defaults:
       run:
         working-directory: ${{matrix.lang}}
     steps:
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{secrets.AWS_CI_ROLE}}
-          aws-region: eu-west-1
       - uses: actions/checkout@v4
       - uses: actions-rs/toolchain@v1
         if: ${{ matrix.lang == 'rust'}}
@@ -54,25 +51,28 @@ jobs:
         with:
           name: ${{matrix.lang}}-binary
           path: ${{matrix.lang}}/vault
-  # create_keys:
-  #   runs-on: ubuntu-latest
-  #   env:
-  #     VAULT_STACK: nitor-vault-integration-testing
-  #   strategy:
-  #     matrix:
-  #       lang: [go, rust]
-  #     fail-fast: true
-  #   defaults:
-  #     run:
-  #       working-directory: ${{matrix.lang}}
-  #   steps:
-  #     - name: Configure AWS Credentials
-  #       uses: aws-actions/configure-aws-credentials@v4
-  #       with:
-  #         role-to-assume: ${{secrets.AWS_CI_ROLE}}
-  #         aws-region: eu-west-1
-  #     - uses: actions/checkout@v4
-  #     - uses: actions/setup-python@v4
-  #       if: ${{ matrix.lang == 'go'}}
-  #       with:
-  #         python-version: "3.12"
+  create_keys:
+    runs-on: ubuntu-latest
+    env:
+      VAULT_STACK: nitor-vault-integration-testing
+    strategy:
+      matrix:
+        lang: [go, rust, python]
+      fail-fast: true
+    defaults:
+      run:
+        working-directory: ${{matrix.lang}}
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{secrets.AWS_CI_ROLE}}
+          aws-region: eu-west-1
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        if: ${{ matrix.lang == 'python'}}
+        with:
+          python-version: "3.12"
+      - name: install python vault to path
+        if: ${{ matrix.lang == 'python'}}
+        run: python -m pip install .
