@@ -34,6 +34,10 @@ Resources:
             region: { Ref: "AWS::Region" }
             stackName: nitor-vault-integration-testing
             paramName: decryptPolicy
+        - StackRef:
+            region: { Ref: "AWS::Region" }
+            stackName: nitor-vault-integration-testing
+            paramName: encryptPolicy
 
 Outputs:
   Role:
