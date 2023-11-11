@@ -38,9 +38,8 @@ jobs:
           go-version: ">=1.21.0"
           cache-dependency-path: go/go.sum
       - name: Run build script for compiled languages
-        if: ${{ hashFiles(join(matrix.lang,'build.sh')) != '' }}
         run: "./build.sh"
-      - name: Archive code coverage results
+      - name: Upload built binaries
         uses: actions/upload-artifact@v3
         with:
           name: ${{matrix.lang}}
