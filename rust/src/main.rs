@@ -23,19 +23,20 @@ async fn main() -> Result<()> {
     };
 
     // Handle subcommands
-    if let Some(command) = &args.command {
+    if let Some(command) = args.command {
         return match command {
-            Command::Delete { key } => cli::delete(&client, key).await,
+            Command::Delete { key } => cli::delete(&client, &key).await,
             Command::Describe {} => Ok(println!("{}", client.stack_info())),
             Command::Exists { key } => cli::exists(&client, key).await,
             Command::All {} => cli::list_all(&client).await,
-            Command::Lookup { key } => cli::lookup(&client, key).await,
+            Command::Lookup { key } => cli::lookup(&client, &key).await,
             Command::Store {
                 key,
                 value,
                 overwrite,
                 file,
-            } => cli::store(&client, key, value, file, overwrite).await,
+                value_opt,
+            } => cli::store(&client, key, value, file, value_opt, overwrite).await,
             Command::Info {} => Ok(println!("{}", client.stack_info())),
         };
     }

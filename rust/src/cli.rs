@@ -63,13 +63,21 @@ pub enum Command {
         key: Option<String>,
         #[arg(short = 'w', long, help = "Overwrite existing key")]
         overwrite: bool,
+        #[arg(
+            short,
+            long,
+            help = "Point to a file that will be stored, - for stdin",
+            value_name = "value",
+            conflicts_with_all = vec!["value","file"]
+        )]
+        value_opt: Option<String>,
         value: Option<String>,
         #[arg(
             short,
             long,
             help = "Point to a file that will be stored, - for stdin",
             value_name = "filename",
-            conflicts_with = "value"
+            conflicts_with_all = vec!["value","value_opt"]
         )]
         file: Option<String>,
     },
@@ -89,15 +97,16 @@ pub async fn parse_args() -> Args {
 /// Store key-value pair
 pub async fn store(
     vault: &Vault,
-    key: &Option<String>,
-    value: &Option<String>,
-    file: &Option<String>,
-    overwrite: &bool,
+    key: Option<String>,
+    value: Option<String>,
+    file: Option<String>,
+    value_opt: Option<String>,
+    overwrite: bool,
 ) -> Result<()> {
     let key = {
-        if let Some(key) = key {
+        if let Some(key) = &key {
             key
-        } else if let Some(file_name) = file {
+        } else if let Some(file_name) = &file {
             match file_name.as_str() {
                 "-" => anyhow::bail!("Key cannot be empty when reading from stdin"),
                 _ => file_name,
@@ -110,9 +119,9 @@ pub async fn store(
     };
 
     let data = {
-        if let Some(value) = value {
+        if let Some(value) = value.or(value_opt) {
             value.to_owned()
-        } else if let Some(path) = file {
+        } else if let Some(path) = &file {
             match path.as_str() {
                 "-" => {
                     println!("Reading from stdin, empty line stops reading");
@@ -123,7 +132,7 @@ pub async fn store(
                         .take_while(|l| !l.trim().is_empty())
                         .fold(String::new(), |acc, line| acc + &line + "\n")
                 }
-                _ => std::fs::read_to_string(path)
+                _ => std::fs::read_to_string(&path)
                     .with_context(|| format!("Error reading file '{path}'"))?,
             }
         } else {
@@ -133,7 +142,7 @@ pub async fn store(
 
     if !overwrite
         && vault
-            .exists(key)
+            .exists(&key)
             .await
             .with_context(|| format!("Error checking if key '{key}' exists"))?
     {
@@ -143,7 +152,7 @@ pub async fn store(
     }
 
     vault
-        .store(key, data.as_bytes())
+        .store(&key, data.as_bytes())
         .await
         .with_context(|| format!("Error saving key '{key}'"))
 }
@@ -177,12 +186,12 @@ pub async fn list_all(vault: &Vault) -> Result<()> {
         .map(|list| println!("{}", list.join("\n")))
 }
 
-pub async fn exists(vault: &Vault, key: &str) -> Result<()> {
+pub async fn exists(vault: &Vault, key: String) -> Result<()> {
     if key.trim().is_empty() {
         anyhow::bail!("Empty key '{key}'")
     }
     vault
-        .exists(key)
+        .exists(&key)
         .await
         .with_context(|| format!("Error checking if key '{key}' exists"))
         .map(|result| match result {
