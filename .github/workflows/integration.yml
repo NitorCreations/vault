@@ -35,10 +35,10 @@ jobs:
         if: ${{ matrix.lang == 'rust'}}
         with:
           toolchain: stable
-      - uses: actions-rs/toolchain@v1
+      - uses: Swatinem/rust-cache@v2.7.0
         if: ${{ matrix.lang == 'rust'}}
         with:
-          toolchain: stable
+          cache-directories: rust
       - uses: actions/setup-go@v4
         if: ${{ matrix.lang == 'go'}}
         with:
