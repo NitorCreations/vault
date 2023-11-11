@@ -1,12 +1,15 @@
 [package]
 name = "nitor-vault"
-version = "0.4.0"
+version = "0.4.1"
 edition = "2021"
-authors = ["Kalle Ahlström <kalle.ahlstrom@nitor.com", "Akseli Lukkarila <akseli.lukkarila@nitor.com>"]
+authors = [
+  "Kalle Ahlström <kalle.ahlstrom@nitor.com",
+  "Akseli Lukkarila <akseli.lukkarila@nitor.com>",
+]
 description = "Encrypted AWS key-value storage"
 license = "Apache-2.0"
 repository = "https://github.com/nitorcreations/vault"
-keywords = ["secrets","s3"]
+keywords = ["secrets", "s3"]
 
 [dependencies]
 aes-gcm = "0.10.3"
@@ -20,7 +23,7 @@ base64 = "0.21.5"
 clap = { version = "4.4.7", features = ["derive", "env"] }
 rand = "0.8.5"
 serde = { version = "1.0.190", features = ["derive"] }
-serde_json="1.0"
+serde_json = "1.0"
 thiserror = "1.0.50"
 tokio = { version = "1", features = ["full"] }
 
