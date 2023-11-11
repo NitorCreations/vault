@@ -78,6 +78,7 @@ jobs:
         working-directory: python
       - name: run version for all version
         run: |
+          chmod +x bin/go/vault bin/rust/vault
           vault --version
           bin/go/vault --version
           bin/rust/vault --version
