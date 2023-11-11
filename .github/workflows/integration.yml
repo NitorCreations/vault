@@ -78,11 +78,11 @@ jobs:
           bin/go/vault --version
           bin/rust/vault --version
       - name: store secret with python
-        run: vault -s 'secret-python' -v 'sha-${{github.refs.sha}}' -w
+        run: vault -s 'secret-python' -v 'sha-${{github.sha}}' -w
       - name: store secret with rust
-        run: bin/go/vault -s 'secret-go' -v 'sha-${{github.refs.sha}}' -w
+        run: bin/go/vault -s 'secret-go' -v 'sha-${{github.sha}}' -w
       - name: store secret with rust
-        run: bin/rust/vault -s 'secret-rust' -v 'sha-${{github.refs.sha}}' -w
+        run: bin/rust/vault -s 'secret-rust' -v 'sha-${{github.sha}}' -w
       - name: validate go and rust secret equality with python
         run: diff <(vault -l secret-go) <(vault -l secret-rust)
       - name: validate python and rust secret equality with go
