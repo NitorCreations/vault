@@ -285,7 +285,7 @@ public class VaultClient {
   }
 
   private byte[] readObject(String key) throws IOException {
-    return this.s3.getObject(GetObjectRequest.builder().bucket(this.bucketName).key(key).build()).readNBytes(Integer.MAX_VALUE);
+    return this.s3.getObjectAsBytes(GetObjectRequest.builder().bucket(this.bucketName).key(key).build()).asByteArray();
   }
 
   private void deleteObject(String key) {
