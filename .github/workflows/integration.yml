@@ -31,7 +31,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2.7.0
         if: ${{ matrix.lang == 'rust'}}
         with:
-          cache-directories: ./rust/target
+          workspaces: ./rust -> target
       - uses: actions/setup-go@v4
         if: ${{ matrix.lang == 'go'}}
         with:
