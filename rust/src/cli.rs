@@ -132,7 +132,7 @@ pub async fn store(
                         .take_while(|l| !l.trim().is_empty())
                         .fold(String::new(), |acc, line| acc + &line + "\n")
                 }
-                _ => std::fs::read_to_string(&path)
+                _ => std::fs::read_to_string(path)
                     .with_context(|| format!("Error reading file '{path}'"))?,
             }
         } else {
@@ -142,7 +142,7 @@ pub async fn store(
 
     if !overwrite
         && vault
-            .exists(&key)
+            .exists(key)
             .await
             .with_context(|| format!("Error checking if key '{key}' exists"))?
     {
@@ -152,7 +152,7 @@ pub async fn store(
     }
 
     vault
-        .store(&key, data.as_bytes())
+        .store(key, data.as_bytes())
         .await
         .with_context(|| format!("Error saving key '{key}'"))
 }
