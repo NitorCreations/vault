@@ -49,19 +49,14 @@ jobs:
       - name: Archive code coverage results
         uses: actions/upload-artifact@v3
         with:
-          name: ${{matrix.lang}}-binary
+          name: ${{matrix.lang}}-vault
           path: ${{matrix.lang}}/vault
   create_keys:
+    needs: build
     runs-on: ubuntu-latest
     env:
       VAULT_STACK: nitor-vault-integration-testing
-    strategy:
-      matrix:
-        lang: [go, rust, python]
-      fail-fast: true
-    defaults:
-      run:
-        working-directory: ${{matrix.lang}}
+
     steps:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -69,6 +64,10 @@ jobs:
           role-to-assume: ${{secrets.AWS_CI_ROLE}}
           aws-region: eu-west-1
       - uses: actions/checkout@v4
+      - name: Download reports' artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: /bin/
       - uses: actions/setup-python@v4
         if: ${{ matrix.lang == 'python'}}
         with:
@@ -76,3 +75,9 @@ jobs:
       - name: install python vault to path
         if: ${{ matrix.lang == 'python'}}
         run: python -m pip install .
+        working-directory: python
+      - name: run version for all version
+        run: |
+          vault --version
+          go-vault --version
+          rust-vault --version
