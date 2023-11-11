@@ -13,74 +13,52 @@ use nitor_vault::Vault;
     arg_required_else_help = true
 )] // Reads info from `Cargo.toml`
 pub struct Args {
-    /// List all available secrets
-    #[arg(short, long, help = "List all available secrets")]
-    pub all: bool,
-
     /// Override the bucket name
     #[arg(short, long, env = "VAULT_BUCKET")]
     pub bucket: Option<String>,
-
-    /// Describe CloudFormation stack parameters
-    #[arg(
-        long,
-        help = "Describe CloudFormation stack parameters for current configuration"
-    )]
-    pub describe: bool,
-
-    /// Delete key
-    #[arg(short, long, help = "Delete key", value_name = "KEY")]
-    pub delete: Option<String>,
-
-    /// Print debug information
-    #[arg(long, help = "Print information")]
-    pub info: bool,
 
     /// Override the KMS key arn for storing or looking up
     #[arg(short, long, env = "VAULT_KEY")]
     pub key_arn: Option<String>,
 
-    /// Print secret value for given key
-    #[arg(
-        short,
-        long,
-        help = "Print secret value for given key",
-        value_name = "KEY"
-    )]
-    pub lookup: Option<String>,
-
     /// Specify AWS region to use
     #[arg(short, long, help = "Specify AWS region for the bucket")]
     pub region: Option<String>,
 
-    /// Available subcommands
-    #[command(subcommand)]
-    pub command: Option<Command>,
-
     /// Optional CloudFormation stack to lookup key and bucket
     #[arg(long, env)]
     pub vault_stack: Option<String>,
+
+    /// Available subcommands
+    #[command(subcommand)]
+    pub command: Option<Command>,
 }
 
 #[derive(Subcommand)]
 pub enum Command {
     /// Delete an existing key from the store
+    #[command(short_flag('d'), long_flag("delete"))]
     Delete { key: String },
 
     /// Describe CloudFormation stack parameters for current configuration.
     // This value is useful for Lambdas as you can load the CloudFormation parameters from env.
+    #[command(long_flag("describe"))]
     Describe {},
 
     /// Check if a key exists
+    #[command(long_flag("exists"), alias("e"))]
     Exists { key: String },
 
     /// List available secrets
-    List {},
+    #[command(short_flag('a'), long_flag("all"), alias("a"))]
+    All {},
 
     /// Print secret value for given key
-    Load { key: String },
+    #[command(short_flag('l'), alias("l"))]
+    Lookup { key: String },
 
     /// Store new key-value pair
+    #[command(short_flag('s'), alias("s"))]
     Store {
         key: Option<String>,
         #[arg(short = 'w', long, help = "Overwrite existing key")]
@@ -95,6 +73,9 @@ pub enum Command {
         )]
         file: Option<String>,
     },
+    /// Print debug information
+    #[command(long_flag("info"), alias("i"))]
+    Info {},
 }
 
 /// Parse command line arguments.
