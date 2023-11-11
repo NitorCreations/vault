@@ -94,9 +94,9 @@ jobs:
       - name: delete secret with python
         run: vault -d 'secret-python'
       - name: delete secret with go
-        run: bin/go/vault -s 'secret-go'
+        run: bin/go/vault -d 'secret-go'
       - name: delete secret with rust
-        run: bin/rust/vault -s 'secret-rust'
+        run: bin/rust/vault -d 'secret-rust'
       - name: verify that keys have been deleted
         run: |
           bin/rust/vault --exists secret-python | grep doesn\'t
