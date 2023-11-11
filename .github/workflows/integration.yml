@@ -43,6 +43,7 @@ jobs:
         if: ${{ matrix.lang == 'go'}}
         with:
           go-version: ">=1.21.0"
+          cache-dependency-path: go/go.sum
       - name: Run build script for compiled languages
         if: ${{ hashFiles(join(matrix.lang,'build.sh')) != '' }}
         run: "./build.sh"
