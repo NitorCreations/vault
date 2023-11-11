@@ -9,8 +9,8 @@ import (
 
 // CLI helper functions
 
-func InitVault() vault.Vault {
-	nVault, err := vault.LoadVault()
+func InitVault(vaultstackFlag string) vault.Vault {
+	nVault, err := vault.LoadVault(vaultstackFlag)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -8,6 +8,7 @@ import (
 	"crypto/rand"
 	"errors"
 	"net/http"
+	"os"
 
 	"encoding/base64"
 	"encoding/json"
@@ -66,13 +67,22 @@ func Init() {
 	}
 }
 
-func LoadVault() (Vault, error) {
+// / stackNameOpt is made an optional string array so that one can call LoadVault with no params or first parameter being vault stack name, i.e. vault.LoadVault() === vault.LoadVault("vault")
+func LoadVault(stackNameOpt ...string) (Vault, error) {
 	res := Vault{}
 	cfg, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
 		return res, fmt.Errorf("error creating config: %v", err)
 	}
-	cfnParams, err := getCloudformationParams(&cfg, "vault")
+	// fetch VAULT_STACK from env
+	stackName := os.Getenv("VAULT_STACK")
+
+	if len(stackNameOpt) != 0 && stackNameOpt[0] != "" {
+		stackName = stackNameOpt[0]
+	} else if stackName == "" {
+		stackName = "vault"
+	}
+	cfnParams, err := getCloudformationParams(&cfg, stackName)
 	if err != nil {
 		return res, err
 	}

@@ -10,12 +10,13 @@ import (
 )
 
 var (
-	aFlag       bool
-	lFlag       string
-	sFlag       string
-	vFlag       string
-	wFlag       bool
-	versionFlag bool
+	aFlag          bool
+	lFlag          string
+	sFlag          string
+	vFlag          string
+	wFlag          bool
+	versionFlag    bool
+	vaultstackFlag string
 )
 
 func main() {
@@ -34,7 +35,7 @@ func main() {
 				os.Exit(0)
 			}
 
-			nVault := cli.InitVault()
+			nVault := cli.InitVault(vaultstackFlag)
 
 			switch {
 			case aFlag:
@@ -73,7 +74,7 @@ func main() {
 		Use:   "all",
 		Short: "List all available secrets",
 		Run: func(cmd *cobra.Command, args []string) {
-			nVault := cli.InitVault()
+			nVault := cli.InitVault(vaultstackFlag)
 			cli.All(nVault)
 		},
 	}
@@ -84,7 +85,7 @@ func main() {
 		Short: "Lookup secret value for key",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			nVault := cli.InitVault()
+			nVault := cli.InitVault(vaultstackFlag)
 			cli.Lookup(nVault, &args[0])
 		},
 	}
@@ -95,7 +96,7 @@ func main() {
 		Short: "Store an entry",
 		Args:  cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
-			nVault := cli.InitVault()
+			nVault := cli.InitVault(vaultstackFlag)
 			cli.Store(nVault, &args[0], []byte(args[1]))
 		},
 	}
@@ -108,6 +109,8 @@ func main() {
 	rootCmd.Flags().StringVarP(&lFlag, "lookup", "l", "", "Lookup secret value for key, usage: -l <key>")
 	rootCmd.Flags().StringVarP(&sFlag, "store", "s", "", "Store flag, usage together with -v: -s <key> -v <value string>")
 	rootCmd.Flags().StringVarP(&vFlag, "value", "v", "", "Value used with store flag")
+	// the default is written in library side, don't put it here as it will break ENV variable
+	rootCmd.Flags().StringVar(&vaultstackFlag, "vaultstack", "", "Optional CloudFormation stack to lookup key and bucket. 'vault' by default (also by env: VAULT_STACK=)")
 	rootCmd.Flags().BoolVarP(&wFlag, "overwrite", "w", false, "Overwrite flag used with store flag")
 
 	// Add all subcommands to the root command
