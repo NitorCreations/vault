@@ -79,7 +79,7 @@ jobs:
           bin/rust/vault --version
       - name: store secret with python
         run: vault -s 'secret-python' -v 'sha-${{github.sha}}' -w
-      - name: store secret with rust
+      - name: store secret with go
         run: bin/go/vault -s 'secret-go' -v 'sha-${{github.sha}}' -w
       - name: store secret with rust
         run: bin/rust/vault -s 'secret-rust' -v 'sha-${{github.sha}}' -w
