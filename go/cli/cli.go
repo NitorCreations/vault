@@ -3,7 +3,7 @@ package cli
 import (
 	"fmt"
 	"log"
-	"nitor_vault/vault"
+	vault "nitor_vault/nvault"
 	"runtime/debug"
 )
 
