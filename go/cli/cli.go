@@ -35,6 +35,13 @@ func Lookup(vault vault.Vault, key *string) {
 	fmt.Printf("%s", res)
 }
 
+func Delete(vault vault.Vault, key *string) {
+	err := vault.Delete(*key)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
 func Store(vault vault.Vault, key *string, value []byte) {
 	err := vault.Store(*key, value)
 	if err != nil {

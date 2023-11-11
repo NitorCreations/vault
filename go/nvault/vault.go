@@ -221,6 +221,42 @@ func (v Vault) putS3Object(key string, value io.Reader, c chan error) {
 	c <- nil
 }
 
+func (v Vault) deleteS3Object(key string, c chan error) {
+	_, err := v.s3Client.DeleteObject(context.TODO(), &s3.DeleteObjectInput{Bucket: &v.cloudformationParams.BucketName, Key: &key})
+	if err != nil {
+		c <- err
+		return
+	}
+	c <- nil
+}
+func (v Vault) Delete(key string) error {
+	exists, err := v.Exists(key)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return fmt.Errorf("key %s doesn't exists, cannot delete", key)
+	}
+	// is this how you do concurrency?
+	ch := make(chan error)
+	go v.deleteS3Object(fmt.Sprintf("%s.key", key), ch)
+	go v.deleteS3Object(fmt.Sprintf("%s.aesgcm.encrypted", key), ch)
+	go v.deleteS3Object(fmt.Sprintf("%s.meta", key), ch)
+	recvd := 0
+	for err := range ch {
+		recvd += 1
+		if err != nil {
+			close(ch)
+			return err
+		}
+		if recvd == 3 {
+			close(ch)
+		}
+	}
+
+	return nil
+}
+
 func (v Vault) Store(key string, value []byte) error {
 	encrypted, err := v.encrypt(value)
 	if err != nil {

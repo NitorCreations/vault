@@ -12,6 +12,7 @@ import (
 var (
 	aFlag          bool
 	lFlag          string
+	dFlag          string
 	sFlag          string
 	vFlag          string
 	wFlag          bool
@@ -54,6 +55,8 @@ func main() {
 					}
 				}
 				cli.Store(nVault, &sFlag, []byte(vFlag))
+			case dFlag != "":
+				cli.Delete(nVault, &dFlag)
 			default:
 				cmd.Help()
 			}
@@ -101,12 +104,23 @@ func main() {
 		},
 	}
 
+	// Delete command
+	var deleteCmd = &cobra.Command{
+		Use:   "delete [key]",
+		Short: "Delete secret value for key",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			nVault := cli.InitVault(vaultstackFlag)
+			cli.Delete(nVault, &args[0])
+		},
+	}
 	// Add overwrite flag to store command
 	storeCmd.Flags().BoolVarP(&wFlag, "overwrite", "w", false, "Overwrite the existing entry")
 
 	rootCmd.Flags().BoolVarP(&versionFlag, "version", "", false, "Print version information and exit")
 	rootCmd.Flags().BoolVarP(&aFlag, "all", "a", false, "List all available secrets")
 	rootCmd.Flags().StringVarP(&lFlag, "lookup", "l", "", "Lookup secret value for key, usage: -l <key>")
+	rootCmd.Flags().StringVarP(&dFlag, "delete", "d", "", "Delete secret value for key, usage: -d <key>")
 	rootCmd.Flags().StringVarP(&sFlag, "store", "s", "", "Store flag, usage together with -v: -s <key> -v <value string>")
 	rootCmd.Flags().StringVarP(&vFlag, "value", "v", "", "Value used with store flag")
 	// the default is written in library side, don't put it here as it will break ENV variable
@@ -114,7 +128,7 @@ func main() {
 	rootCmd.Flags().BoolVarP(&wFlag, "overwrite", "w", false, "Overwrite flag used with store flag")
 
 	// Add all subcommands to the root command
-	rootCmd.AddCommand(versionCmd, allCmd, lookupCmd, storeCmd)
+	rootCmd.AddCommand(versionCmd, allCmd, lookupCmd, storeCmd, deleteCmd)
 
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatal(err)
