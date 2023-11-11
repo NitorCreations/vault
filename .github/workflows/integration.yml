@@ -50,7 +50,7 @@ jobs:
       - name: Archive code coverage results
         uses: actions/upload-artifact@v3
         with:
-          name: ${{matrix.lang}}-vault
+          name: ${{matrix.lang}}
           path: ${{matrix.lang}}/vault
   create_keys:
     needs: build
@@ -79,5 +79,5 @@ jobs:
       - name: run version for all version
         run: |
           vault --version
-          bin/go-vault --version
-          bin/rust-vault --version
+          bin/go/vault --version
+          bin/rust/vault --version
