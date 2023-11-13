@@ -22,3 +22,9 @@ updates:
     directory: "/rust"
     schedule:
       interval: "weekly"
+
+  # Go
+  - package-ecosystem: gomod
+    directory: /go
+    schedule:
+      interval: "weekly"
