@@ -123,30 +123,31 @@ checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 
 [[package]]
 name = "aws-config"
-version = "0.55.3"
+version = "0.57.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bcdcf0d683fe9c23d32cf5b53c9918ea0a500375a9fb20109802552658e576c9"
+checksum = "7489a72550db3712fe3a0a92068f832d6270ff82f518b84a800af131f99570d7"
 dependencies = [
- "aws-credential-types 0.55.3",
- "aws-http 0.55.3",
+ "aws-credential-types 0.57.1",
+ "aws-http 0.57.1",
+ "aws-runtime",
  "aws-sdk-sso",
- "aws-sdk-sts 0.28.0",
- "aws-smithy-async 0.55.3",
- "aws-smithy-client",
- "aws-smithy-http 0.55.3",
- "aws-smithy-http-tower",
- "aws-smithy-json 0.55.3",
- "aws-smithy-types 0.55.3",
- "aws-types 0.55.3",
+ "aws-sdk-ssooidc",
+ "aws-sdk-sts",
+ "aws-smithy-async 0.57.1",
+ "aws-smithy-http 0.57.1",
+ "aws-smithy-json 0.57.1",
+ "aws-smithy-runtime",
+ "aws-smithy-runtime-api",
+ "aws-smithy-types 0.57.1",
+ "aws-types 0.57.1",
  "bytes",
- "fastrand 1.9.0",
+ "fastrand 2.0.1",
  "hex",
  "http",
  "hyper",
- "ring 0.16.20",
+ "ring 0.17.5",
  "time",
  "tokio",
- "tower",
  "tracing",
  "zeroize",
 ]
@@ -336,52 +337,45 @@ dependencies = [
 
 [[package]]
 name = "aws-sdk-sso"
-version = "0.28.0"
+version = "0.35.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c8b812340d86d4a766b2ca73f740dfd47a97c2dff0c06c8517a16d88241957e4"
+checksum = "341a5b00567d0f350025501c8fd36e1ca8055744a2d17e351f0b254f84eba48a"
 dependencies = [
- "aws-credential-types 0.55.3",
- "aws-endpoint",
- "aws-http 0.55.3",
- "aws-sig-auth",
- "aws-smithy-async 0.55.3",
- "aws-smithy-client",
- "aws-smithy-http 0.55.3",
- "aws-smithy-http-tower",
- "aws-smithy-json 0.55.3",
- "aws-smithy-types 0.55.3",
- "aws-types 0.55.3",
+ "aws-credential-types 0.57.1",
+ "aws-http 0.57.1",
+ "aws-runtime",
+ "aws-smithy-async 0.57.1",
+ "aws-smithy-http 0.57.1",
+ "aws-smithy-json 0.57.1",
+ "aws-smithy-runtime",
+ "aws-smithy-runtime-api",
+ "aws-smithy-types 0.57.1",
+ "aws-types 0.57.1",
  "bytes",
  "http",
  "regex",
- "tokio-stream",
- "tower",
  "tracing",
 ]
 
 [[package]]
-name = "aws-sdk-sts"
-version = "0.28.0"
+name = "aws-sdk-ssooidc"
+version = "0.35.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "265fac131fbfc188e5c3d96652ea90ecc676a934e3174eaaee523c6cec040b3b"
+checksum = "dbd4bffbd26f66269933bcd26123f2d6860769c0f769b6d3fc10eda025d287d8"
 dependencies = [
- "aws-credential-types 0.55.3",
- "aws-endpoint",
- "aws-http 0.55.3",
- "aws-sig-auth",
- "aws-smithy-async 0.55.3",
- "aws-smithy-client",
- "aws-smithy-http 0.55.3",
- "aws-smithy-http-tower",
- "aws-smithy-json 0.55.3",
- "aws-smithy-query 0.55.3",
- "aws-smithy-types 0.55.3",
- "aws-smithy-xml 0.55.3",
- "aws-types 0.55.3",
+ "aws-credential-types 0.57.1",
+ "aws-http 0.57.1",
+ "aws-runtime",
+ "aws-smithy-async 0.57.1",
+ "aws-smithy-http 0.57.1",
+ "aws-smithy-json 0.57.1",
+ "aws-smithy-runtime",
+ "aws-smithy-runtime-api",
+ "aws-smithy-types 0.57.1",
+ "aws-types 0.57.1",
  "bytes",
  "http",
  "regex",
- "tower",
  "tracing",
 ]
 
@@ -679,6 +673,7 @@ dependencies = [
  "pin-project-lite",
  "tokio",
  "tracing",
+ "zeroize",
 ]
 
 [[package]]
@@ -1368,7 +1363,7 @@ dependencies = [
  "aws-sdk-cloudformation",
  "aws-sdk-kms",
  "aws-sdk-s3",
- "aws-sdk-sts 0.35.0",
+ "aws-sdk-sts",
  "base64",
  "clap",
  "rand",
