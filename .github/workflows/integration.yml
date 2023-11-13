@@ -1,4 +1,4 @@
-name: Integration Tests between the different implementations
+name: Integration Tests
 
 # Run either when pushing directly to main/master or in a PR targeting main/master
 on:
@@ -10,9 +10,11 @@ on:
     branches:
       - master
       - main
+
 permissions:
   id-token: write
   contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -44,6 +46,7 @@ jobs:
         with:
           name: ${{matrix.lang}}
           path: ${{matrix.lang}}/vault
+
   tests:
     needs: build
     runs-on: ubuntu-latest
@@ -51,12 +54,13 @@ jobs:
       # VAULT_STACK overwrites default 'vault' for vaults
       VAULT_STACK: nitor-vault-integration-testing
     # at the moment we store to the values to fixed keys so this needs to have limited concurrency
-    concurrency: 1
+    concurrency: "integration-test"
     steps:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{secrets.AWS_CI_ROLE}}
+          role-to-assume: ${{ secrets.AWS_CI_ROLE }}
+          role-session-name: GitHubVaultIntegrationTests
           aws-region: eu-west-1
       - uses: actions/checkout@v4
       - name: Download reports' artifacts
