@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 	"log"
-	"nitor_vault/cli"
 	"os"
 
+	"github.com/nitorcreations/vault/go/cli"
 	"github.com/spf13/cobra"
 )
 

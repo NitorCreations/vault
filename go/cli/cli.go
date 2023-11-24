@@ -3,8 +3,10 @@ package cli
 import (
 	"fmt"
 	"log"
-	vault "nitor_vault/nvault"
+
 	"runtime/debug"
+
+	vault "github.com/nitorcreations/vault/go/nvault"
 )
 
 // CLI helper functions
