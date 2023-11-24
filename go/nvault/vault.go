@@ -14,7 +14,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -46,25 +45,6 @@ type EncryptedObject struct {
 	DataKey       []byte
 	EncryptedBlob []byte
 	Meta          string
-}
-
-func Init() {
-	cfg, err := config.LoadDefaultConfig(context.TODO())
-	if err != nil {
-		log.Fatal(err)
-	}
-	s3Client := s3.NewFromConfig(cfg)
-	output, err := s3Client.ListObjectsV2(context.TODO(), &s3.ListObjectsV2Input{
-		Bucket: aws.String("jounin-testi-bucksu-666"),
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	log.Println("first page results:")
-	for _, object := range output.Contents {
-		fmt.Printf("%s\n", aws.ToString(object.Key))
-	}
 }
 
 // / stackNameOpt is made an optional string array so that one can call LoadVault with no params or first parameter being vault stack name, i.e. vault.LoadVault() === vault.LoadVault("vault")
