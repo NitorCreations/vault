@@ -72,7 +72,17 @@ func LoadVault(stackNameOpt ...string) (Vault, error) {
 
 	return res, nil
 }
-
+func FromCloudFormationParams(params CloudFormationParams) (*Vault, error) {
+	cfg, err := config.LoadDefaultConfig(context.TODO())
+	if err != nil {
+		return nil, fmt.Errorf("error creating config: %v", err)
+	}
+	return &Vault{
+		cloudformationParams: params,
+		s3Client:             *s3.NewFromConfig(cfg),
+		kmsClient:            *kms.NewFromConfig(cfg),
+	}, nil
+}
 func getCloudformationParams(cfg *aws.Config, stackName string) (CloudFormationParams, error) {
 	res := CloudFormationParams{}
 	cfnClient := cloudformation.NewFromConfig(*cfg)
