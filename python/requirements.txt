@@ -22,7 +22,7 @@ cryptography==41.0.5
     # via nitor-vault (setup.py)
 future==0.18.3
     # via nitor-vault (setup.py)
-idna==3.4
+idna==3.6
     # via requests
 jmespath==1.0.1
     # via
