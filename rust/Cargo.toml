@@ -13,7 +13,7 @@ keywords = ["secrets", "s3"]
 
 [dependencies]
 aes-gcm = "0.10.3"
-anyhow = "1.0.76"
+anyhow = "1.0.79"
 aws-config = "0.55.3"
 aws-sdk-cloudformation = "0.28.0"
 aws-sdk-kms = "0.28.0"
