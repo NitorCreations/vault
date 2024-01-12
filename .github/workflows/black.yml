@@ -13,6 +13,9 @@ on:
     branches:
       - master
       - main
+    paths:
+      - "**.py"
+      - ".github/workflows/black.yml"
 
 # https://github.com/psf/black
 jobs:

@@ -13,6 +13,9 @@ on:
     branches:
       - master
       - main
+    paths:
+      - "python/requirements.txt"
+      - ".github/workflows/pip.yml"
 
 # https://github.com/py-actions/py-dependency-install
 jobs:
