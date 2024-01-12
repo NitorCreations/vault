@@ -143,26 +143,22 @@ impl Vault {
             .bucket(&self.cloudformation_params.bucket_name)
             .send()
             .await?;
-        output
+        Ok(output
             .contents()
-            .map(|objects| {
-                objects
-                    .iter()
-                    .filter_map(|object| -> Option<String> {
-                        if let Some(key) = object.key() {
-                            if key.ends_with(".aesgcm.encrypted") {
-                                key.strip_suffix(".aesgcm.encrypted")
-                                    .map(|stripped| stripped.to_owned())
-                            } else {
-                                None
-                            }
-                        } else {
-                            None
-                        }
-                    })
-                    .collect()
+            .iter()
+            .filter_map(|object| -> Option<String> {
+                if let Some(key) = object.key() {
+                    if key.ends_with(".aesgcm.encrypted") {
+                        key.strip_suffix(".aesgcm.encrypted")
+                            .map(|stripped| stripped.to_owned())
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
             })
-            .ok_or(VaultError::S3NoContentsError)
+            .collect::<Vec<_>>())
     }
 
     /// Get CloudFormation stack information
@@ -355,8 +351,9 @@ async fn get_cloudformation_params(
         .await?;
     let stack_output = stack_output
         .stacks()
-        .and_then(|stacks| stacks.first())
-        .and_then(|stack| stack.outputs())
+        .iter()
+        .next()
+        .map(|stack| stack.outputs())
         .ok_or(VaultError::StackOutputsMissingError)?;
 
     Ok(CloudFormationParams {
