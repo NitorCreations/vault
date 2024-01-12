@@ -23,14 +23,12 @@ cargo build --release
 cargo run --release
 ```
 
-Cargo will output the executable to either
+Depending on which build profile is used, Cargo will output the executable to either:
 
 ```shell
 rust/target/debug/vault
 rust/target/release/vault
 ```
-
-depending on which build profile is used.
 
 ## Install
 
