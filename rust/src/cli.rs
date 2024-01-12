@@ -22,8 +22,8 @@ pub struct Args {
     #[arg(short, long, env = "VAULT_KEY")]
     pub key_arn: Option<String>,
 
-    /// Specify AWS region to use
-    #[arg(short, long, help = "Specify AWS region for the bucket")]
+    /// Specify AWS region for the bucket
+    #[arg(short, long, env = "AWS_REGION")]
     pub region: Option<String>,
 
     /// Optional CloudFormation stack to lookup key and bucket
