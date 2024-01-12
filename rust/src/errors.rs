@@ -1,3 +1,5 @@
+use std::string::FromUtf8Error;
+
 use aws_sdk_cloudformation::error::SdkError;
 use aws_sdk_cloudformation::operation::describe_stacks::DescribeStacksError;
 use aws_sdk_kms::operation::decrypt::DecryptError;
@@ -7,7 +9,6 @@ use aws_sdk_s3::operation::get_object::GetObjectError;
 use aws_sdk_s3::operation::head_object::HeadObjectError;
 use aws_sdk_s3::operation::list_objects_v2::ListObjectsV2Error;
 use aws_sdk_s3::operation::put_object::PutObjectError;
-use std::string::FromUtf8Error;
 use thiserror::Error;
 
 #[derive(Debug, Error)]

@@ -1,6 +1,7 @@
+use std::io::{stdin, BufRead};
+
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
-use std::io::{stdin, BufRead};
 
 use nitor_vault::Vault;
 
