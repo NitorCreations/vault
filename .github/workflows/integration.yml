@@ -28,7 +28,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
         if: ${{ matrix.lang == 'rust'}}
-      - uses: Swatinem/rust-cache@v2.7.1
+      - uses: Swatinem/rust-cache@v2.7.3
         if: ${{ matrix.lang == 'rust'}}
         with:
           workspaces: ./rust -> target
