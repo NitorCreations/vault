@@ -13,6 +13,9 @@ on:
     branches:
       - master
       - main
+    paths:
+      - "**.py"
+      - ".github/workflows/isort.yml"
 
 # https://github.com/marketplace/actions/python-isort
 jobs:

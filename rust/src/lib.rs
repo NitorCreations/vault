@@ -1,3 +1,6 @@
+use std::env;
+use std::fmt;
+
 use aes_gcm::aead::{Aead, Payload};
 use aes_gcm::aes::{cipher, Aes256};
 use aes_gcm::{AesGcm, KeyInit, Nonce};
@@ -16,8 +19,6 @@ use base64::{engine::general_purpose, Engine as _};
 use errors::VaultError;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
-use std::env;
-use std::fmt;
 use tokio::try_join;
 
 pub mod errors;
