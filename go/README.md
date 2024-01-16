@@ -48,3 +48,14 @@ Override version manually:
 # this also works
 VERSION=1.2.3 ./update_version.sh
 ```
+
+## Updating dependencies
+
+```shell
+# check for available updates
+go list -u -m all
+# update a specific package
+go get -u example.com/pkg
+# update all dependencies
+go get -u ./...
+```
