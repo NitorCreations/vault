@@ -81,5 +81,4 @@ set_version_info
   echo "// Generated automatically; DO NOT EDIT MANUALLY."
   echo ""
   echo "const VersionNumber = \"$NEW_VERSION\""
-  echo "const GitBranch = \"$GIT_BRANCH\""
 } > "$VERSION_FILE"

@@ -50,14 +50,16 @@ build_project() {
 
   pushd "$PROJECT_PATH" > /dev/null
   rm -f "$EXECUTABLE"
-  time go build -v -o vault
+  time go build -v -o vault \
+    -ldflags "-X github.com/nitorcreations/vault/go/cli.GitBranch=$GIT_BRANCH \
+              -X github.com/nitorcreations/vault/go/cli.GitHash=$GIT_HASH \
+              -X github.com/nitorcreations/vault/go/cli.Timestamp=$BUILD_TIME"
 
   file "$EXECUTABLE"
   popd > /dev/null
 }
 
 update_version_file() {
-  set_version_info
   VERSION_FILE="$PROJECT_PATH/cli/version.go"
   CURRENT_VERSION="$(grep "const VersionNumber =" "$VERSION_FILE" | cut -d\" -f 2)"
   {
@@ -66,10 +68,10 @@ update_version_file() {
     echo "// Generated automatically; DO NOT EDIT MANUALLY."
     echo ""
     echo "const VersionNumber = \"$CURRENT_VERSION\""
-    echo "const GitBranch = \"$GIT_BRANCH\""
   } > "$VERSION_FILE"
 }
 
 init_options "$@"
+set_version_info
 update_version_file
 build_project

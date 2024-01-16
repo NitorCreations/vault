@@ -1,6 +1,7 @@
 # Nitor Vault (Go Version)
 
-A command line tool for encrypting and decrypting keys and values using client-side encryption with AWS KMS keys, implemented in Go.
+A command line tool for encrypting and decrypting keys and values using client-side encryption with AWS KMS keys,
+implemented in Go.
 
 ## Prerequisites
 
