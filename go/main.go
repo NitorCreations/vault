@@ -31,9 +31,13 @@ func main() {
 				return
 			}
 
+			// No arguments given, print help
 			if !cmd.Flags().HasFlags() {
-				cmd.Help()
-				os.Exit(0)
+				err := cmd.Help()
+				if err != nil {
+					log.Fatal(err)
+				}
+				os.Exit(1)
 			}
 
 			nVault := cli.InitVault(vaultStackFlag)
@@ -58,7 +62,10 @@ func main() {
 			case deleteFlag != "":
 				cli.Delete(nVault, &deleteFlag)
 			default:
-				cmd.Help()
+				err := cmd.Help()
+				if err != nil {
+					log.Fatal(err)
+				}
 			}
 		},
 	}
