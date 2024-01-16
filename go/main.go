@@ -22,7 +22,7 @@ var (
 
 func main() {
 	var rootCmd = &cobra.Command{
-		Use:   "nitor-vault",
+		Use:   "vault",
 		Short: "Encrypted AWS key-value storage",
 		Long:  "Nitor Vault, see https://github.com/nitorcreations/vault for usage examples",
 		Run: func(cmd *cobra.Command, args []string) {
