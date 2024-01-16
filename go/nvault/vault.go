@@ -47,7 +47,9 @@ type EncryptedObject struct {
 	Meta          string
 }
 
-// / stackNameOpt is made an optional string array so that one can call LoadVault with no params or first parameter being vault stack name, i.e. vault.LoadVault() === vault.LoadVault("vault")
+// LoadVault stackNameOpt is made an optional string array,
+// so that one can call LoadVault with no params or first parameter being vault stack name,
+// i.e. vault.LoadVault() === vault.LoadVault("vault")
 func LoadVault(stackNameOpt ...string) (Vault, error) {
 	res := Vault{}
 	cfg, err := config.LoadDefaultConfig(context.TODO())

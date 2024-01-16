@@ -11,8 +11,14 @@ import (
 
 // CLI helper functions
 
-func InitVault(vaultstackFlag string) vault.Vault {
-	nVault, err := vault.LoadVault(vaultstackFlag)
+// Info variables are set at build time
+
+var GitBranch string
+var GitHash string
+var Timestamp string
+
+func InitVault(vaultStackFlag string) vault.Vault {
+	nVault, err := vault.LoadVault(vaultStackFlag)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -55,21 +61,13 @@ func Store(vault vault.Vault, key *string, value []byte) {
 func VersionInfo() string {
 	if info, ok := debug.ReadBuildInfo(); ok {
 		goVersion := info.GoVersion
-		commit := "unknown"
-		timestamp := "unknown"
 		arch := "unknown"
 		for _, setting := range info.Settings {
-			if setting.Key == "vcs.revision" {
-				commit = setting.Value
-			}
-			if setting.Key == "vcs.time" {
-				timestamp = setting.Value
-			}
 			if setting.Key == "GOARCH" {
 				arch = setting.Value
 			}
 		}
-		return fmt.Sprintf("%s %s %s %s %s %s", VersionNumber, timestamp, GitBranch, commit, goVersion, arch)
+		return fmt.Sprintf("%s %s %s %s %s %s", VersionNumber, Timestamp, GitBranch, GitHash, goVersion, arch)
 	}
-	return ""
+	return fmt.Sprintf("%s %s %s %s", VersionNumber, Timestamp, GitBranch, GitHash)
 }
