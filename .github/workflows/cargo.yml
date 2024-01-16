@@ -46,16 +46,20 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: ${{ runner.os }}-cargo-
 
-      - name: build
+      - name: Build
         working-directory: rust
         run: cargo build
 
-      - name: fmt
+      - name: Check formatting
         working-directory: rust
         run: cargo fmt --check --verbose
 
-      - name: clippy
+      - name: Lint
         working-directory: rust
         # exit non-zero if there are any warnings
         # https://doc.rust-lang.org/stable/clippy/usage.html
         run: cargo clippy -- -Dwarnings
+
+      - name: Audit dependencies for security vulnerabilities
+        run: cargo audit
+        working-directory: rust
