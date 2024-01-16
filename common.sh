@@ -85,8 +85,10 @@ run_command() {
 
 # Set variables GIT_HASH and GIT_BRANCH
 set_version_info() {
+  BUILD_TIME=$(date -u +"%Y-%m-%dT%H%MZ")
   GIT_HASH=$(git -C "$REPO_ROOT" rev-parse --short HEAD)
   GIT_BRANCH=$(git -C "$REPO_ROOT" branch --show-current)
+  export BUILD_TIME
   export GIT_HASH
   export GIT_BRANCH
 }
