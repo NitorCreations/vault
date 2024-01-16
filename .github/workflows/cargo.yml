@@ -62,3 +62,4 @@ jobs:
 
       - name: Audit dependencies for security vulnerabilities
         run: cargo audit
+        working-directory: rust
