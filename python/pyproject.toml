@@ -10,6 +10,8 @@ extend-exclude = '''venv*'''
 include = ["*.py", "*.pyi", "**/pyproject.toml"]
 target-version = "py38"
 line-length = 120
+
+[tool.ruff.lint]
 select = ["E", "F", "W", "N", "UP"]
 ignore = []
 per-file-ignores = {}
@@ -89,7 +91,7 @@ exclude = [
     "venv*",
 ]
 
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 # https://beta.ruff.rs/docs/settings/#isort
 combine-as-imports = true
 lines-between-types = 1
