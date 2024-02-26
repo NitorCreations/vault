@@ -20,7 +20,7 @@ charset-normalizer==3.3.2
     # via requests
 cryptography==42.0.5
     # via nitor-vault (setup.py)
-future==0.18.3
+future==1.0.0
     # via nitor-vault (setup.py)
 idna==3.6
     # via requests
