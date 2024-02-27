@@ -58,4 +58,7 @@ go list -u -m all
 go get -u example.com/pkg
 # update all dependencies
 go get -u ./...
+# cleanup
+go mod tidy
+go mod verify
 ```
