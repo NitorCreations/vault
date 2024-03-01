@@ -1,8 +1,9 @@
-use anyhow::{Context, Result};
-use cli::{Args, Command};
-use nitor_vault::{CloudFormationParams, Vault};
-
 mod cli;
+
+use anyhow::{Context, Result};
+
+use crate::cli::{Args, Command};
+use nitor_vault::{CloudFormationParams, Vault};
 
 #[tokio::main]
 async fn main() -> Result<()> {
