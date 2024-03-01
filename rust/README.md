@@ -1,6 +1,7 @@
 # nitor-vault
 
-Rust CLI and library for encrypting keys and values using client-side encryption with [AWS KMS](https://aws.amazon.com/kms/) keys.
+Rust CLI and library for encrypting keys and values using client-side encryption
+with [AWS KMS](https://aws.amazon.com/kms/) keys.
 
 ## Build
 
@@ -10,7 +11,7 @@ Using the shell script:
 ./build.sh
 ```
 
-Note: works on Windows too, just use Git for Windows Bash to run it.
+Note: works on Windows too, use Git for Windows Bash to run it.
 
 Manually from terminal:
 
@@ -21,6 +22,8 @@ cargo run
 # release
 cargo build --release
 cargo run --release
+# pass arguments
+cargo run --release -- --help
 ```
 
 Depending on which build profile is used, Cargo will output the executable to either:
@@ -32,18 +35,22 @@ rust/target/release/vault
 
 ## Install
 
-You can install a release binary locally using [cargo install](https://doc.rust-lang.org/cargo/commands/cargo-install.html).
-Note that you need to specify the path to the directory containing [Cargo.toml](./Cargo.toml),
-so from the repo root you would do:
+You can install a release binary locally
+using [cargo install](https://doc.rust-lang.org/cargo/commands/cargo-install.html).
 
-```shell
-cargo install --path rust/
-```
-
-Using the shell script:
+Use the shell script:
 
 ```shell
 ./install.sh
+```
+
+The script calls `cargo install` and checks for the binary in path.
+If you run the command directly,
+note that you need to specify the path to the directory containing [Cargo.toml](./Cargo.toml).
+From the repo root you would do:
+
+```shell
+cargo install --path rust/
 ```
 
 Cargo will put the binary under `$HOME/.cargo/bin` by default,
