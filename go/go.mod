@@ -5,7 +5,7 @@ go 1.21.3
 require (
 	github.com/aws/aws-sdk-go-v2 v1.25.3
 	github.com/aws/aws-sdk-go-v2/config v1.27.7
-	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.46.1
+	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.47.2
 	github.com/aws/aws-sdk-go-v2/service/kms v1.29.2
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.52.0
 	github.com/spf13/cobra v1.8.0
