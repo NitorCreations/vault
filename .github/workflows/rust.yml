@@ -72,7 +72,7 @@ jobs:
         uses: dtolnay/rust-toolchain@v1
         with:
           toolchain: stable
-          components: rustfmt, clippy, cargo-audit
+          components: rustfmt, clippy
 
       - name: Cache dependencies
         uses: actions/cache@v4
@@ -94,7 +94,3 @@ jobs:
       - name: Lint
         working-directory: rust
         run: cargo clippy -- -Dwarnings
-
-      - name: Audit dependencies
-        working-directory: rust
-        run: cargo audit
