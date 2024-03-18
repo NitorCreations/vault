@@ -1,0 +1,96 @@
+name: Rust
+
+on:
+  push:
+    branches:
+      - master
+      - main
+    paths:
+      - ".github/workflows/rust.yml"
+      - "**.rs"
+      - "rust/Cargo.lock"
+      - "rust/Cargo.toml"
+  pull_request:
+    paths:
+      - ".github/workflows/rust.yml"
+      - "**.rs"
+      - "rust/Cargo.lock"
+      - "rust/Cargo.toml"
+
+# Cancel previous runs for PRs but not pushes to main
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.head_ref || github.sha }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  cargo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source repository
+        uses: actions/checkout@v4
+
+      - name: Set up Rust toolchain
+        uses: dtolnay/rust-toolchain@v1
+        with:
+          toolchain: stable
+
+      - uses: Swatinem/rust-cache@v2.7.3
+        with:
+          workspaces: ./rust -> target
+
+      - name: Set up cargo cache
+        uses: actions/cache@v4
+        continue-on-error: false
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      - name: Build
+        working-directory: rust
+        run: cargo build
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source repository
+        uses: actions/checkout@v4
+
+      - name: Set up Rust toolchain
+        uses: dtolnay/rust-toolchain@v1
+        with:
+          toolchain: stable
+          components: rustfmt, clippy, cargo-audit
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        continue-on-error: false
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      - name: Check formatting
+        working-directory: rust
+        run: cargo fmt --check --verbose
+
+      - name: Lint
+        working-directory: rust
+        run: cargo clippy -- -Dwarnings
+
+      - name: Audit dependencies
+        working-directory: rust
+        run: cargo audit
