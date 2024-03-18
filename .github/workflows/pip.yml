@@ -1,23 +1,24 @@
 name: Python pip
 
-# Run either when pushing directly to main/master or in a PR targeting main/master
 on:
   push:
     branches:
       - master
       - main
     paths:
-      - "python/requirements.txt"
       - ".github/workflows/pip.yml"
+      - "python/requirements.txt"
   pull_request:
-    branches:
-      - master
-      - main
     paths:
-      - "python/requirements.txt"
       - ".github/workflows/pip.yml"
+      - "python/requirements.txt"
 
-# https://github.com/py-actions/py-dependency-install
+# Cancel previous runs for PRs but not pushes to main
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.head_ref || github.sha }}
+  cancel-in-progress: true
+
+
 jobs:
   dependencies:
     runs-on: ubuntu-latest

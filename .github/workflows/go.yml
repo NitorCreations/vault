@@ -1,6 +1,5 @@
-name: Go build
+name: Go
 
-# Run either when pushing directly to main/master or in a PR targeting main/master
 on:
   push:
     branches:
@@ -16,18 +15,26 @@ on:
       - master
       - main
 
+# Cancel previous runs for PRs but not pushes to main
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.head_ref || github.sha }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ./go
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out repository
+        uses: actions/checkout@v4
+
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.21.x"
+          go-version: "1.22.x"
           cache-dependency-path: go/go.sum
 
       - name: Install dependencies
@@ -36,5 +43,5 @@ jobs:
       - name: Build
         run: go build -v ./...
 
-      - name: Test with the Go CLI
+      - name: Run tests
         run: go test
