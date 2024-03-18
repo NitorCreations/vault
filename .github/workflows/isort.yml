@@ -1,28 +1,28 @@
 name: Python isort
 
-# Run either when pushing directly to main/master or in a PR targeting main/master
 on:
   push:
     branches:
       - master
       - main
     paths:
-      - "**.py"
       - ".github/workflows/isort.yml"
+      - "**.py"
   pull_request:
-    branches:
-      - master
-      - main
     paths:
-      - "**.py"
       - ".github/workflows/isort.yml"
+      - "**.py"
 
-# https://github.com/marketplace/actions/python-isort
+# Cancel previous runs for PRs but not pushes to main
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.head_ref || github.sha }}
+  cancel-in-progress: true
+
 jobs:
   format:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out source repository
+      - name: Check out repository
         uses: actions/checkout@v4
 
       - name: Set up Python environment

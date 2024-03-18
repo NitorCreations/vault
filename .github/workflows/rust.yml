@@ -28,8 +28,12 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./rust
+
     steps:
-      - name: Check out source repository
+      - name: Check out repository
         uses: actions/checkout@v4
 
       - name: Set up Rust toolchain
@@ -55,17 +59,19 @@ jobs:
           restore-keys: ${{ runner.os }}-cargo-
 
       - name: Build
-        working-directory: rust
         run: cargo build
 
       - name: Run tests
-        working-directory: rust
         run: cargo test --no-fail-fast
 
   lint:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./rust
+
     steps:
-      - name: Check out source repository
+      - name: Check out repository
         uses: actions/checkout@v4
 
       - name: Set up Rust toolchain
@@ -88,9 +94,7 @@ jobs:
           restore-keys: ${{ runner.os }}-cargo-
 
       - name: Check formatting
-        working-directory: rust
         run: cargo fmt --check --verbose
 
       - name: Lint
-        working-directory: rust
         run: cargo clippy -- -Dwarnings
