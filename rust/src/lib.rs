@@ -1,3 +1,5 @@
+pub mod errors;
+
 use std::env;
 use std::fmt;
 
@@ -16,16 +18,16 @@ use aws_sdk_s3::operation::put_object::PutObjectOutput;
 use aws_sdk_s3::primitives::ByteStream;
 use aws_sdk_s3::Client as s3Client;
 use base64::{engine::general_purpose, Engine as _};
-use errors::VaultError;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use tokio::try_join;
 
-pub mod errors;
+use crate::errors::VaultError;
 
 #[derive(Debug)]
 pub struct Vault {
-    /// AWS region to use with Vault. Will fallback to default provider if nothing is specified.
+    /// AWS region to use with Vault.
+    /// Will fall back to default provider if nothing is specified.
     region: Region,
     cloudformation_params: CloudFormationParams,
     s3: s3Client,
@@ -128,12 +130,9 @@ impl Vault {
         })
     }
 
-    /// Print debug information: region, CloudFormation parameters and S3 client.
-    pub fn test(&self) {
-        println!(
-            "region: {}\nvault_stack: {:#?}\ns3: {:#?}",
-            self.region, self.cloudformation_params, self.s3
-        );
+    /// Print information: region and CloudFormation parameters.
+    pub fn print_info(&self) {
+        println!("region: {}\n{}", self.region, self.cloudformation_params);
     }
 
     /// Get all available secrets

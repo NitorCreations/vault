@@ -2,6 +2,7 @@ use std::io::{stdin, BufRead};
 
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
+use colored::Colorize;
 
 use nitor_vault::Vault;
 
@@ -47,7 +48,7 @@ pub enum Command {
     Describe {},
 
     /// Check if a key exists
-    #[command(long_flag("exists"), alias("e"))]
+    #[command(short_flag('e'), long_flag("exists"), alias("e"))]
     Exists { key: String },
 
     /// List available secrets
@@ -55,11 +56,11 @@ pub enum Command {
     All {},
 
     /// Print secret value for given key
-    #[command(short_flag('l'), alias("l"))]
+    #[command(short_flag('l'), long_flag("lookup"), alias("l"))]
     Lookup { key: String },
 
-    /// Store new key-value pair
-    #[command(short_flag('s'), alias("s"))]
+    /// Store a new key-value pair
+    #[command(short_flag('s'), long_flag("store"), alias("s"))]
     Store {
         key: Option<String>,
         #[arg(short = 'w', long, help = "Overwrite existing key")]
@@ -82,8 +83,8 @@ pub enum Command {
         )]
         file: Option<String>,
     },
-    /// Print debug information
-    #[command(long_flag("info"), alias("i"))]
+    /// Print region and stack information
+    #[command(short_flag('i'), long_flag("info"), alias("i"))]
     Info {},
 }
 
@@ -91,7 +92,7 @@ pub enum Command {
 ///
 /// See Clap `Derive` documentation for details:
 /// https://docs.rs/clap/latest/clap/_derive/index.html
-pub async fn parse_args() -> Args {
+pub fn parse_args() -> Args {
     Args::parse()
 }
 
@@ -109,12 +110,13 @@ pub async fn store(
             key
         } else if let Some(file_name) = &file {
             match file_name.as_str() {
-                "-" => anyhow::bail!("Key cannot be empty when reading from stdin"),
+                "-" => anyhow::bail!("Key cannot be empty when reading from stdin".red()),
                 _ => file_name,
             }
         } else {
             anyhow::bail!(
-                "Empty key and no \x1b[33m-f\x1b[0m flag provided, provide at least one of these"
+                "Empty key and no {} flag provided, provide at least one of these",
+                "-f".yellow().bold()
             )
         }
     };
@@ -134,10 +136,10 @@ pub async fn store(
                         .fold(String::new(), |acc, line| acc + &line + "\n")
                 }
                 _ => std::fs::read_to_string(path)
-                    .with_context(|| format!("Error reading file '{path}'"))?,
+                    .context(format!("Error reading file: '{path}'").red())?,
             }
         } else {
-            anyhow::bail!("No value or filename provided")
+            anyhow::bail!("No value or filename provided".red())
         }
     };
 
@@ -145,58 +147,63 @@ pub async fn store(
         && vault
             .exists(key)
             .await
-            .with_context(|| format!("Error checking if key '{key}' exists"))?
+            .context(format!("Error checking if key '{key}' exists").red())?
     {
         anyhow::bail!(
-            "Error saving key, it already exists and you did not provide \x1b[33m-w\x1b[0m flag for overwriting"
+            "Error saving key, it already exists and you did not provide {} flag for overwriting",
+            "-w".yellow().bold()
         )
     }
 
     vault
         .store(key, data.as_bytes())
         .await
-        .with_context(|| format!("Error saving key '{key}'"))
+        .context(format!("Error saving key '{key}'").red())
 }
 
+/// Delete key value
 pub async fn delete(vault: &Vault, key: &str) -> Result<()> {
     if key.trim().is_empty() {
-        anyhow::bail!("Empty key '{key}'")
+        anyhow::bail!("Empty key '{key}'".red())
     }
     vault
         .delete(key)
         .await
-        .with_context(|| format!("Error deleting key '{key}'"))
+        .context(format!("Error deleting key '{key}'").red())
 }
 
+/// Get key value
 pub async fn lookup(vault: &Vault, key: &str) -> Result<()> {
     if key.trim().is_empty() {
-        anyhow::bail!("Empty key '{key}'")
+        anyhow::bail!("Empty key '{key}'".red())
     }
     vault
         .lookup(key)
         .await
-        .with_context(|| format!("Error looking up key '{key}'"))
+        .context(format!("Error looking up key '{key}'").red())
         .map(|res| print!("{res}"))
 }
 
+/// List all available keys
 pub async fn list_all(vault: &Vault) -> Result<()> {
     vault
         .all()
         .await
-        .with_context(|| "Error listing all keys".to_string())
+        .context("Error listing all keys".red())
         .map(|list| println!("{}", list.join("\n")))
 }
 
-pub async fn exists(vault: &Vault, key: String) -> Result<()> {
+/// Check if key exists
+pub async fn exists(vault: &Vault, key: &str) -> Result<()> {
     if key.trim().is_empty() {
-        anyhow::bail!("Empty key '{key}'")
+        anyhow::bail!("Empty key: '{key}'".red())
     }
     vault
-        .exists(&key)
+        .exists(key)
         .await
-        .with_context(|| format!("Error checking if key '{key}' exists"))
+        .context(format!("Error checking if key '{key}' exists").red())
         .map(|result| match result {
-            true => println!("key {key} exists"),
-            false => println!("key {key} doesn't exist"),
+            true => println!("key '{key}' exists"),
+            false => println!("{}", format!("key '{key}' does not exist").red()),
         })
 }
