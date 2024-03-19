@@ -25,6 +25,8 @@ Options:
   -V, --version                    Print version
 ```
 
+ANSI color output can be disabled by setting the env variable `NO_COLOR=1`.
+
 ## Build
 
 Using the shell script:
