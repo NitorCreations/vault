@@ -204,6 +204,6 @@ pub async fn exists(vault: &Vault, key: &str) -> Result<()> {
         .context(format!("Failed to check if key '{key}' exists").red())
         .map(|result| match result {
             true => println!("key '{key}' exists"),
-            false => println!("{}", format!("key '{key}' does not exist").red()),
+            false => println!("{}", format!("key '{key}' doesn't exist").red()),
         })
 }
