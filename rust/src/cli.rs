@@ -147,10 +147,10 @@ pub async fn store(
         && vault
             .exists(key)
             .await
-            .context(format!("Error checking if key '{key}' exists").red())?
+            .context(format!("Failed to check if key '{key}' exists").red())?
     {
         anyhow::bail!(
-            "Error saving key, it already exists and you did not provide {} flag for overwriting",
+            "Key already exists and no {} flag provided for overwriting",
             "-w".yellow().bold()
         )
     }
@@ -158,7 +158,7 @@ pub async fn store(
     vault
         .store(key, data.as_bytes())
         .await
-        .context(format!("Error saving key '{key}'").red())
+        .context(format!("Failed to store key '{key}'").red())
 }
 
 /// Delete key value
@@ -169,7 +169,7 @@ pub async fn delete(vault: &Vault, key: &str) -> Result<()> {
     vault
         .delete(key)
         .await
-        .context(format!("Error deleting key '{key}'").red())
+        .context(format!("Failed to delete key '{key}'").red())
 }
 
 /// Get key value
@@ -180,7 +180,7 @@ pub async fn lookup(vault: &Vault, key: &str) -> Result<()> {
     vault
         .lookup(key)
         .await
-        .context(format!("Error looking up key '{key}'").red())
+        .context(format!("Failed to look up key '{key}'").red())
         .map(|res| print!("{res}"))
 }
 
@@ -189,7 +189,7 @@ pub async fn list_all(vault: &Vault) -> Result<()> {
     vault
         .all()
         .await
-        .context("Error listing all keys".red())
+        .context("Failed to list all keys".red())
         .map(|list| println!("{}", list.join("\n")))
 }
 
@@ -201,7 +201,7 @@ pub async fn exists(vault: &Vault, key: &str) -> Result<()> {
     vault
         .exists(key)
         .await
-        .context(format!("Error checking if key '{key}' exists").red())
+        .context(format!("Failed to check if key '{key}' exists").red())
         .map(|result| match result {
             true => println!("key '{key}' exists"),
             false => println!("{}", format!("key '{key}' does not exist").red()),
