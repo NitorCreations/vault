@@ -77,7 +77,7 @@ impl CloudFormationParams {
 
 impl fmt::Display for CloudFormationParams {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        writeln!(
+        write!(
             f,
             "bucket: {}\nkey: {}",
             self.bucket_name,
