@@ -1,10 +1,12 @@
 use std::string::FromUtf8Error;
 
+use aws_sdk_cloudformation::error::BuildError;
 use aws_sdk_cloudformation::error::SdkError;
 use aws_sdk_cloudformation::operation::describe_stacks::DescribeStacksError;
 use aws_sdk_kms::operation::decrypt::DecryptError;
 use aws_sdk_kms::operation::generate_data_key::GenerateDataKeyError;
 use aws_sdk_s3::operation::delete_object::DeleteObjectError;
+use aws_sdk_s3::operation::delete_objects::DeleteObjectsError;
 use aws_sdk_s3::operation::get_object::GetObjectError;
 use aws_sdk_s3::operation::head_object::HeadObjectError;
 use aws_sdk_s3::operation::list_objects_v2::ListObjectsV2Error;
@@ -26,9 +28,9 @@ pub enum VaultError {
     KMSGenerateDataKeyError(#[from] SdkError<GenerateDataKeyError>),
     #[error("Failed to decrypt Ciphertext with KMS")]
     KMSDecryptError(#[from] SdkError<DecryptError>),
-    #[error("No Plaintext for generated datakey")]
+    #[error("No Plaintext for generated data key")]
     KMSDataKeyPlainTextMissingError,
-    #[error("No ciphertextBlob for generated datakey")]
+    #[error("No ciphertextBlob for generated data key")]
     KMSDataKeyCiphertextBlobMissingError,
     #[error("Invalid length for encryption cipher")]
     InvalidNonceLengthError(#[from] aes_gcm::aes::cipher::InvalidLength),
@@ -54,6 +56,10 @@ pub enum VaultError {
     S3PutObjectError(#[from] SdkError<PutObjectError>),
     #[error("Failed to list S3 objects")]
     S3ListObjectsError(#[from] SdkError<ListObjectsV2Error>),
+    #[error("Failed to build S3 object")]
+    S3BuildObjectError(#[from] BuildError),
+    #[error("Failed to delete S3 objects")]
+    S3DeleteObjectsError(#[from] SdkError<DeleteObjectsError>),
     #[error("No contents found from S3")]
     S3NoContentsError,
     #[error("Failed getting region")]

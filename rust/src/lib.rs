@@ -15,6 +15,7 @@ use aws_sdk_kms::types::DataKeySpec;
 use aws_sdk_kms::Client as kmsClient;
 use aws_sdk_s3::operation::put_object::PutObjectOutput;
 use aws_sdk_s3::primitives::ByteStream;
+use aws_sdk_s3::types::{Delete, ObjectIdentifier};
 use aws_sdk_s3::Client as s3Client;
 use base64::Engine;
 use rand::Rng;
@@ -112,6 +113,18 @@ impl S3DataKeys {
     pub fn as_array(&self) -> [&str; 3] {
         [&self.key, &self.cipher, &self.meta]
     }
+
+    pub fn as_object_identifiers(&self) -> Vec<ObjectIdentifier> {
+        self.as_array()
+            .iter()
+            .map(|key| {
+                ObjectIdentifier::builder()
+                    .set_key(Some(key.to_string()))
+                    .build()
+                    .expect("Failed to create ObjectIdentifier")
+            })
+            .collect()
+    }
 }
 
 impl fmt::Display for Vault {
@@ -130,8 +143,8 @@ impl Vault {
             .load()
             .await;
 
-        // Check env variables directly in case library is not used through the CLI.
-        // These are also handled in the CLI so they are documented in the CLI help.
+        // Check env variables directly in case the library is not used through the CLI.
+        // These are also handled in the CLI, so they are documented in the CLI help.
         let vault_stack_from_env = Self::get_env_variable("VAULT_STACK");
         let vault_bucket_from_env = Self::get_env_variable("VAULT_BUCKET");
         let vault_key_from_env = Self::get_env_variable("VAULT_KEY");
@@ -339,15 +352,19 @@ impl Vault {
         if !self.exists(name).await? {
             return Err(VaultError::S3DeleteObjectKeyMissingError);
         }
-        // TODO: delete all objects with one call
-        for key in S3DataKeys::new(name).as_array() {
-            self.s3
-                .delete_object()
-                .bucket(&self.cloudformation_params.bucket_name)
-                .key(key)
-                .send()
-                .await?;
-        }
+
+        let keys = S3DataKeys::new(name);
+        self.s3
+            .delete_objects()
+            .bucket(&self.cloudformation_params.bucket_name)
+            .delete(
+                Delete::builder()
+                    .set_objects(Some(keys.as_object_identifiers()))
+                    .build()?,
+            )
+            .send()
+            .await?;
+
         Ok(())
     }
 
