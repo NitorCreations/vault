@@ -7,17 +7,16 @@ use aes_gcm::aead::{Aead, Payload};
 use aes_gcm::aes::{cipher, Aes256};
 use aes_gcm::{AesGcm, KeyInit, Nonce};
 use aws_config::meta::region::RegionProviderChain;
-use aws_config::SdkConfig;
+use aws_config::{Region, SdkConfig};
 use aws_sdk_cloudformation::types::Output;
 use aws_sdk_cloudformation::Client as CloudFormationClient;
 use aws_sdk_kms::primitives::Blob;
 use aws_sdk_kms::types::DataKeySpec;
 use aws_sdk_kms::Client as kmsClient;
-use aws_sdk_s3::config::Region;
 use aws_sdk_s3::operation::put_object::PutObjectOutput;
 use aws_sdk_s3::primitives::ByteStream;
 use aws_sdk_s3::Client as s3Client;
-use base64::{engine::general_purpose, Engine as _};
+use base64::Engine;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use tokio::try_join;
@@ -38,23 +37,36 @@ pub struct Vault {
 pub struct CloudFormationParams {
     bucket_name: String,
     key_arn: Option<String>,
-    // deployed_version: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-struct Meta {
-    alg: String,
-    nonce: String,
-}
-
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct EncryptObject {
     data_key: Vec<u8>,
     aes_gcm_ciphertext: Vec<u8>,
     meta: String,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+struct Meta {
+    alg: String,
+    nonce: String,
+}
+
+#[derive(Debug, Clone)]
+struct S3DataKeys {
+    key: String,
+    cipher: String,
+    meta: String,
+}
+
 impl CloudFormationParams {
+    pub fn new(bucket_name: String, key_arn: Option<String>) -> CloudFormationParams {
+        CloudFormationParams {
+            bucket_name,
+            key_arn,
+        }
+    }
+
     pub fn from(bucket_name: &str, key_arn: Option<&str>) -> CloudFormationParams {
         CloudFormationParams {
             bucket_name: bucket_name.to_owned(),
@@ -65,15 +77,46 @@ impl CloudFormationParams {
 
 impl fmt::Display for CloudFormationParams {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
+        writeln!(
             f,
             "bucket: {}\nkey: {}",
             self.bucket_name,
             match &self.key_arn {
-                None => "None".to_string(),
-                Some(k) => k.to_string(),
+                None => "None",
+                Some(k) => k,
             }
         )
+    }
+}
+
+impl Meta {
+    pub fn new_json(algorithm: &str, nonce: &[u8]) -> serde_json::Result<String> {
+        let meta = Meta {
+            alg: algorithm.to_owned(),
+            nonce: base64::engine::general_purpose::STANDARD.encode(nonce),
+        };
+
+        serde_json::to_string(&meta)
+    }
+}
+
+impl S3DataKeys {
+    pub fn new(name: &str) -> S3DataKeys {
+        S3DataKeys {
+            key: format!("{name}.key"),
+            cipher: format!("{name}.aesgcm.encrypted"),
+            meta: format!("{name}.meta"),
+        }
+    }
+
+    pub fn as_array(&self) -> [&str; 3] {
+        [&self.key, &self.cipher, &self.meta]
+    }
+}
+
+impl fmt::Display for Vault {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "region: {}\n{}", self.region, self.cloudformation_params)
     }
 }
 
@@ -83,26 +126,25 @@ impl Vault {
         region_opt: Option<&str>,
     ) -> Result<Vault, VaultError> {
         let config = aws_config::from_env()
-            .region(get_region_provider(region_opt))
+            .region(Self::get_region_provider(region_opt))
             .load()
             .await;
 
         // Check env variables directly in case library is not used through the CLI.
         // These are also handled in the CLI so they are documented in the CLI help.
-        let vault_stack_from_env = get_env_variable("VAULT_STACK");
-        let vault_bucket_from_env = get_env_variable("VAULT_BUCKET");
-        let vault_key_from_env = get_env_variable("VAULT_KEY");
+        let vault_stack_from_env = Self::get_env_variable("VAULT_STACK");
+        let vault_bucket_from_env = Self::get_env_variable("VAULT_BUCKET");
+        let vault_key_from_env = Self::get_env_variable("VAULT_KEY");
 
         let cloudformation_params = match (vault_bucket_from_env, vault_key_from_env) {
-            (Some(bucket), Some(key)) => {
-                CloudFormationParams::from(bucket.as_str(), Some(key.as_str()))
-            }
+            (Some(bucket), Some(key)) => CloudFormationParams::new(bucket, Some(key)),
             (_, _) => {
                 let stack_name = vault_stack_from_env
                     .as_deref()
                     .or(vault_stack)
                     .unwrap_or("vault");
-                get_cloudformation_params(&config, stack_name).await?
+
+                Self::get_cloudformation_params(&config, stack_name).await?
             }
         };
 
@@ -119,7 +161,7 @@ impl Vault {
         region_opt: Option<&str>,
     ) -> Result<Vault, VaultError> {
         let config = aws_config::from_env()
-            .region(get_region_provider(region_opt))
+            .region(Self::get_region_provider(region_opt))
             .load()
             .await;
         Ok(Vault {
@@ -179,18 +221,12 @@ impl Vault {
         let plaintext = key_dict
             .plaintext()
             .ok_or(VaultError::KMSDataKeyPlainTextMissingError)?;
+
         let aesgcm_cipher: AesGcm<Aes256, cipher::typenum::U12> =
             AesGcm::new_from_slice(plaintext.as_ref())?;
-        let mut nonce: [u8; 12] = [0; 12];
-        let mut rng = rand::thread_rng();
-        rng.fill(nonce.as_mut_slice());
+        let nonce = Self::create_random_nonce();
         let nonce = Nonce::from_slice(nonce.as_slice());
-
-        let meta = serde_json::to_string(&Meta {
-            alg: "AESGCM".to_owned(),
-            nonce: general_purpose::STANDARD.encode(nonce),
-        })?;
-
+        let meta = Meta::new_json("AESGCM", nonce)?;
         let aes_gcm_ciphertext = aesgcm_cipher
             .encrypt(
                 nonce,
@@ -200,12 +236,15 @@ impl Vault {
                 },
             )
             .map_err(|_| VaultError::CiphertextEncryptionError)?;
+
+        let data_key = key_dict
+            .ciphertext_blob()
+            .ok_or(VaultError::CiphertextEncryptionError)?
+            .to_owned()
+            .into_inner();
+
         Ok(EncryptObject {
-            data_key: key_dict
-                .ciphertext_blob()
-                .ok_or(VaultError::CiphertextEncryptionError)?
-                .to_owned()
-                .into_inner(),
+            data_key,
             aes_gcm_ciphertext,
             meta,
         })
@@ -300,7 +339,8 @@ impl Vault {
         if !self.exists(name).await? {
             return Err(VaultError::S3DeleteObjectKeyMissingError);
         }
-        for key in get_s3_data_keys(name) {
+        // TODO: delete all objects with one call
+        for key in S3DataKeys::new(name).as_array() {
             self.s3
                 .delete_object()
                 .bucket(&self.cloudformation_params.bucket_name)
@@ -311,81 +351,79 @@ impl Vault {
         Ok(())
     }
 
+    /// Return value for given key name
     pub async fn lookup(&self, name: &str) -> Result<String, VaultError> {
-        let key = name;
-        let data_key = self.get_s3_object(format!("{key}.key"));
-        let ciphertext = self.get_s3_object(format!("{key}.aesgcm.encrypted"));
-        let meta_add = self.get_s3_object(format!("{key}.meta"));
-        let (data_key, ciphertext, meta_add) = try_join!(data_key, ciphertext, meta_add)?;
+        let keys = S3DataKeys::new(name);
+        let data_key = self.get_s3_object(keys.key);
+        let cipher_text = self.get_s3_object(keys.cipher);
+        let meta_add = self.get_s3_object(keys.meta);
+        let (data_key, cipher_text, meta_add) = try_join!(data_key, cipher_text, meta_add)?;
         let meta: Meta = serde_json::from_slice(&meta_add)?;
         let cipher: AesGcm<Aes256, cipher::typenum::U12> =
             AesGcm::new_from_slice(self.direct_decrypt(&data_key).await?.as_slice())?;
-        let nonce = general_purpose::STANDARD.decode(meta.nonce)?;
+        let nonce = base64::engine::general_purpose::STANDARD.decode(meta.nonce)?;
         let nonce = Nonce::from_slice(nonce.as_slice());
         let res = cipher
             .decrypt(
                 nonce,
                 Payload {
-                    msg: &ciphertext,
+                    msg: &cipher_text,
                     aad: &meta_add,
                 },
             )
             .map_err(|_| VaultError::NonceDecryptError)?;
         Ok(String::from_utf8(res)?)
     }
-}
 
-async fn get_cloudformation_params(
-    config: &SdkConfig,
-    stack: &str,
-) -> Result<CloudFormationParams, VaultError> {
-    let stack_output = CloudFormationClient::new(config)
-        .describe_stacks()
-        .stack_name(stack)
-        .send()
-        .await?;
-    let stack_output = stack_output
-        .stacks()
-        .iter()
-        .next()
-        .map(|stack| stack.outputs())
-        .ok_or(VaultError::StackOutputsMissingError)?;
+    /// Get CloudFormation parameters based on config and stack name
+    async fn get_cloudformation_params(
+        config: &SdkConfig,
+        stack: &str,
+    ) -> Result<CloudFormationParams, VaultError> {
+        let describe_stack_output = CloudFormationClient::new(config)
+            .describe_stacks()
+            .stack_name(stack)
+            .send()
+            .await?;
 
-    Ok(CloudFormationParams {
-        bucket_name: parse_output_value_from_key("vaultBucketName", stack_output)
-            .ok_or(VaultError::BucketNameMissingError)?,
-        key_arn: parse_output_value_from_key("kmsKeyArn", stack_output),
-        // deployed_version: parse_output_value_from_key("vaultStackVersion", &stack_output),
-    })
-}
+        let stack_output = describe_stack_output
+            .stacks()
+            .iter()
+            .next()
+            .map(|stack| stack.outputs())
+            .ok_or(VaultError::StackOutputsMissingError)?;
 
-impl fmt::Display for Vault {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "region: {}\n{}", self.region, self.cloudformation_params)
+        let bucket_name = Self::parse_output_value_from_key("vaultBucketName", stack_output)
+            .ok_or(VaultError::BucketNameMissingError)?;
+
+        let key_arn = Self::parse_output_value_from_key("kmsKeyArn", stack_output);
+
+        Ok(CloudFormationParams {
+            bucket_name,
+            key_arn,
+        })
     }
-}
 
-fn get_region_provider(region_opt: Option<&str>) -> RegionProviderChain {
-    RegionProviderChain::first_try(region_opt.map(|r| Region::new(r.to_owned())))
-        .or_default_provider()
-}
+    fn get_region_provider(region_opt: Option<&str>) -> RegionProviderChain {
+        RegionProviderChain::first_try(region_opt.map(|r| Region::new(r.to_owned())))
+            .or_default_provider()
+    }
 
-fn parse_output_value_from_key(key: &str, out: &[Output]) -> Option<String> {
-    out.iter()
-        .find(|output| output.output_key() == Some(key))
-        .map(|output| output.output_value().unwrap_or_default().to_owned())
-}
+    fn parse_output_value_from_key(key: &str, out: &[Output]) -> Option<String> {
+        out.iter()
+            .find(|output| output.output_key() == Some(key))
+            .map(|output| output.output_value().unwrap_or_default().to_owned())
+    }
 
-/// Helper function to get all three key names for S3 data
-fn get_s3_data_keys(name: &str) -> [String; 3] {
-    [
-        format!("{name}.aesgcm.encrypted"),
-        format!("{name}.key"),
-        format!("{name}.meta"),
-    ]
-}
+    fn create_random_nonce() -> [u8; 12] {
+        let mut nonce: [u8; 12] = [0; 12];
+        let mut rng = rand::thread_rng();
+        rng.fill(nonce.as_mut_slice());
+        nonce
+    }
 
-/// Return possible env variable value as Option
-fn get_env_variable(name: &str) -> Option<String> {
-    env::var(name).ok()
+    /// Return possible env variable value as Option
+    fn get_env_variable(name: &str) -> Option<String> {
+        env::var(name).ok()
+    }
 }
