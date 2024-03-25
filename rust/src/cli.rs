@@ -164,7 +164,7 @@ pub async fn store(
 /// Delete key value
 pub async fn delete(vault: &Vault, key: &str) -> Result<()> {
     if key.trim().is_empty() {
-        anyhow::bail!("Empty key '{key}'".red())
+        anyhow::bail!(format!("Empty key '{key}'").red())
     }
     vault
         .delete(key)
@@ -175,7 +175,7 @@ pub async fn delete(vault: &Vault, key: &str) -> Result<()> {
 /// Get key value
 pub async fn lookup(vault: &Vault, key: &str) -> Result<()> {
     if key.trim().is_empty() {
-        anyhow::bail!("Empty key '{key}'".red())
+        anyhow::bail!(format!("Empty key '{key}'").red())
     }
     vault
         .lookup(key)
@@ -196,7 +196,7 @@ pub async fn list_all(vault: &Vault) -> Result<()> {
 /// Check if key exists
 pub async fn exists(vault: &Vault, key: &str) -> Result<()> {
     if key.trim().is_empty() {
-        anyhow::bail!("Empty key: '{key}'".red())
+        anyhow::bail!(format!("Empty key: '{key}'").red())
     }
     vault
         .exists(key)
