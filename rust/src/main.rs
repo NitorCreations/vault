@@ -18,11 +18,13 @@ async fn main() -> Result<()> {
             args.region.as_deref(),
         )
         .await
-        .context("Failed to create vault from given params".red())?
+        // Note: `with_context` is used instead of the simpler `context`
+        // as it is lazily evaluated.
+        .with_context(|| "Failed to create vault from given params".red())?
     } else {
         Vault::new(args.vault_stack.as_deref(), args.region.as_deref())
             .await
-            .context("Failed to create vault".red())?
+            .with_context(|| "Failed to create vault".red())?
     };
 
     // Handle subcommands

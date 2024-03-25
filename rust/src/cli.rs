@@ -136,7 +136,7 @@ pub async fn store(
                         .fold(String::new(), |acc, line| acc + &line + "\n")
                 }
                 _ => std::fs::read_to_string(path)
-                    .context(format!("Error reading file: '{path}'").red())?,
+                    .with_context(|| format!("Error reading file: '{path}'").red())?,
             }
         } else {
             anyhow::bail!("No value or filename provided".red())
@@ -147,7 +147,7 @@ pub async fn store(
         && vault
             .exists(key)
             .await
-            .context(format!("Failed to check if key '{key}' exists").red())?
+            .with_context(|| format!("Failed to check if key '{key}' exists").red())?
     {
         anyhow::bail!(
             "Key already exists and no {} flag provided for overwriting",
@@ -158,7 +158,7 @@ pub async fn store(
     vault
         .store(key, data.as_bytes())
         .await
-        .context(format!("Failed to store key '{key}'").red())
+        .with_context(|| format!("Failed to store key '{key}'").red())
 }
 
 /// Delete key value
@@ -169,7 +169,7 @@ pub async fn delete(vault: &Vault, key: &str) -> Result<()> {
     vault
         .delete(key)
         .await
-        .context(format!("Failed to delete key '{key}'").red())
+        .with_context(|| format!("Failed to delete key '{key}'").red())
 }
 
 /// Get key value
@@ -180,7 +180,7 @@ pub async fn lookup(vault: &Vault, key: &str) -> Result<()> {
     vault
         .lookup(key)
         .await
-        .context(format!("Failed to look up key '{key}'").red())
+        .with_context(|| format!("Failed to look up key '{key}'").red())
         .map(|res| print!("{res}"))
 }
 
@@ -189,7 +189,7 @@ pub async fn list_all(vault: &Vault) -> Result<()> {
     vault
         .all()
         .await
-        .context("Failed to list all keys".red())
+        .with_context(|| "Failed to list all keys".red())
         .map(|list| println!("{}", list.join("\n")))
 }
 
@@ -201,7 +201,7 @@ pub async fn exists(vault: &Vault, key: &str) -> Result<()> {
     vault
         .exists(key)
         .await
-        .context(format!("Failed to check if key '{key}' exists").red())
+        .with_context(|| format!("Failed to check if key '{key}' exists").red())
         .map(|result| match result {
             true => println!("key '{key}' exists"),
             false => println!("{}", format!("key '{key}' doesn't exist").red()),
