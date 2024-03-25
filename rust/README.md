@@ -3,6 +3,30 @@
 Rust CLI and library for encrypting keys and values using client-side encryption
 with [AWS KMS](https://aws.amazon.com/kms/) keys.
 
+```console
+Usage: vault [OPTIONS] [COMMAND]
+
+Commands:
+  delete, -d, --delete  Delete an existing key from the store
+  describe, --describe  Describe CloudFormation stack parameters for current configuration
+  exists, -e, --exists  Check if a key exists
+  all, -a, --all        List available secrets
+  lookup, -l, --lookup  Print secret value for given key
+  store, -s, --store    Store a new key-value pair
+  info, -i, --info      Print region and stack information
+  help                  Print this message or the help of the given subcommand(s)
+
+Options:
+  -b, --bucket <BUCKET>            Override the bucket name [env: VAULT_BUCKET=]
+  -k, --key-arn <KEY_ARN>          Override the KMS key arn for storing or looking up [env: VAULT_KEY=]
+  -r, --region <REGION>            Specify AWS region for the bucket [env: AWS_REGION=]
+      --vault-stack <VAULT_STACK>  Optional CloudFormation stack to lookup key and bucket [env: VAULT_STACK=]
+  -h, --help                       Print help (see more with '--help')
+  -V, --version                    Print version
+```
+
+ANSI color output can be disabled by setting the env variable `NO_COLOR=1`.
+
 ## Build
 
 Using the shell script:
