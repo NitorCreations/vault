@@ -115,8 +115,8 @@ impl S3DataKeys {
         [&self.key, &self.cipher, &self.meta]
     }
 
-    /// Return keys as S3 object identifiers.
-    pub fn as_object_identifiers(&self) -> Vec<ObjectIdentifier> {
+    /// Convert keys to S3 object identifiers.
+    pub fn to_object_identifiers(&self) -> Vec<ObjectIdentifier> {
         self.as_array()
             .iter()
             .map(|key| {
@@ -361,7 +361,7 @@ impl Vault {
             .bucket(&self.cloudformation_params.bucket_name)
             .delete(
                 Delete::builder()
-                    .set_objects(Some(keys.as_object_identifiers()))
+                    .set_objects(Some(keys.to_object_identifiers()))
                     .build()?,
             )
             .send()
