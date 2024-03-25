@@ -398,10 +398,7 @@ impl Vault {
 
         let key_arn = Self::parse_output_value_from_key("kmsKeyArn", stack_output);
 
-        Ok(CloudFormationParams {
-            bucket_name,
-            key_arn,
-        })
+        Ok(CloudFormationParams::new(bucket_name, key_arn))
     }
 
     fn get_region_provider(region_opt: Option<&str>) -> RegionProviderChain {
