@@ -40,10 +40,7 @@ async fn main() -> Result<()> {
                 file,
                 value_opt,
             } => cli::store(&client, key, value, file, value_opt, overwrite).await,
-            Command::Info {} => {
-                client.print_info();
-                Ok(())
-            }
+            Command::Info {} => Ok(println!("{}", client)),
         };
     }
     Ok(())

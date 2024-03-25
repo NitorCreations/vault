@@ -130,11 +130,6 @@ impl Vault {
         })
     }
 
-    /// Print information: region and CloudFormation parameters.
-    pub fn print_info(&self) {
-        println!("region: {}\n{}", self.region, self.cloudformation_params);
-    }
-
     /// Get all available secrets
     pub async fn all(&self) -> Result<Vec<String>, VaultError> {
         let output = self
@@ -362,6 +357,12 @@ async fn get_cloudformation_params(
         key_arn: parse_output_value_from_key("kmsKeyArn", stack_output),
         // deployed_version: parse_output_value_from_key("vaultStackVersion", &stack_output),
     })
+}
+
+impl fmt::Display for Vault {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "region: {}\n{}", self.region, self.cloudformation_params)
+    }
 }
 
 fn get_region_provider(region_opt: Option<&str>) -> RegionProviderChain {
