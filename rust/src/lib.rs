@@ -110,10 +110,12 @@ impl S3DataKeys {
         }
     }
 
+    /// Return key strings as an array for easy iteration.
     pub fn as_array(&self) -> [&str; 3] {
         [&self.key, &self.cipher, &self.meta]
     }
 
+    /// Return keys as S3 object identifiers.
     pub fn as_object_identifiers(&self) -> Vec<ObjectIdentifier> {
         self.as_array()
             .iter()
@@ -121,7 +123,7 @@ impl S3DataKeys {
                 ObjectIdentifier::builder()
                     .set_key(Some(key.to_string()))
                     .build()
-                    .expect("Failed to create ObjectIdentifier")
+                    .unwrap_or_else(|_| panic!("Failed to create ObjectIdentifier for '{key}'"))
             })
             .collect()
     }
