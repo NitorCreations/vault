@@ -91,13 +91,16 @@ impl fmt::Display for CloudFormationParams {
 }
 
 impl Meta {
-    pub fn new_json(algorithm: &str, nonce: &[u8]) -> serde_json::Result<String> {
-        let meta = Meta {
+    pub fn new(algorithm: &str, nonce: &[u8]) -> Meta {
+        Meta {
             alg: algorithm.to_owned(),
             nonce: base64::engine::general_purpose::STANDARD.encode(nonce),
-        };
+        }
+    }
 
-        serde_json::to_string(&meta)
+    /// Serialize Meta to JSON string.
+    pub fn to_json(&self) -> serde_json::Result<String> {
+        serde_json::to_string(&self)
     }
 }
 
@@ -241,7 +244,7 @@ impl Vault {
             AesGcm::new_from_slice(plaintext.as_ref())?;
         let nonce = Self::create_random_nonce();
         let nonce = Nonce::from_slice(nonce.as_slice());
-        let meta = Meta::new_json("AESGCM", nonce)?;
+        let meta = Meta::new("AESGCM", nonce).to_json()?;
         let aes_gcm_ciphertext = aesgcm_cipher
             .encrypt(
                 nonce,
