@@ -74,6 +74,38 @@ impl CloudFormationParams {
             key_arn: key_arn.map(|x| x.to_owned()),
         }
     }
+
+    /// Get CloudFormation parameters based on config and stack name
+    async fn get_from_stack(
+        config: &SdkConfig,
+        stack: &str,
+    ) -> Result<CloudFormationParams, VaultError> {
+        let describe_stack_output = CloudFormationClient::new(config)
+            .describe_stacks()
+            .stack_name(stack)
+            .send()
+            .await?;
+
+        let stack_output = describe_stack_output
+            .stacks()
+            .iter()
+            .next()
+            .map(|stack| stack.outputs())
+            .ok_or(VaultError::StackOutputsMissingError)?;
+
+        let bucket_name = Self::parse_output_value_from_key("vaultBucketName", stack_output)
+            .ok_or(VaultError::BucketNameMissingError)?;
+
+        let key_arn = Self::parse_output_value_from_key("kmsKeyArn", stack_output);
+
+        Ok(CloudFormationParams::new(bucket_name, key_arn))
+    }
+
+    fn parse_output_value_from_key(key: &str, out: &[Output]) -> Option<String> {
+        out.iter()
+            .find(|output| output.output_key() == Some(key))
+            .map(|output| output.output_value().unwrap_or_default().to_owned())
+    }
 }
 
 impl fmt::Display for CloudFormationParams {
@@ -162,7 +194,7 @@ impl Vault {
                     .or(vault_stack)
                     .unwrap_or("vault");
 
-                Self::get_cloudformation_params(&config, stack_name).await?
+                CloudFormationParams::get_from_stack(&config, stack_name).await?
             }
         };
 
@@ -397,41 +429,9 @@ impl Vault {
         Ok(String::from_utf8(res)?)
     }
 
-    /// Get CloudFormation parameters based on config and stack name
-    async fn get_cloudformation_params(
-        config: &SdkConfig,
-        stack: &str,
-    ) -> Result<CloudFormationParams, VaultError> {
-        let describe_stack_output = CloudFormationClient::new(config)
-            .describe_stacks()
-            .stack_name(stack)
-            .send()
-            .await?;
-
-        let stack_output = describe_stack_output
-            .stacks()
-            .iter()
-            .next()
-            .map(|stack| stack.outputs())
-            .ok_or(VaultError::StackOutputsMissingError)?;
-
-        let bucket_name = Self::parse_output_value_from_key("vaultBucketName", stack_output)
-            .ok_or(VaultError::BucketNameMissingError)?;
-
-        let key_arn = Self::parse_output_value_from_key("kmsKeyArn", stack_output);
-
-        Ok(CloudFormationParams::new(bucket_name, key_arn))
-    }
-
     fn get_region_provider(region_opt: Option<&str>) -> RegionProviderChain {
         RegionProviderChain::first_try(region_opt.map(|r| Region::new(r.to_owned())))
             .or_default_provider()
-    }
-
-    fn parse_output_value_from_key(key: &str, out: &[Output]) -> Option<String> {
-        out.iter()
-            .find(|output| output.output_key() == Some(key))
-            .map(|output| output.output_value().unwrap_or_default().to_owned())
     }
 
     fn create_random_nonce() -> [u8; 12] {
