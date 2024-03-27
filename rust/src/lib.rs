@@ -137,7 +137,7 @@ impl Meta {
 }
 
 impl S3DataKeys {
-    pub fn new(name: &str) -> S3DataKeys {
+    fn new(name: &str) -> S3DataKeys {
         S3DataKeys {
             key: format!("{name}.key"),
             cipher: format!("{name}.aesgcm.encrypted"),
@@ -146,19 +146,19 @@ impl S3DataKeys {
     }
 
     /// Return key strings as an array for easy iteration.
-    pub fn as_array(&self) -> [&str; 3] {
+    fn as_array(&self) -> [&str; 3] {
         [&self.key, &self.cipher, &self.meta]
     }
 
     /// Convert keys to S3 object identifiers.
-    pub fn to_object_identifiers(&self) -> Vec<ObjectIdentifier> {
+    fn to_object_identifiers(&self) -> Result<Vec<ObjectIdentifier>, VaultError> {
         self.as_array()
             .iter()
             .map(|key| {
                 ObjectIdentifier::builder()
                     .set_key(Some(key.to_string()))
                     .build()
-                    .unwrap_or_else(|_| panic!("Failed to create ObjectIdentifier for '{key}'"))
+                    .map_err(VaultError::from)
             })
             .collect()
     }
@@ -391,14 +391,11 @@ impl Vault {
         }
 
         let keys = S3DataKeys::new(name);
+        let identifiers = keys.to_object_identifiers()?;
         self.s3
             .delete_objects()
             .bucket(&self.cloudformation_params.bucket_name)
-            .delete(
-                Delete::builder()
-                    .set_objects(Some(keys.to_object_identifiers()))
-                    .build()?,
-            )
+            .delete(Delete::builder().set_objects(Some(identifiers)).build()?)
             .send()
             .await?;
 

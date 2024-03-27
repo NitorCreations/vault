@@ -1,10 +1,10 @@
 use std::string::FromUtf8Error;
 
-use aws_sdk_cloudformation::error::BuildError;
 use aws_sdk_cloudformation::error::SdkError;
 use aws_sdk_cloudformation::operation::describe_stacks::DescribeStacksError;
 use aws_sdk_kms::operation::decrypt::DecryptError;
 use aws_sdk_kms::operation::generate_data_key::GenerateDataKeyError;
+use aws_sdk_s3::error::BuildError;
 use aws_sdk_s3::operation::delete_object::DeleteObjectError;
 use aws_sdk_s3::operation::delete_objects::DeleteObjectsError;
 use aws_sdk_s3::operation::get_object::GetObjectError;
