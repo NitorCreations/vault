@@ -28,7 +28,7 @@ jmespath==1.0.1
     # via
     #   boto3
     #   botocore
-pycparser==2.21
+pycparser==2.22
     # via cffi
 python-dateutil==2.9.0
     # via botocore
