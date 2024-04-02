@@ -176,15 +176,15 @@ impl Vault {
         region_opt: Option<&str>,
     ) -> Result<Vault, VaultError> {
         let config = aws_config::from_env()
-            .region(Self::get_region_provider(region_opt))
+            .region(get_region_provider(region_opt))
             .load()
             .await;
 
         // Check env variables directly in case the library is not used through the CLI.
         // These are also handled in the CLI, so they are documented in the CLI help.
-        let vault_stack_from_env = Self::get_env_variable("VAULT_STACK");
-        let vault_bucket_from_env = Self::get_env_variable("VAULT_BUCKET");
-        let vault_key_from_env = Self::get_env_variable("VAULT_KEY");
+        let vault_stack_from_env = get_env_variable("VAULT_STACK");
+        let vault_bucket_from_env = get_env_variable("VAULT_BUCKET");
+        let vault_key_from_env = get_env_variable("VAULT_KEY");
 
         let cloudformation_params = match (vault_bucket_from_env, vault_key_from_env) {
             (Some(bucket), Some(key)) => CloudFormationParams::new(bucket, Some(key)),
@@ -211,7 +211,7 @@ impl Vault {
         region_opt: Option<&str>,
     ) -> Result<Vault, VaultError> {
         let config = aws_config::from_env()
-            .region(Self::get_region_provider(region_opt))
+            .region(get_region_provider(region_opt))
             .load()
             .await;
         Ok(Vault {
@@ -426,20 +426,20 @@ impl Vault {
         Ok(String::from_utf8(res)?)
     }
 
-    fn get_region_provider(region_opt: Option<&str>) -> RegionProviderChain {
-        RegionProviderChain::first_try(region_opt.map(|r| Region::new(r.to_owned())))
-            .or_default_provider()
-    }
-
     fn create_random_nonce() -> [u8; 12] {
         let mut nonce: [u8; 12] = [0; 12];
         let mut rng = rand::thread_rng();
         rng.fill(nonce.as_mut_slice());
         nonce
     }
+}
 
-    /// Return possible env variable value as Option
-    fn get_env_variable(name: &str) -> Option<String> {
-        env::var(name).ok()
-    }
+fn get_region_provider(region_opt: Option<&str>) -> RegionProviderChain {
+    RegionProviderChain::first_try(region_opt.map(|r| Region::new(r.to_owned())))
+        .or_default_provider()
+}
+
+/// Return possible env variable value as Option
+fn get_env_variable(name: &str) -> Option<String> {
+    env::var(name).ok()
 }
