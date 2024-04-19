@@ -59,7 +59,10 @@ prog
   .command("lookup <name>", "Look up data from the vault", { alias: "l" })
   .action(async (name, options) => {
     const client = await vault(options);
-    client.lookup(name).then(console.log).catch(handleRejection);
+    client
+      .lookup(name)
+      .then((res) => process.stdout.write(res))
+      .catch(handleRejection);
   })
   .command("delete <name>", "Delete data from the vault", { alias: "d" })
   .action((name, options) => {
