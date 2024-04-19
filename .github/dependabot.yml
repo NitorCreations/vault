@@ -28,3 +28,9 @@ updates:
     directory: /go
     schedule:
       interval: "weekly"
+
+  # Node
+  - package-ecosystem: npm
+    directory: /nodejs
+    schedule:
+      interval: "weekly"
