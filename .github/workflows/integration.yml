@@ -66,6 +66,17 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: bin
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+          cache-dependency-path: nodejs/pnpm-lock.yaml
+      - name: build node vault
+        run: pnpm install --frozen-lockfile && pnpm build
+        working-directory: nodejs
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -75,32 +86,42 @@ jobs:
         working-directory: python
       - name: add execute rights & run --version for all versions
         run: |
-          chmod +x bin/go/vault bin/rust/vault
+          chmod +x bin/go/vault bin/rust/vault nodejs/dist/cli/vault.js
           vault --version
           bin/go/vault --version
           bin/rust/vault --version
+          nodejs/dist/cli/vault.js --version
       - name: store secret with python
         run: vault -s 'secret-python' -v 'sha-${{github.sha}}' -w
       - name: store secret with go
         run: bin/go/vault -s 'secret-go' -v 'sha-${{github.sha}}' -w
       - name: store secret with rust
         run: bin/rust/vault -s 'secret-rust' -v 'sha-${{github.sha}}' -w
+      - name: store secret with nodejs
+        run: nodejs/dist/cli/vault.js s 'secret-nodejs' 'sha-${{github.sha}}' -w
       - name: validate storing worked fine python
         run: diff <(vault -l secret-python) <(echo -n sha-${{github.sha}})
       - name: validate go and rust secret equality with python
         run: diff <(vault -l secret-go) <(vault -l secret-rust)
-      - name: validate python and rust secret equality with go
-        run: diff <(bin/go/vault -l secret-rust) <(bin/go/vault -l secret-python)
-      - name: validate go and python secret equality with rust
-        run: diff <(bin/rust/vault -l secret-go) <(bin/rust/vault -l secret-python)
+      - name: validate python and rust secret equality with go and nodejs
+        run: diff <(bin/go/vault -l secret-rust) <(nodejs/dist/cli/vault.js l secret-python)
+      - name: validate go and python secret equality with rust and go
+        run: diff <(bin/rust/vault -l secret-go) <(bin/go/vault -l secret-python)
+      - name: validate python and nodejs secret equality with rust
+        run: diff <(bin/rust/vault -l secret-python) <(bin/rust/vault -l secret-nodejs)
+      - name: validate rust and go secret equality with rust and nodejs
+        run: diff <(bin/rust/vault -l secret-rust) <(nodejs/dist/cli/vault.js l secret-nodejs)
       - name: delete secret with python
         run: vault -d 'secret-python'
       - name: delete secret with go
         run: bin/go/vault -d 'secret-go'
       - name: delete secret with rust
         run: bin/rust/vault -d 'secret-rust'
+      - name: delete secret with nodejs
+        run: nodejs/dist/cli/vault.js d 'secret-nodejs'
       - name: verify that keys have been deleted
         run: |
           bin/rust/vault --exists secret-python | grep doesn\'t
           bin/rust/vault --exists secret-go | grep doesn\'t
           bin/rust/vault --exists secret-rust | grep doesn\'t
+          bin/rust/vault --exists secret-nodejs | grep doesn\'t
