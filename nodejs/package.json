@@ -20,7 +20,8 @@
   },
   "scripts": {
     "test": "mocha",
-    "build": "tsc"
+    "build": "tsc",
+    "vault": "tsx cli/vault.ts"
   },
   "dependencies": {
     "@aws-sdk/client-cloudformation": "^3.272.0",
@@ -41,6 +42,7 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "@types/node": "^20.12.0",
+    "tsx": "^4.7.2",
     "typescript": "^5.4.5"
   }
 }

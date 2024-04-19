@@ -7,7 +7,7 @@ const handleRejection = (err: string) => {
   process.exit(1);
 };
 
-const prog = sade("vault");
+const prog = sade("vault").version("1.1.1");
 
 prog.option(
   "--vaultstack",
