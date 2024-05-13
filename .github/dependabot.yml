@@ -10,27 +10,47 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    groups:
+      actions:
+        patterns:
+          - "*"
 
   # Python
   - package-ecosystem: "pip"
     directory: "/python"
     schedule:
       interval: "weekly"
+    groups:
+      python:
+        patterns:
+          - "*"
 
   # Rust
   - package-ecosystem: "cargo"
     directory: "/rust"
     schedule:
       interval: "weekly"
+    groups:
+      rust:
+        patterns:
+          - "*"
 
   # Go
   - package-ecosystem: gomod
     directory: /go
     schedule:
       interval: "weekly"
+    groups:
+      go:
+        patterns:
+          - "*"
 
   # Node
   - package-ecosystem: npm
     directory: /nodejs
     schedule:
       interval: "weekly"
+    groups:
+      node:
+        patterns:
+          - "*"
