@@ -42,7 +42,7 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "@types/node": "^20.12.11",
-    "tsx": "^4.9.3",
+    "tsx": "^4.10.1",
     "typescript": "^5.4.5"
   }
 }
