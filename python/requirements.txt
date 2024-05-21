@@ -32,7 +32,7 @@ pycparser==2.22
     # via cffi
 python-dateutil==2.9.0
     # via botocore
-requests==2.31.0
+requests==2.32.0
     # via
     #   nitor-vault (setup.py)
     #   threadlocal-aws
