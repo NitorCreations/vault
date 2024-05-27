@@ -30,9 +30,9 @@ jmespath==1.0.1
     #   botocore
 pycparser==2.22
     # via cffi
-python-dateutil==2.9.0
+python-dateutil==2.9.0.post0
     # via botocore
-requests==2.32.0
+requests==2.32.2
     # via
     #   nitor-vault (setup.py)
     #   threadlocal-aws
