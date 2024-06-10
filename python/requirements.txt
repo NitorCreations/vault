@@ -12,13 +12,13 @@ botocore==1.34.53
     # via
     #   boto3
     #   s3transfer
-certifi==2024.2.2
+certifi==2024.6.2
     # via requests
 cffi==1.16.0
     # via cryptography
 charset-normalizer==3.3.2
     # via requests
-cryptography==42.0.7
+cryptography==42.0.8
     # via nitor-vault (setup.py)
 future==1.0.0
     # via nitor-vault (setup.py)
@@ -32,7 +32,7 @@ pycparser==2.22
     # via cffi
 python-dateutil==2.9.0.post0
     # via botocore
-requests==2.32.2
+requests==2.32.3
     # via
     #   nitor-vault (setup.py)
     #   threadlocal-aws
