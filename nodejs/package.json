@@ -24,9 +24,9 @@
     "vault": "tsx cli/vault.ts"
   },
   "dependencies": {
-    "@aws-sdk/client-cloudformation": "^3.598.0",
-    "@aws-sdk/client-kms": "^3.598.0",
-    "@aws-sdk/client-s3": "^3.598.0",
+    "@aws-sdk/client-cloudformation": "^3.600.0",
+    "@aws-sdk/client-kms": "^3.600.0",
+    "@aws-sdk/client-s3": "^3.600.0",
     "sade": "^1.7.0"
   },
   "engines": {
@@ -41,8 +41,8 @@
   },
   "license": "Apache-2.0",
   "devDependencies": {
-    "@types/node": "^20.14.2",
-    "tsx": "^4.15.5",
-    "typescript": "^5.4.5"
+    "@types/node": "^20.14.8",
+    "tsx": "^4.15.7",
+    "typescript": "^5.5.2"
   }
 }
