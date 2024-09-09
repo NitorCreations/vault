@@ -13,17 +13,17 @@ authors = [
 
 [dependencies]
 aes-gcm = "0.10.3"
-anyhow = "1.0.86"
+anyhow = "1.0.87"
 aws-config = { version = "1.4.0", features = ["behavior-version-latest"] }
 aws-sdk-cloudformation = "1.30.0"
 aws-sdk-kms = "1.26.0"
 aws-sdk-s3 = "1.29.0"
 base64 = "0.22.1"
-clap = { version = "4.5.16", features = ["derive", "env"] }
+clap = { version = "4.5.17", features = ["derive", "env"] }
 colored = "2.1.0"
 rand = "0.8.5"
-serde = { version = "1.0.209", features = ["derive"] }
-serde_json = "1.0.127"
+serde = { version = "1.0.210", features = ["derive"] }
+serde_json = "1.0.128"
 thiserror = "1.0.63"
 tokio = { version = "1.40.0", features = ["full"] }
 
