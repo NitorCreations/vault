@@ -1,5 +1,7 @@
 # nitor-vault
 
+![Crates.io Version](https://img.shields.io/crates/v/nitor-vault)
+
 Rust CLI and library for encrypting keys and values using client-side encryption
 with [AWS KMS](https://aws.amazon.com/kms/) keys.
 
