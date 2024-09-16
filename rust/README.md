@@ -106,3 +106,17 @@ cargo clippy --fix
 ```shell
 cargo update
 ```
+
+## Publish a new crate version
+
+Go to [crates.io/settings/tokens](https://crates.io/settings/tokens) and create a new API token,
+unless you already have one that has not expired.
+Do _not_ create a token with no expiration date,
+and prefer short expiration times.
+
+Copy token and run `cargo login <token>`.
+
+If you need to publish an older version (that is not the current git HEAD commit),
+first checkout the version you want to publish.
+
+Try publishing with `cargo publish --dry-run` and then run with `cargo publish`.
