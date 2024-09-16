@@ -1,6 +1,6 @@
 [package]
 name = "nitor-vault"
-version = "0.6.2"
+version = "0.6.3"
 edition = "2021"
 description = "Encrypted AWS key-value storage utility."
 license = "Apache-2.0"
@@ -32,4 +32,16 @@ name = "vault"
 path = "src/main.rs"
 
 [profile.release]
-lto = true
+lto = "thin"
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+# https://rust-lang.github.io/rust-clippy/master/index.html
+enum_glob_use = "deny"
+unwrap_used = "deny"
+nursery = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"

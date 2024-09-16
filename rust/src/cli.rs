@@ -6,6 +6,7 @@ use colored::Colorize;
 
 use nitor_vault::Vault;
 
+#[allow(clippy::doc_markdown)]
 #[derive(Parser)]
 #[command(
     author,
@@ -36,6 +37,7 @@ pub struct Args {
     pub command: Option<Command>,
 }
 
+#[allow(clippy::doc_markdown)]
 #[derive(Subcommand)]
 pub enum Command {
     /// Delete an existing key from the store
@@ -91,12 +93,12 @@ pub enum Command {
 /// Parse command line arguments.
 ///
 /// See Clap `Derive` documentation for details:
-/// https://docs.rs/clap/latest/clap/_derive/index.html
+/// <https://docs.rs/clap/latest/clap>/_derive/index.html
 pub fn parse_args() -> Args {
     Args::parse()
 }
 
-/// Store key-value pair
+/// Store a key-value pair
 pub async fn store(
     vault: &Vault,
     key: Option<String>,
@@ -123,7 +125,7 @@ pub async fn store(
 
     let data = {
         if let Some(value) = value.or(value_opt) {
-            value.to_owned()
+            value.clone()
         } else if let Some(path) = &file {
             match path.as_str() {
                 "-" => {
@@ -131,7 +133,7 @@ pub async fn store(
                     stdin()
                         .lock()
                         .lines()
-                        .map(|l| l.unwrap())
+                        .map(|l| l.expect("Failed to read line from stdin"))
                         .take_while(|l| !l.trim().is_empty())
                         .fold(String::new(), |acc, line| acc + &line + "\n")
                 }
@@ -155,8 +157,7 @@ pub async fn store(
         )
     }
 
-    vault
-        .store(key, data.as_bytes())
+    Box::pin(vault.store(key, data.as_bytes()))
         .await
         .with_context(|| format!("Failed to store key '{key}'").red())
 }
@@ -177,8 +178,7 @@ pub async fn lookup(vault: &Vault, key: &str) -> Result<()> {
     if key.trim().is_empty() {
         anyhow::bail!(format!("Empty key '{key}'").red())
     }
-    vault
-        .lookup(key)
+    Box::pin(vault.lookup(key))
         .await
         .with_context(|| format!("Failed to look up key '{key}'").red())
         .map(|res| print!("{res}"))
@@ -202,8 +202,11 @@ pub async fn exists(vault: &Vault, key: &str) -> Result<()> {
         .exists(key)
         .await
         .with_context(|| format!("Failed to check if key '{key}' exists").red())
-        .map(|result| match result {
-            true => println!("key '{key}' exists"),
-            false => println!("{}", format!("key '{key}' doesn't exist").red()),
+        .map(|result| {
+            if result {
+                println!("key '{key}' exists");
+            } else {
+                println!("{}", format!("key '{key}' doesn't exist").red());
+            }
         })
 }

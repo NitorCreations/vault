@@ -12,11 +12,11 @@ use aws_sdk_cloudformation::types::Output;
 use aws_sdk_cloudformation::Client as CloudFormationClient;
 use aws_sdk_kms::primitives::Blob;
 use aws_sdk_kms::types::DataKeySpec;
-use aws_sdk_kms::Client as kmsClient;
+use aws_sdk_kms::Client as KmsClient;
 use aws_sdk_s3::operation::put_object::PutObjectOutput;
 use aws_sdk_s3::primitives::ByteStream;
 use aws_sdk_s3::types::{Delete, ObjectIdentifier};
-use aws_sdk_s3::Client as s3Client;
+use aws_sdk_s3::Client as S3Client;
 use base64::Engine;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
@@ -30,8 +30,8 @@ pub struct Vault {
     /// Will fall back to default provider if nothing is specified.
     region: Region,
     cloudformation_params: CloudFormationParams,
-    s3: s3Client,
-    kms: kmsClient,
+    s3: S3Client,
+    kms: KmsClient,
 }
 
 #[derive(Debug, Clone)]
@@ -61,25 +61,23 @@ struct S3DataKeys {
 }
 
 impl CloudFormationParams {
-    pub fn new(bucket_name: String, key_arn: Option<String>) -> CloudFormationParams {
-        CloudFormationParams {
+    #[must_use]
+    pub const fn new(bucket_name: String, key_arn: Option<String>) -> Self {
+        Self {
             bucket_name,
             key_arn,
         }
     }
 
-    pub fn from(bucket_name: &str, key_arn: Option<&str>) -> CloudFormationParams {
-        CloudFormationParams {
+    pub fn from(bucket_name: &str, key_arn: Option<&str>) -> Self {
+        Self {
             bucket_name: bucket_name.to_owned(),
-            key_arn: key_arn.map(|x| x.to_owned()),
+            key_arn: key_arn.map(std::borrow::ToOwned::to_owned),
         }
     }
 
-    /// Get CloudFormation parameters based on config and stack name
-    async fn get_from_stack(
-        config: &SdkConfig,
-        stack: &str,
-    ) -> Result<CloudFormationParams, VaultError> {
+    /// Get `CloudFormation` parameters based on config and stack name
+    async fn get_from_stack(config: &SdkConfig, stack: &str) -> Result<Self, VaultError> {
         let describe_stack_output = CloudFormationClient::new(config)
             .describe_stacks()
             .stack_name(stack)
@@ -90,7 +88,7 @@ impl CloudFormationParams {
             .stacks()
             .iter()
             .next()
-            .map(|stack| stack.outputs())
+            .map(aws_sdk_cloudformation::types::Stack::outputs)
             .ok_or(VaultError::StackOutputsMissingError)?;
 
         let bucket_name = Self::parse_output_value_from_key("vaultBucketName", stack_output)
@@ -98,7 +96,7 @@ impl CloudFormationParams {
 
         let key_arn = Self::parse_output_value_from_key("kmsKeyArn", stack_output);
 
-        Ok(CloudFormationParams::new(bucket_name, key_arn))
+        Ok(Self::new(bucket_name, key_arn))
     }
 
     fn parse_output_value_from_key(key: &str, out: &[Output]) -> Option<String> {
@@ -114,17 +112,14 @@ impl fmt::Display for CloudFormationParams {
             f,
             "bucket: {}\nkey: {}",
             self.bucket_name,
-            match &self.key_arn {
-                None => "None",
-                Some(k) => k,
-            }
+            self.key_arn.as_ref().map_or("None", |k| k)
         )
     }
 }
 
 impl Meta {
-    pub fn new(algorithm: &str, nonce: &[u8]) -> Meta {
-        Meta {
+    pub fn new(algorithm: &str, nonce: &[u8]) -> Self {
+        Self {
             alg: algorithm.to_owned(),
             nonce: base64::engine::general_purpose::STANDARD.encode(nonce),
         }
@@ -137,8 +132,8 @@ impl Meta {
 }
 
 impl S3DataKeys {
-    fn new(name: &str) -> S3DataKeys {
-        S3DataKeys {
+    fn new(name: &str) -> Self {
+        Self {
             key: format!("{name}.key"),
             cipher: format!("{name}.aesgcm.encrypted"),
             meta: format!("{name}.meta"),
@@ -156,7 +151,7 @@ impl S3DataKeys {
             .iter()
             .map(|key| {
                 ObjectIdentifier::builder()
-                    .set_key(Some(key.to_string()))
+                    .set_key(Some((*key).to_string()))
                     .build()
                     .map_err(VaultError::from)
             })
@@ -174,11 +169,16 @@ impl Vault {
     pub async fn new(
         vault_stack: Option<&str>,
         region_opt: Option<&str>,
-    ) -> Result<Vault, VaultError> {
+    ) -> Result<Self, VaultError> {
         let config = aws_config::from_env()
             .region(get_region_provider(region_opt))
             .load()
             .await;
+
+        let region = config
+            .region()
+            .map(ToOwned::to_owned)
+            .ok_or_else(|| VaultError::NoRegionError)?;
 
         // Check env variables directly in case the library is not used through the CLI.
         // These are also handled in the CLI, so they are documented in the CLI help.
@@ -186,39 +186,39 @@ impl Vault {
         let vault_bucket_from_env = get_env_variable("VAULT_BUCKET");
         let vault_key_from_env = get_env_variable("VAULT_KEY");
 
-        let cloudformation_params = match (vault_bucket_from_env, vault_key_from_env) {
-            (Some(bucket), Some(key)) => CloudFormationParams::new(bucket, Some(key)),
-            (_, _) => {
+        let cloudformation_params =
+            if let (Some(bucket), Some(key)) = (vault_bucket_from_env, vault_key_from_env) {
+                CloudFormationParams::new(bucket, Some(key))
+            } else {
                 let stack_name = vault_stack_from_env
                     .as_deref()
                     .or(vault_stack)
                     .unwrap_or("vault");
 
                 CloudFormationParams::get_from_stack(&config, stack_name).await?
-            }
-        };
+            };
 
-        Ok(Vault {
-            region: config.region().unwrap().to_owned(),
+        Ok(Self {
+            region,
             cloudformation_params,
-            s3: s3Client::new(&config),
-            kms: kmsClient::new(&config),
+            s3: S3Client::new(&config),
+            kms: KmsClient::new(&config),
         })
     }
 
     pub async fn from_params(
         cloudformation_params: CloudFormationParams,
         region_opt: Option<&str>,
-    ) -> Result<Vault, VaultError> {
+    ) -> Result<Self, VaultError> {
         let config = aws_config::from_env()
             .region(get_region_provider(region_opt))
             .load()
             .await;
-        Ok(Vault {
+        Ok(Self {
             region: config.region().ok_or(VaultError::NoRegionError)?.to_owned(),
             cloudformation_params,
-            s3: s3Client::new(&config),
-            kms: kmsClient::new(&config),
+            s3: S3Client::new(&config),
+            kms: KmsClient::new(&config),
         })
     }
 
@@ -234,23 +234,22 @@ impl Vault {
             .contents()
             .iter()
             .filter_map(|object| -> Option<String> {
-                if let Some(key) = object.key() {
+                object.key().and_then(|key| {
                     if key.ends_with(".aesgcm.encrypted") {
                         key.strip_suffix(".aesgcm.encrypted")
-                            .map(|stripped| stripped.to_owned())
+                            .map(std::borrow::ToOwned::to_owned)
                     } else {
                         None
                     }
-                } else {
-                    None
-                }
+                })
             })
             .collect::<Vec<_>>())
     }
 
-    /// Get CloudFormation stack information
+    /// Get `CloudFormation` stack information
+    #[must_use]
     pub fn stack_info(&self) -> CloudFormationParams {
-        self.cloudformation_params.to_owned()
+        self.cloudformation_params.clone()
     }
 
     /// Encrypt data
@@ -261,7 +260,7 @@ impl Vault {
             .key_id(
                 self.cloudformation_params
                     .key_arn
-                    .to_owned()
+                    .clone()
                     .ok_or(VaultError::KeyARNMissingError)?,
             )
             .key_spec(DataKeySpec::Aes256)
@@ -304,7 +303,7 @@ impl Vault {
     async fn get_s3_object(&self, key: String) -> Result<Vec<u8>, VaultError> {
         self.s3
             .get_object()
-            .bucket(self.cloudformation_params.bucket_name.to_owned())
+            .bucket(self.cloudformation_params.bucket_name.clone())
             .key(&key)
             .send()
             .await?
@@ -312,7 +311,7 @@ impl Vault {
             .collect()
             .await
             .map_err(|_| VaultError::S3GetObjectBodyError)
-            .map(|bytes| bytes.to_vec())
+            .map(aws_sdk_s3::primitives::AggregatedBytes::to_vec)
     }
 
     /// Get decrypted data
@@ -350,7 +349,7 @@ impl Vault {
         if let Err(e) = self
             .s3
             .head_object()
-            .bucket(self.cloudformation_params.bucket_name.to_owned())
+            .bucket(self.cloudformation_params.bucket_name.clone())
             .key(format!("{name}.key"))
             .send()
             .await

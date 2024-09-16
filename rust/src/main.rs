@@ -3,18 +3,18 @@ mod cli;
 use anyhow::{Context, Result};
 use colored::Colorize;
 
-use crate::cli::{Args, Command};
-
 use nitor_vault::{CloudFormationParams, Vault};
+
+use crate::cli::{Args, Command};
 
 #[tokio::main]
 async fn main() -> Result<()> {
     let args: Args = cli::parse_args();
 
     // Bucket and key were either given as args or found in env variables
-    let vault = if args.bucket.is_some() && args.key_arn.is_some() {
+    let vault = if let (Some(bucket), key_arn) = (args.bucket.as_deref(), args.key_arn.as_deref()) {
         Vault::from_params(
-            CloudFormationParams::from(args.bucket.as_deref().unwrap(), args.key_arn.as_deref()),
+            CloudFormationParams::from(bucket, key_arn),
             args.region.as_deref(),
         )
         .await
@@ -42,7 +42,7 @@ async fn main() -> Result<()> {
                 file,
                 value_opt,
             } => cli::store(&vault, key, value, file, value_opt, overwrite).await,
-            Command::Info {} => Ok(println!("{}", vault)),
+            Command::Info {} => Ok(println!("{vault}")),
         };
     }
     Ok(())
