@@ -206,6 +206,14 @@ impl Vault {
         })
     }
 
+    pub async fn from_cli_params(
+        bucket: &str,
+        key_arn: Option<&str>,
+        region_opt: Option<&str>,
+    ) -> Result<Self, VaultError> {
+        Self::from_params(CloudFormationParams::from(bucket, key_arn), region_opt).await
+    }
+
     pub async fn from_params(
         cloudformation_params: CloudFormationParams,
         region_opt: Option<&str>,

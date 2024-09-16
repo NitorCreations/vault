@@ -2,8 +2,7 @@ mod cli;
 
 use anyhow::{Context, Result};
 use colored::Colorize;
-
-use nitor_vault::{CloudFormationParams, Vault};
+use nitor_vault::Vault;
 
 use crate::cli::{Args, Command};
 
@@ -13,14 +12,11 @@ async fn main() -> Result<()> {
 
     // Bucket and key were either given as args or found in env variables
     let vault = if let (Some(bucket), key_arn) = (args.bucket.as_deref(), args.key_arn.as_deref()) {
-        Vault::from_params(
-            CloudFormationParams::from(bucket, key_arn),
-            args.region.as_deref(),
-        )
-        .await
-        // Note: `with_context` is used instead of the simpler `context`
-        // as it is lazily evaluated.
-        .with_context(|| "Failed to create vault from given params".red())?
+        Vault::from_cli_params(bucket, key_arn, args.region.as_deref())
+            .await
+            // Note: `with_context` is used instead of the simpler `context`
+            // as it is lazily evaluated.
+            .with_context(|| "Failed to create vault from given params".red())?
     } else {
         Vault::new(args.vault_stack.as_deref(), args.region.as_deref())
             .await
