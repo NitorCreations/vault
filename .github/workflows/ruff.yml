@@ -40,4 +40,4 @@ jobs:
         run: ruff check --output-format=github ./python
 
       - name: Ruff format
-        run: ruff format --check ./python
+        run: ruff format --check --verbose ./python
