@@ -42,13 +42,6 @@ build = [
 requires = ["setuptools", "wheel", "build"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools]
-# True by default in pyproject.toml, but included for reference
-include-package-data = true
-
-[tool.setuptools.packages.find]
-where = ["n_vault"]
-
 [tool.black]
 # https://black.readthedocs.io/en/stable/usage_and_configuration/the_basics.html#configuration-via-a-file
 line-length = 120
