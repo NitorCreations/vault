@@ -74,7 +74,8 @@ fi
 rm -f requirements.txt
 
 print_magenta "Compiling requirements.txt"
-$COMPILE_CMD --output-file=requirements.txt --strip-extras pyproject.toml
+$COMPILE_CMD --output-file=requirements.txt pyproject.toml
+$COMPILE_CMD --output-file=requirements-dev.txt --all-extras pyproject.toml
 
 if [ "$COMMIT_CHANGES" = true ]; then
   git add requirements.txt
