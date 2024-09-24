@@ -84,12 +84,12 @@ init_options "$@"
 
 print_magenta "Updating version number..."
 "${SED_COMMAND[@]}" "s/^VERSION = .*/VERSION = \"$NEW_VERSION\"/g" n_vault/__init__.py
-"${SED_COMMAND[@]}" "s/^version = .*/version = $NEW_VERSION/g" pyproject.toml
-# update tarball url version
-"${SED_COMMAND[@]}" "s/$VERSION/$NEW_VERSION/g" pyproject.toml
-git commit -m "$MESSAGE" n_vault/__init__.py pyproject.toml
+"${SED_COMMAND[@]}" "s/^version = .*/version = \"$NEW_VERSION\"/g" pyproject.toml
+"${SED_COMMAND[@]}" "s|https://github.com/NitorCreations/vault/tarball/[^\"]*|https://github.com/NitorCreations/vault/tarball/$NEW_VERSION|g" pyproject.toml
+
+run_command git commit -m "$MESSAGE" n_vault/__init__.py pyproject.toml
 # TODO: should use annotated tags for releases: convert old tags and add `-a` here
-git tag "$NEW_VERSION" -m "$MESSAGE"
+run_command git tag "$NEW_VERSION" -m "$MESSAGE"
 run_command git push origin "$NEW_VERSION"
 
 print_magenta "Building package..."
