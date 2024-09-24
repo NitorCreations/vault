@@ -28,7 +28,7 @@ fixable = [
     "E",
     "F",
     "G",
-    #"I",  disable isort rules
+    "I",
     "N",
     "Q",
     "S",

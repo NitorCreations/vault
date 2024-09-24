@@ -15,6 +15,7 @@
 """
 Vault module for securely storing secrets in s3 with local encryption with data keys from AWS KMS
 """
+
 import sys
 from os import environ
 

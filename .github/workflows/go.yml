@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - main
     paths:
       - "**.go"
       - "go/go.mod"
@@ -13,7 +12,11 @@ on:
   pull_request:
     branches:
       - master
-      - main
+    paths:
+      - "**.go"
+      - "go/go.mod"
+      - "go/go.sum"
+      - ".github/workflows/go.yml"
 
 # Cancel previous runs for PRs but not pushes to main
 concurrency:
