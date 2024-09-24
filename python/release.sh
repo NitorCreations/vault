@@ -37,6 +37,7 @@ source "$DIR/../common.sh"
 init_options() {
   DRYRUN=false
   VERSION=$(grep '^VERSION' n_vault/__init__.py | cut -d\" -f 2)
+  echo "Current version: $VERSION"
   MAJOR=${VERSION//.*/}
   MINOR=${VERSION##*.}
   while [ $# -gt 0 ]; do
