@@ -21,7 +21,7 @@ dependencies = [
 
 [project.urls]
 Repository = "http://github.com/NitorCreations/vault"
-Download = "https://github.com/NitorCreations/vault/tarball/0.56"
+Download = "https://github.com/NitorCreations/vault/tarball/0.54"
 
 [project.scripts]
 vault = "n_vault.cli:main"
