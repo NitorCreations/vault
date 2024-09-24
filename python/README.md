@@ -11,7 +11,7 @@ Dependencies are specified in [pyproject.toml](./pyproject.toml).
 To update the requirements file,
 use the provided shell script.
 First install [uv](https://github.com/astral-sh/uv) (recommended),
-or alternatively `pip-tools` with [pipx](https://github.com/pypa/pipx).
+or alternatively `pip-tools` using [pipx](https://github.com/pypa/pipx).
 Then run:
 
 ```shell
@@ -24,13 +24,14 @@ Then run:
 
 uv is the recommended way to handle virtual environments for development.
 
-Create venv and install all dependencies:
+Create a venv and install all dependencies:
 
 ```shell
 uv sync --all-extras
 ```
 
-You can then run command with the venv using `uv run` or activate the venv manually.
+You can then run commands directly with the venv using `uv run`,
+or activate the venv manually first.
 The uv default venv location is `.venv`.
 
 ```shell
@@ -42,7 +43,7 @@ source .venv/bin/activate
 ## Release
 
 Use the provided shell script.
-Note that you need to have a venv with the dependencies installed active when running the script.
+Note that you need to have a venv with the extra dependencies installed active when running the script.
 
 ```shell
 ./release.sh
