@@ -95,6 +95,7 @@ run_command git push origin "$NEW_VERSION"
 print_magenta "Building package..."
 check_and_set_python
 rm -rf dist
-$PYTHON setup.py sdist bdist_wheel
+$PYTHON -m build --sdist --wheel
 print_magenta "Uploading package..."
+twine check dist/*
 run_command twine upload dist/*

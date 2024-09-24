@@ -9,31 +9,37 @@ authors = [
 ]
 license = { text = "Apache 2.0" }
 dependencies = [
-  "argcomplete",
-  "cryptography",
-  "future",
-  "requests",
-  "threadlocal-aws",
-  "pypiwin32;platform_system=='Windows'",
-  "win-unicode-console;platform_system=='Windows'",
-  "wmi;platform_system=='Windows'"
+    "argcomplete",
+    "cryptography",
+    "future",
+    "requests",
+    "threadlocal-aws",
+    "pypiwin32; platform_system=='Windows'",
+    "win-unicode-console; platform_system=='Windows'",
+    "wmi; platform_system=='Windows'"
 ]
 
 [project.urls]
 Repository = "http://github.com/NitorCreations/vault"
-Download = "https://github.com/NitorCreations/vault/tarball/0.54"
-
-[project.optional-dependencies]
-test = [
-    "coverage",
-    "coveralls"
-]
+Download = "https://github.com/NitorCreations/vault/tarball/0.56"
 
 [project.scripts]
 vault = "n_vault.cli:main"
 
+[project.optional-dependencies]
+test = [
+    "coverage",
+    "coveralls",
+]
+build = [
+    "build",
+    "setuptools",
+    "twine",
+    "wheel",
+]
+
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = ["setuptools", "wheel", "build"]
 build-backend = "setuptools.build_meta"
 
 [tool.black]
