@@ -41,7 +41,7 @@ source .venv/bin/activate
 ## Release
 
 Use the provided shell script.
-Note that you need to a venv with the dependencies installed activate when running the script.
+Note that you need to have a venv with the dependencies installed active when running the script.
 
 ```shell
 ./release.sh
