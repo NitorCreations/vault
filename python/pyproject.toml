@@ -1,12 +1,24 @@
+# Copyright 2016-2024 Nitor Creations Oy
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 [project]
 name = "nitor-vault"
 version = "0.54"
 description = "Vault for storing locally encrypted data in S3 using KMS keys"
 readme = "README.md"
 requires-python = ">=3.8"
-authors = [
-    { name = "Pasi Niemi", email = "pasi@nitor.com" }
-]
+authors = [{ name = "Pasi Niemi", email = "pasi@nitor.com" }]
 license = { text = "Apache 2.0" }
 dependencies = [
     "argcomplete",
@@ -16,8 +28,16 @@ dependencies = [
     "threadlocal-aws",
     "pypiwin32; platform_system=='Windows'",
     "win-unicode-console; platform_system=='Windows'",
-    "wmi; platform_system=='Windows'"
+    "wmi; platform_system=='Windows'",
 ]
+
+[project.optional-dependencies]
+test = ["coverage", "coveralls"]
+build = ["build", "setuptools", "twine", "wheel"]
+
+[build-system]
+requires = ["setuptools", "wheel", "build"]
+build-backend = "setuptools.build_meta"
 
 [project.urls]
 Repository = "http://github.com/NitorCreations/vault"
@@ -25,22 +45,6 @@ Download = "https://github.com/NitorCreations/vault/tarball/0.54"
 
 [project.scripts]
 vault = "n_vault.cli:main"
-
-[project.optional-dependencies]
-test = [
-    "coverage",
-    "coveralls",
-]
-build = [
-    "build",
-    "setuptools",
-    "twine",
-    "wheel",
-]
-
-[build-system]
-requires = ["setuptools", "wheel", "build"]
-build-backend = "setuptools.build_meta"
 
 [tool.black]
 # https://black.readthedocs.io/en/stable/usage_and_configuration/the_basics.html#configuration-via-a-file

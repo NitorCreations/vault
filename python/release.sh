@@ -17,13 +17,17 @@ set -eo pipefail
 
 USAGE="Usage: $(basename "$0") [OPTIONS] [MESSAGE]
 
+Create new release for Nitor vault.
+
+Arguments:
+  [MESSAGE]    Optional commit message for git commit (default is the new version).
+
 OPTIONS: All options are optional
   -h | --help                 Display these instructions.
   -d | --dryrun               Only print commands instead of executing them.
   -m | --major                Increment major version and reset minor version to 0.
   -v | --version [VERSION]    Set the new version explicitly.
   -x | --verbose              Display commands being executed.
-  [MESSAGE]                   Optional commit message for git commit (default is the new version).
 
 Example Usage:
   $(basename "$0") -v 2.5              # Set version to 2.5.
@@ -94,9 +98,10 @@ run_command git tag "$NEW_VERSION" -m "$MESSAGE"
 run_command git push origin "$NEW_VERSION"
 
 print_magenta "Building package..."
-check_and_set_python
 rm -rf dist
+check_and_set_python
 $PYTHON -m build --sdist --wheel
+
 print_magenta "Uploading package..."
 twine check dist/*
 run_command twine upload dist/*
