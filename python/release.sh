@@ -37,6 +37,7 @@ source "$DIR/../common.sh"
 init_options() {
   DRYRUN=false
   VERSION=$(grep '^VERSION' n_vault/__init__.py | cut -d\" -f 2)
+  echo "Current version: $VERSION"
   MAJOR=${VERSION//.*/}
   MINOR=${VERSION##*.}
   while [ $# -gt 0 ]; do
@@ -84,17 +85,18 @@ init_options "$@"
 
 print_magenta "Updating version number..."
 "${SED_COMMAND[@]}" "s/^VERSION = .*/VERSION = \"$NEW_VERSION\"/g" n_vault/__init__.py
-"${SED_COMMAND[@]}" "s/^version = .*/version = $NEW_VERSION/g" setup.cfg
-# update tarball url version
-"${SED_COMMAND[@]}" "s/$VERSION/$NEW_VERSION/g" setup.cfg
-git commit -m "$MESSAGE" n_vault/__init__.py setup.cfg
+"${SED_COMMAND[@]}" "s/^version = .*/version = \"$NEW_VERSION\"/g" pyproject.toml
+"${SED_COMMAND[@]}" "s|https://github.com/NitorCreations/vault/tarball/[^\"]*|https://github.com/NitorCreations/vault/tarball/$NEW_VERSION|g" pyproject.toml
+
+run_command git commit -m "$MESSAGE" n_vault/__init__.py pyproject.toml
 # TODO: should use annotated tags for releases: convert old tags and add `-a` here
-git tag "$NEW_VERSION" -m "$MESSAGE"
+run_command git tag "$NEW_VERSION" -m "$MESSAGE"
 run_command git push origin "$NEW_VERSION"
 
 print_magenta "Building package..."
 check_and_set_python
 rm -rf dist
-$PYTHON setup.py sdist bdist_wheel
+$PYTHON -m build --sdist --wheel
 print_magenta "Uploading package..."
+twine check dist/*
 run_command twine upload dist/*

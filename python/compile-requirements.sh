@@ -23,7 +23,7 @@ source "$DIR/../common.sh"
 
 USAGE="Usage: $0 [OPTIONS] [MESSAGE]
 
-Re-compile requirements files using pip-compile.
+Re-compile requirements files using pip compile.
 
 OPTIONS: All options are optional
   -h | --help
@@ -61,15 +61,21 @@ done
 
 cd "$DIR"
 
-if [ -z "$(command -v pip-compile)" ]; then
-  print_error_and_exit "pip-tools is not installed. Run 'pip install pip-tools'"
+if [ -n "$(command -v uv)" ]; then
+  COMPILE_CMD="uv pip compile"
+elif [ -n "$(command -v pip-compile)" ]; then
+  print_yellow "uv is the recommended tool for running pip compile: https://github.com/astral-sh/uv"
+  COMPILE_CMD="pip-compile"
+else
+  print_error_and_exit "pip tools are not installed. Use uv, or install 'pip-tools' with pipx."
 fi
 
 # Remove old file to force upgrade of all dependencies
 rm -f requirements.txt
 
 print_magenta "Compiling requirements.txt"
-pip-compile --output-file=requirements.txt --strip-extras setup.py
+$COMPILE_CMD --output-file=requirements.txt pyproject.toml
+$COMPILE_CMD --output-file=requirements-dev.txt --all-extras pyproject.toml
 
 if [ "$COMMIT_CHANGES" = true ]; then
   git add requirements.txt

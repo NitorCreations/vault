@@ -1,3 +1,47 @@
+[project]
+name = "nitor-vault"
+version = "0.54"
+description = "Vault for storing locally encrypted data in S3 using KMS keys"
+readme = "README.md"
+requires-python = ">=3.8"
+authors = [
+    { name = "Pasi Niemi", email = "pasi@nitor.com" }
+]
+license = { text = "Apache 2.0" }
+dependencies = [
+    "argcomplete",
+    "cryptography",
+    "future",
+    "requests",
+    "threadlocal-aws",
+    "pypiwin32; platform_system=='Windows'",
+    "win-unicode-console; platform_system=='Windows'",
+    "wmi; platform_system=='Windows'"
+]
+
+[project.urls]
+Repository = "http://github.com/NitorCreations/vault"
+Download = "https://github.com/NitorCreations/vault/tarball/0.54"
+
+[project.scripts]
+vault = "n_vault.cli:main"
+
+[project.optional-dependencies]
+test = [
+    "coverage",
+    "coveralls",
+]
+build = [
+    "build",
+    "setuptools",
+    "twine",
+    "wheel",
+]
+
+[build-system]
+requires = ["setuptools", "wheel", "build"]
+build-backend = "setuptools.build_meta"
+
 [tool.black]
 # https://black.readthedocs.io/en/stable/usage_and_configuration/the_basics.html#configuration-via-a-file
 line-length = 120
