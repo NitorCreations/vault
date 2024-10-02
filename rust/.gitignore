@@ -12,3 +12,6 @@ target/
 # Binary
 /vault
 /vault.exe
+
+# macOS
+.DS_Store
