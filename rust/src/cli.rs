@@ -4,7 +4,7 @@ use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use colored::Colorize;
 
-use nitor_vault::Vault;
+use nitor_vault::{Data, Vault};
 
 #[allow(clippy::doc_markdown)]
 #[derive(Parser)]
@@ -72,7 +72,7 @@ pub enum Command {
             long,
             help = "Point to a file that will be stored, - for stdin",
             value_name = "value",
-            conflicts_with_all = vec!["value","file"]
+            conflicts_with_all = vec!["value", "file"]
         )]
         value_opt: Option<String>,
         value: Option<String>,
@@ -81,10 +81,11 @@ pub enum Command {
             long,
             help = "Point to a file that will be stored, - for stdin",
             value_name = "filename",
-            conflicts_with_all = vec!["value","value_opt"]
+            conflicts_with_all = vec!["value", "value_opt"]
         )]
         file: Option<String>,
     },
+
     /// Print region and stack information
     #[command(short_flag('i'), long_flag("info"), alias("i"))]
     Info {},
@@ -125,20 +126,29 @@ pub async fn store(
 
     let data = {
         if let Some(value) = value.or(value_opt) {
-            value.clone()
+            Data::Utf8(value)
         } else if let Some(path) = &file {
             match path.as_str() {
                 "-" => {
                     println!("Reading from stdin, empty line stops reading");
-                    stdin()
-                        .lock()
-                        .lines()
-                        .map(|l| l.expect("Failed to read line from stdin"))
-                        .take_while(|l| !l.trim().is_empty())
-                        .fold(String::new(), |acc, line| acc + &line + "\n")
+                    Data::Utf8(
+                        stdin()
+                            .lock()
+                            .lines()
+                            .map(|l| l.expect("Failed to read line from stdin"))
+                            .take_while(|l| !l.trim().is_empty())
+                            .fold(String::new(), |acc, line| acc + &line + "\n"),
+                    )
                 }
-                _ => std::fs::read_to_string(path)
-                    .with_context(|| format!("Error reading file: '{path}'").red())?,
+                _ => {
+                    if let Ok(content) = std::fs::read_to_string(path) {
+                        Data::Utf8(content)
+                    } else {
+                        let binary_data = std::fs::read(path)
+                            .with_context(|| format!("Error reading file: '{path}'").red())?;
+                        Data::Binary(binary_data)
+                    }
+                }
             }
         } else {
             anyhow::bail!("No value or filename provided".red())

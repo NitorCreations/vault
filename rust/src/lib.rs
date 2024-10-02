@@ -50,7 +50,7 @@ struct EncryptObject {
 #[derive(Debug, Clone)]
 /// Vault supports storing arbitrary data that might not be valid UTF-8.
 /// Support looking up data as either UTF-8 or binary.
-pub enum LookupData {
+pub enum Data {
     Utf8(String),
     Binary(Vec<u8>),
 }
@@ -66,6 +66,17 @@ struct S3DataKeys {
     key: String,
     cipher: String,
     meta: String,
+}
+
+impl Data {
+    /// Returns the data as a byte slice (`&[u8]`)
+    #[must_use]
+    pub fn as_bytes(&self) -> &[u8] {
+        match self {
+            Self::Utf8(ref string) => string.as_bytes(),
+            Self::Binary(ref bytes) => bytes,
+        }
+    }
 }
 
 impl CloudFormationParams {
@@ -173,7 +184,7 @@ impl fmt::Display for Vault {
     }
 }
 
-impl fmt::Display for LookupData {
+impl fmt::Display for Data {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Utf8(text) => write!(f, "{text}"),
@@ -434,7 +445,7 @@ impl Vault {
     /// Return value for the given key name.
     /// If the data is valid UTF-8, it will be returned as a string.
     /// Otherwise, the raw bytes will be returned.
-    pub async fn lookup(&self, name: &str) -> Result<LookupData, VaultError> {
+    pub async fn lookup(&self, name: &str) -> Result<Data, VaultError> {
         let keys = S3DataKeys::new(name);
         let data_key = self.get_s3_object(keys.key);
         let cipher_text = self.get_s3_object(keys.cipher);
@@ -456,8 +467,8 @@ impl Vault {
             .map_err(|_| VaultError::NonceDecryptError)?;
 
         match String::from_utf8(res) {
-            Ok(valid_string) => Ok(LookupData::Utf8(valid_string)),
-            Err(from_utf8_error) => Ok(LookupData::Binary(from_utf8_error.into_bytes())),
+            Ok(valid_string) => Ok(Data::Utf8(valid_string)),
+            Err(from_utf8_error) => Ok(Data::Binary(from_utf8_error.into_bytes())),
         }
     }
 
