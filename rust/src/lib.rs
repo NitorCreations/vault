@@ -6,11 +6,9 @@ mod vault;
 pub use crate::value::Value;
 pub use crate::vault::Vault;
 
-use std::env;
 use std::fmt;
 
-use aws_config::meta::region::RegionProviderChain;
-use aws_config::{Region, SdkConfig};
+use aws_config::SdkConfig;
 use aws_sdk_cloudformation::types::Output;
 use aws_sdk_cloudformation::Client as CloudFormationClient;
 use aws_sdk_s3::types::ObjectIdentifier;
@@ -43,16 +41,6 @@ struct S3DataKeys {
     key: String,
     cipher: String,
     meta: String,
-}
-
-/// Get AWS region from optional argument or fallback to default
-fn get_region_provider(region: Option<&str>) -> RegionProviderChain {
-    RegionProviderChain::first_try(region.map(|r| Region::new(r.to_owned()))).or_default_provider()
-}
-
-/// Return possible env variable value as Option
-fn get_env_variable(name: &str) -> Option<String> {
-    env::var(name).ok()
 }
 
 impl CloudFormationParams {

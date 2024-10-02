@@ -1,8 +1,9 @@
-use std::fmt;
+use std::{env, fmt};
 
 use aes_gcm::aead::{Aead, Payload};
 use aes_gcm::aes::{cipher, Aes256};
 use aes_gcm::{AesGcm, KeyInit, Nonce};
+use aws_config::meta::region::RegionProviderChain;
 use aws_config::Region;
 use aws_sdk_kms::primitives::Blob;
 use aws_sdk_kms::types::DataKeySpec;
@@ -35,7 +36,7 @@ impl Vault {
         region_opt: Option<&str>,
     ) -> Result<Self, VaultError> {
         let config = aws_config::from_env()
-            .region(crate::get_region_provider(region_opt))
+            .region(get_region_provider(region_opt))
             .load()
             .await;
 
@@ -46,9 +47,9 @@ impl Vault {
 
         // Check env variables directly in case the library is not used through the CLI.
         // These are also handled in the CLI, so they are documented in the CLI help.
-        let vault_stack_from_env = crate::get_env_variable("VAULT_STACK");
-        let vault_bucket_from_env = crate::get_env_variable("VAULT_BUCKET");
-        let vault_key_from_env = crate::get_env_variable("VAULT_KEY");
+        let vault_stack_from_env = get_env_variable("VAULT_STACK");
+        let vault_bucket_from_env = get_env_variable("VAULT_BUCKET");
+        let vault_key_from_env = get_env_variable("VAULT_KEY");
 
         let cloudformation_params =
             if let (Some(bucket), Some(key)) = (vault_bucket_from_env, vault_key_from_env) {
@@ -83,7 +84,7 @@ impl Vault {
         region_opt: Option<&str>,
     ) -> Result<Self, VaultError> {
         let config = aws_config::from_env()
-            .region(crate::get_region_provider(region_opt))
+            .region(get_region_provider(region_opt))
             .load()
             .await;
         Ok(Self {
@@ -146,7 +147,7 @@ impl Vault {
 
         let aesgcm_cipher: AesGcm<Aes256, cipher::typenum::U12> =
             AesGcm::new_from_slice(plaintext.as_ref())?;
-        let nonce = Self::create_random_nonce();
+        let nonce = create_random_nonce();
         let nonce = Nonce::from_slice(nonce.as_slice());
         let meta = Meta::aesgcm(nonce).to_json()?;
         let aes_gcm_ciphertext = aesgcm_cipher
@@ -305,13 +306,23 @@ impl Vault {
             Err(from_utf8_error) => Ok(Value::Binary(from_utf8_error.into_bytes())),
         }
     }
+}
 
-    fn create_random_nonce() -> [u8; 12] {
-        let mut nonce: [u8; 12] = [0; 12];
-        let mut rng = rand::thread_rng();
-        rng.fill(nonce.as_mut_slice());
-        nonce
-    }
+fn create_random_nonce() -> [u8; 12] {
+    let mut nonce: [u8; 12] = [0; 12];
+    let mut rng = rand::thread_rng();
+    rng.fill(nonce.as_mut_slice());
+    nonce
+}
+
+/// Get AWS region from optional argument or fallback to default
+fn get_region_provider(region: Option<&str>) -> RegionProviderChain {
+    RegionProviderChain::first_try(region.map(|r| Region::new(r.to_owned()))).or_default_provider()
+}
+
+/// Return possible env variable value as Option
+fn get_env_variable(name: &str) -> Option<String> {
+    env::var(name).ok()
 }
 
 impl fmt::Display for Vault {
