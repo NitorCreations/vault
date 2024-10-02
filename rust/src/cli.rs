@@ -1,5 +1,5 @@
 use std::io::{stdin, Read};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
@@ -58,9 +58,16 @@ pub enum Command {
     #[command(short_flag('a'), long_flag("all"), alias("a"))]
     All {},
 
-    /// Print secret value for given key
+    /// Output secret value for given key
     #[command(short_flag('l'), long_flag("lookup"), alias("l"))]
-    Lookup { key: String },
+    Lookup {
+        /// Key name to lookup
+        key: String,
+
+        /// Optional output file
+        #[arg(short, long, value_name = "filepath")]
+        outfile: Option<String>,
+    },
 
     /// Store a new key-value pair
     #[command(
@@ -115,7 +122,7 @@ pub enum Command {
 /// Parse command line arguments.
 ///
 /// See Clap `Derive` documentation for details:
-/// <https://docs.rs/clap/latest/clap>/_derive/index.html
+/// <https://docs.rs/clap/latest/clap/_derive/index.html>
 pub fn parse_args() -> Args {
     Args::parse()
 }
@@ -197,7 +204,7 @@ pub async fn delete(vault: &Vault, key: &str) -> Result<()> {
 }
 
 /// Get key value
-pub async fn lookup(vault: &Vault, key: &str) -> Result<()> {
+pub async fn lookup(vault: &Vault, key: &str, outfile: Option<String>) -> Result<()> {
     if key.trim().is_empty() {
         anyhow::bail!(format!("Empty key '{key}'").red())
     }
@@ -206,7 +213,11 @@ pub async fn lookup(vault: &Vault, key: &str) -> Result<()> {
         .await
         .with_context(|| format!("Failed to look up key '{key}'").red())?;
 
-    result.output_to_stdout()?;
+    match resolve_output_file_path(outfile)? {
+        Some(path) => result.output_to_file(&path)?,
+        None => result.output_to_stdout()?,
+    };
+
     Ok(())
 }
 
@@ -288,4 +299,24 @@ fn get_filename_from_path(path: &str) -> Result<String> {
         .ok_or_else(|| {
             anyhow::anyhow!("No filename found in the provided path: {}", path.display())
         })
+}
+
+/// Resolves an optional output file path and creates all directories if necessary.
+/// Returns `Some(PathBuf)` if the file path is valid,
+/// or `None` if a file path was not provided.
+pub fn resolve_output_file_path(outfile: Option<String>) -> Result<Option<PathBuf>> {
+    if let Some(output) = outfile {
+        let path = PathBuf::from(output);
+
+        // Ensure all parent directories exist
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent).with_context(|| {
+                format!("Failed to create directories for '{}'", parent.display())
+            })?;
+        }
+
+        Ok(Some(path))
+    } else {
+        Ok(None)
+    }
 }

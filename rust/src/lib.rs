@@ -1,8 +1,9 @@
 pub mod errors;
 
+use std::env;
 use std::fmt;
-use std::io::Write;
-use std::{env, io};
+use std::io::{self, BufWriter, Write};
+use std::path::Path;
 
 use aes_gcm::aead::{Aead, Payload};
 use aes_gcm::aes::{cipher, Aes256};
@@ -95,6 +96,21 @@ impl Data {
                 handle.flush()
             }
         }
+    }
+
+    /// Outputs the data to the specified file path.
+    pub fn output_to_file(&self, path: &Path) -> io::Result<()> {
+        let file = std::fs::File::create(path)?;
+        let mut writer = BufWriter::new(file);
+        match self {
+            Self::Utf8(ref string) => {
+                writer.write_all(string.as_bytes())?;
+            }
+            Self::Binary(ref bytes) => {
+                writer.write_all(bytes)?;
+            }
+        }
+        writer.flush()
     }
 }
 
