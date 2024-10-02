@@ -62,25 +62,45 @@ pub enum Command {
     Lookup { key: String },
 
     /// Store a new key-value pair
-    #[command(short_flag('s'), long_flag("store"), alias("s"))]
+    #[command(
+        short_flag('s'),
+        long_flag("store"),
+        alias("s"),
+        long_about = "Store a new key-value pair in the vault.\n\
+                      You can provide the key and value directly, or specify a file to store.\n\n\
+                      Usage examples:\n\
+                      - Store a value: `vault store mykey \"some value\"`\n\
+                      - Store a value from args: `vault store mykey --value \"some value\"`\n\
+                      - Store from a file: `vault store mykey --file path/to/file.txt`\n\
+                      - Store from a file with filename as key: `vault store --file path/to/file.txt`\n\
+                      - Store from stdin: `echo \"some data\" | vault store mykey --value -`\n\
+                      - Store from stdin: `cat file.zip | vault store mykey --file -`"
+    )]
     Store {
+        /// Key name
         key: Option<String>,
-        #[arg(short = 'w', long, help = "Overwrite existing key")]
+
+        /// Value to store
+        value: Option<String>,
+
+        /// Overwrite existing key
+        #[arg(short = 'w', long)]
         overwrite: bool,
+
+        /// Value to store, use '-' for stdin
         #[arg(
             short,
-            long,
-            help = "Point to a file that will be stored, - for stdin",
+            long = "value",
             value_name = "value",
             conflicts_with_all = vec!["value", "file"]
         )]
-        value_opt: Option<String>,
-        value: Option<String>,
+        value_argument: Option<String>,
+
+        /// File to store, use '-' for stdin
         #[arg(
             short,
             long,
-            help = "Point to a file that will be stored, - for stdin",
-            value_name = "filename",
+            value_name = "filepath",
             conflicts_with_all = vec!["value", "value_opt"]
         )]
         file: Option<String>,
@@ -103,9 +123,9 @@ pub fn parse_args() -> Args {
 pub async fn store(
     vault: &Vault,
     key: Option<String>,
-    value: Option<String>,
+    value_positional: Option<String>,
     file: Option<String>,
-    value_opt: Option<String>,
+    value_argument: Option<String>,
     overwrite: bool,
 ) -> Result<()> {
     let key = {
