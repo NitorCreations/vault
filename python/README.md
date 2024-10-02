@@ -48,6 +48,17 @@ uv run python n_vault/cli.py
 python3 n_vault/cli.py
 ```
 
+Or install inside venv with:
+
+```shell
+# With uv
+uv pip install .
+# Normal venv
+python -m pip install .
+```
+
+After installing, you will have `vault` available in path.
+
 ## Release
 
 Use the provided shell script.
