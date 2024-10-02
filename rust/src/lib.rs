@@ -2,10 +2,6 @@ pub mod errors;
 mod value;
 mod vault;
 
-// Expose `Vault` and `Value` so they can be used as if they were defined here
-pub use crate::value::Value;
-pub use crate::vault::Vault;
-
 use std::fmt;
 
 use aws_config::SdkConfig;
@@ -16,6 +12,10 @@ use base64::Engine;
 use serde::{Deserialize, Serialize};
 
 use crate::errors::VaultError;
+
+// Expose `Vault` and `Value` so they can be used as if they were defined here
+pub use crate::value::Value;
+pub use crate::vault::Vault;
 
 #[derive(Debug, Clone)]
 pub struct CloudFormationParams {
