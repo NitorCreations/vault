@@ -4,8 +4,7 @@ use std::path::{Path, PathBuf};
 use anyhow::{Context, Result};
 use colored::Colorize;
 
-use nitor_vault::Value;
-use nitor_vault::Vault;
+use nitor_vault::{Value, Vault};
 
 /// Store a key-value pair
 pub async fn store(
