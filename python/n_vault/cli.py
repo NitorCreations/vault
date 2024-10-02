@@ -264,3 +264,7 @@ def main():
                 vlt.update()
     finally:
         stop_cov(None, None)
+
+
+if __name__ == "__main__":
+    main()
