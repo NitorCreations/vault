@@ -27,19 +27,24 @@ jobs:
         working-directory: ${{matrix.lang}}
     steps:
       - uses: actions/checkout@v4
+
       - uses: dtolnay/rust-toolchain@stable
         if: ${{ matrix.lang == 'rust'}}
+
       - uses: Swatinem/rust-cache@v2.7.3
         if: ${{ matrix.lang == 'rust'}}
         with:
           workspaces: ./rust -> target
+
       - uses: actions/setup-go@v5
         if: ${{ matrix.lang == 'go'}}
         with:
           go-version: ">=1.21.0"
           cache-dependency-path: go/go.sum
+
       - name: Run build script for compiled languages
         run: "./build.sh"
+
       - name: Upload built binaries
         uses: actions/upload-artifact@v4
         with:
@@ -61,19 +66,28 @@ jobs:
           role-to-assume: ${{ secrets.AWS_CI_ROLE }}
           role-session-name: GitHubVaultIntegrationTests
           aws-region: eu-west-1
+
       - uses: actions/checkout@v4
-      - name: Download reports' artifacts
+
+      - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
           path: bin
+
       - uses: pnpm/action-setup@v4
         with:
           version: 9
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: "pnpm"
           cache-dependency-path: nodejs/pnpm-lock.yaml
+
+      - name: Install zip
+        run: |
+          sudo apt-get install zip unzip
+
       - name: build node vault
         run: pnpm install --frozen-lockfile && pnpm build
         working-directory: nodejs
@@ -81,6 +95,7 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
+
       - name: install python vault
         run: python -m pip install .
         working-directory: python
@@ -91,37 +106,92 @@ jobs:
           bin/go/vault --version
           bin/rust/vault --version
           nodejs/dist/cli/vault.js --version
-      - name: store secret with python
+
+      - name: Store secret with Python
         run: vault -s 'secret-python' -v 'sha-${{github.sha}}' -w
-      - name: store secret with go
+
+      - name: Store secret with Go
         run: bin/go/vault -s 'secret-go' -v 'sha-${{github.sha}}' -w
-      - name: store secret with rust
+
+      - name: Store secret with Rust
         run: bin/rust/vault -s 'secret-rust' -v 'sha-${{github.sha}}' -w
-      - name: store secret with nodejs
+
+      - name: Store secret with Nodejs
         run: nodejs/dist/cli/vault.js s 'secret-nodejs' 'sha-${{github.sha}}' -w
-      - name: validate storing worked fine python
+
+      - name: Validate storing worked Python
         run: diff <(vault -l secret-python) <(echo -n sha-${{github.sha}})
-      - name: validate go and rust secret equality with python
+
+      - name: Validate Go and Rust secret equality with Python
         run: diff <(vault -l secret-go) <(vault -l secret-rust)
-      - name: validate python and rust secret equality with go and nodejs
+
+      - name: Validate Python and Rust secret equality with Go and Nodejs
         run: diff <(bin/go/vault -l secret-rust) <(nodejs/dist/cli/vault.js l secret-python)
-      - name: validate go and python secret equality with rust and go
+
+      - name: Validate Go and Python secret equality with Rust and Go
         run: diff <(bin/rust/vault -l secret-go) <(bin/go/vault -l secret-python)
-      - name: validate python and nodejs secret equality with rust
+
+      - name: Validate Python and Nodejs secret equality with Rust
         run: diff <(bin/rust/vault -l secret-python) <(bin/rust/vault -l secret-nodejs)
-      - name: validate rust and go secret equality with rust and nodejs
+
+      - name: Validate Rust and Go secret equality with Nodejs
         run: diff <(bin/rust/vault -l secret-rust) <(nodejs/dist/cli/vault.js l secret-nodejs)
-      - name: delete secret with python
+
+      - name: Delete secret with Python
         run: vault -d 'secret-python'
-      - name: delete secret with go
+
+      - name: Delete secret with Go
         run: bin/go/vault -d 'secret-go'
-      - name: delete secret with rust
+
+      - name: Delete secret with Rust
         run: bin/rust/vault -d 'secret-rust'
-      - name: delete secret with nodejs
+
+      - name: Delete secret with Nodejs
         run: nodejs/dist/cli/vault.js d 'secret-nodejs'
-      - name: verify that keys have been deleted
+
+      - name: Verify that keys have been deleted
         run: |
           bin/rust/vault --exists secret-python | grep doesn\'t
           bin/rust/vault --exists secret-go | grep doesn\'t
           bin/rust/vault --exists secret-rust | grep doesn\'t
           bin/rust/vault --exists secret-nodejs | grep doesn\'t
+
+      - name: Create dummy text file
+        run: echo "Vault test ${{ github.sha }} ${{ github.ref_name }}" > test.txt
+
+      - name: Zip the text file
+        run: zip "secret-${{github.sha}}.zip" test.txt
+
+      - name: Store zip file using Python vault
+        run: vault --store --file "secret-${{github.sha}}.zip"
+
+      - name: Lookup the stored zip file and write to output
+        run: vault -l "secret-${{github.sha}}.zip" > output-python.zip
+
+      - name: Extract the retrieved zip file
+        run: unzip output-python.zip -d extracted-python
+
+      - name: Verify the extracted file content
+        run: diff extracted-python/test.txt test.txt
+
+      - name: Delete secret with Python
+        run: vault -d "secret-${{github.sha}}.zip"
+
+      - name: Store zip file using Rust vault
+        run: bin/rust/vault --store --file "secret-${{github.sha}}.zip"
+
+      - name: Lookup the stored zip file and write to output
+        run: bin/rust/vault -l "secret-${{github.sha}}.zip" > output-rust.zip
+
+      - name: Extract the retrieved zip file
+        run: unzip output-rust.zip -d extracted-rust
+
+      - name: Verify the extracted file content
+        run: diff extracted-rust/test.txt test.txt
+
+      - name: Delete secret with Rust
+        run: bin/rust/vault -d "secret-${{github.sha}}.zip"
+
+      - name: Verify that keys have been deleted
+        run: |
+          bin/rust/vault --exists secret-${{github.sha}}.zip | grep doesn\'t

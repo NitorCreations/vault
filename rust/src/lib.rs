@@ -2,6 +2,8 @@ pub mod errors;
 
 use std::env;
 use std::fmt;
+use std::io::{self, BufWriter, Write};
+use std::path::Path;
 
 use aes_gcm::aead::{Aead, Payload};
 use aes_gcm::aes::{cipher, Aes256};
@@ -47,6 +49,14 @@ struct EncryptObject {
     meta: String,
 }
 
+#[derive(Debug, Clone)]
+/// Vault supports storing arbitrary data that might not be valid UTF-8.
+/// Support looking up data as either UTF-8 or binary.
+pub enum Data {
+    Utf8(String),
+    Binary(Vec<u8>),
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 struct Meta {
     alg: String,
@@ -58,6 +68,50 @@ struct S3DataKeys {
     key: String,
     cipher: String,
     meta: String,
+}
+
+impl Data {
+    /// Returns the data as a byte slice (`&[u8]`)
+    #[must_use]
+    pub fn as_bytes(&self) -> &[u8] {
+        match self {
+            Self::Utf8(ref string) => string.as_bytes(),
+            Self::Binary(ref bytes) => bytes,
+        }
+    }
+
+    /// Outputs the data directly to stdout.
+    /// String data is printed.
+    /// Binary data is outputted raw.
+    pub fn output_to_stdout(&self) -> io::Result<()> {
+        match self {
+            Self::Utf8(ref string) => {
+                print!("{string}");
+                Ok(())
+            }
+            Self::Binary(ref bytes) => {
+                let stdout = io::stdout();
+                let mut handle = stdout.lock();
+                handle.write_all(bytes)?;
+                handle.flush()
+            }
+        }
+    }
+
+    /// Outputs the data to the specified file path.
+    pub fn output_to_file(&self, path: &Path) -> io::Result<()> {
+        let file = std::fs::File::create(path)?;
+        let mut writer = BufWriter::new(file);
+        match self {
+            Self::Utf8(ref string) => {
+                writer.write_all(string.as_bytes())?;
+            }
+            Self::Binary(ref bytes) => {
+                writer.write_all(bytes)?;
+            }
+        }
+        writer.flush()
+    }
 }
 
 impl CloudFormationParams {
@@ -106,17 +160,6 @@ impl CloudFormationParams {
     }
 }
 
-impl fmt::Display for CloudFormationParams {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "bucket: {}\nkey: {}",
-            self.bucket_name,
-            self.key_arn.as_ref().map_or("None", |k| k)
-        )
-    }
-}
-
 impl Meta {
     pub fn new(algorithm: &str, nonce: &[u8]) -> Self {
         Self {
@@ -162,6 +205,31 @@ impl S3DataKeys {
 impl fmt::Display for Vault {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "region: {}\n{}", self.region, self.cloudformation_params)
+    }
+}
+
+impl fmt::Display for Data {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Utf8(text) => write!(f, "{text}"),
+            Self::Binary(data) => {
+                for byte in data {
+                    write!(f, "{byte:02x}")?;
+                }
+                Ok(())
+            }
+        }
+    }
+}
+
+impl fmt::Display for CloudFormationParams {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "bucket: {}\nkey: {}",
+            self.bucket_name,
+            self.key_arn.as_ref().map_or("None", |k| k)
+        )
     }
 }
 
@@ -409,8 +477,10 @@ impl Vault {
         Ok(())
     }
 
-    /// Return value for given key name
-    pub async fn lookup(&self, name: &str) -> Result<String, VaultError> {
+    /// Return value for the given key name.
+    /// If the data is valid UTF-8, it will be returned as a string.
+    /// Otherwise, the raw bytes will be returned.
+    pub async fn lookup(&self, name: &str) -> Result<Data, VaultError> {
         let keys = S3DataKeys::new(name);
         let data_key = self.get_s3_object(keys.key);
         let cipher_text = self.get_s3_object(keys.cipher);
@@ -430,7 +500,11 @@ impl Vault {
                 },
             )
             .map_err(|_| VaultError::NonceDecryptError)?;
-        Ok(String::from_utf8(res)?)
+
+        match String::from_utf8(res) {
+            Ok(valid_string) => Ok(Data::Utf8(valid_string)),
+            Err(from_utf8_error) => Ok(Data::Binary(from_utf8_error.into_bytes())),
+        }
     }
 
     fn create_random_nonce() -> [u8; 12] {

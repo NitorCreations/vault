@@ -30,14 +30,14 @@ async fn main() -> Result<()> {
             Command::Describe {} => Ok(println!("{}", vault.stack_info())),
             Command::Exists { key } => cli::exists(&vault, &key).await,
             Command::All {} => cli::list_all(&vault).await,
-            Command::Lookup { key } => cli::lookup(&vault, &key).await,
+            Command::Lookup { key, outfile } => cli::lookup(&vault, &key, outfile).await,
             Command::Store {
                 key,
                 value,
                 overwrite,
                 file,
-                value_opt,
-            } => cli::store(&vault, key, value, file, value_opt, overwrite).await,
+                value_argument,
+            } => cli::store(&vault, key, value, file, value_argument, overwrite).await,
             Command::Info {} => Ok(println!("{vault}")),
         };
     }

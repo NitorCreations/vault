@@ -40,6 +40,25 @@ source .venv/bin/activate
 .venv\Scripts\activate
 ```
 
+The vault CLI can be run without installing using:
+
+```shell
+uv run python n_vault/cli.py
+# or with venv activated
+python3 n_vault/cli.py
+```
+
+Or install inside venv with:
+
+```shell
+# With uv
+uv pip install .
+# Normal venv
+python -m pip install .
+```
+
+After installing, you will have `vault` available in path.
+
 ## Release
 
 Use the provided shell script.
