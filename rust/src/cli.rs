@@ -256,6 +256,8 @@ pub fn read_data_from_stdin() -> Data {
     drop(stdin_lock);
 
     // Try to convert the raw bytes to a UTF-8 string
+    #[allow(clippy::option_if_let_else)]
+    // ^using `map_or` would require cloning buffer
     match std::str::from_utf8(&buffer) {
         Ok(valid_utf8) => Data::Utf8(valid_utf8.to_string()),
         Err(_) => Data::Binary(buffer),
