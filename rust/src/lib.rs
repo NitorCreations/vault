@@ -85,7 +85,7 @@ impl Data {
     pub fn output_to_stdout(&self) -> io::Result<()> {
         match self {
             Self::Utf8(ref string) => {
-                println!("{string}");
+                print!("{string}");
                 Ok(())
             }
             Self::Binary(ref bytes) => {
@@ -141,17 +141,6 @@ impl CloudFormationParams {
         out.iter()
             .find(|output| output.output_key() == Some(key))
             .map(|output| output.output_value().unwrap_or_default().to_owned())
-    }
-}
-
-impl fmt::Display for CloudFormationParams {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "bucket: {}\nkey: {}",
-            self.bucket_name,
-            self.key_arn.as_ref().map_or("None", |k| k)
-        )
     }
 }
 
@@ -214,6 +203,17 @@ impl fmt::Display for Data {
                 Ok(())
             }
         }
+    }
+}
+
+impl fmt::Display for CloudFormationParams {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "bucket: {}\nkey: {}",
+            self.bucket_name,
+            self.key_arn.as_ref().map_or("None", |k| k)
+        )
     }
 }
 
