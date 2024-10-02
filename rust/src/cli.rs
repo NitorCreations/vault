@@ -1,4 +1,5 @@
 use std::io::{stdin, Read};
+use std::path::Path;
 
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
@@ -129,13 +130,15 @@ pub async fn store(
     overwrite: bool,
 ) -> Result<()> {
     let key = {
-        if let Some(key) = &key {
+        if let Some(key) = key {
             key
         } else if let Some(file_name) = &file {
-            match file_name.as_str() {
-                "-" => anyhow::bail!("Key cannot be empty when reading from stdin".red()),
-                _ => file_name,
+            if file_name == "-" {
+                anyhow::bail!("Key cannot be empty when reading from stdin".red())
             }
+            let key = get_filename_from_path(file_name)?;
+            println!("Using filename as key: '{key}'");
+            key
         } else {
             anyhow::bail!(
                 "Empty key and no {} flag provided, provide at least one of these",
@@ -162,7 +165,7 @@ pub async fn store(
 
     if !overwrite
         && vault
-            .exists(key)
+            .exists(&key)
             .await
             .with_context(|| format!("Failed to check if key '{key}' exists").red())?
     {
@@ -172,7 +175,7 @@ pub async fn store(
         )
     }
 
-    Box::pin(vault.store(key, data.as_bytes()))
+    Box::pin(vault.store(&key, data.as_bytes()))
         .await
         .with_context(|| format!("Failed to store key '{key}'").red())
 }
@@ -262,4 +265,22 @@ pub fn read_data_from_stdin() -> Data {
         Ok(valid_utf8) => Data::Utf8(valid_utf8.to_string()),
         Err(_) => Data::Binary(buffer),
     }
+}
+
+/// Try to get the filename for the given filepath
+fn get_filename_from_path(path: &str) -> Result<String> {
+    let path = Path::new(path);
+    if !path.exists() {
+        anyhow::bail!("File does not exist: {}", path.display());
+    }
+    path.file_name()
+        .map(|filename| {
+            filename
+                .to_string_lossy()
+                // Remove all U+FFFD replacement characters
+                .replace('\u{FFFD}', "")
+        })
+        .ok_or_else(|| {
+            anyhow::anyhow!("No filename found in the provided path: {}", path.display())
+        })
 }
