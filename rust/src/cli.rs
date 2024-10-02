@@ -158,7 +158,7 @@ pub async fn store(
         if let Some(value) = value_positional.or(value_argument) {
             if value == "-" {
                 println!("Reading from stdin until EOF");
-                read_data_from_stdin()
+                read_data_from_stdin()?
             } else {
                 Data::Utf8(value)
             }
@@ -166,7 +166,7 @@ pub async fn store(
             match path.as_str() {
                 "-" => {
                     println!("Reading from stdin until EOF");
-                    read_data_from_stdin()
+                    read_data_from_stdin()?
                 }
                 _ => read_data_from_path(path)?,
             }
@@ -261,7 +261,7 @@ fn read_data_from_path(path: &String) -> Result<Data> {
 }
 
 /// Read data from stdin, supporting both UTF-8 and non-UTF-8 input
-pub fn read_data_from_stdin() -> Data {
+pub fn read_data_from_stdin() -> Result<Data> {
     let mut buffer = Vec::new();
 
     let stdin = stdin();
@@ -270,7 +270,7 @@ pub fn read_data_from_stdin() -> Data {
     // Read raw bytes from stdin
     stdin_lock
         .read_to_end(&mut buffer)
-        .expect("Failed to read from stdin");
+        .context("Failed to read from stdin")?;
 
     drop(stdin_lock);
 
@@ -278,8 +278,8 @@ pub fn read_data_from_stdin() -> Data {
     #[allow(clippy::option_if_let_else)]
     // ^using `map_or` would require cloning buffer
     match std::str::from_utf8(&buffer) {
-        Ok(valid_utf8) => Data::Utf8(valid_utf8.to_string()),
-        Err(_) => Data::Binary(buffer),
+        Ok(valid_utf8) => Ok(Data::Utf8(valid_utf8.to_string())),
+        Err(_) => Ok(Data::Binary(buffer)),
     }
 }
 
