@@ -188,10 +188,13 @@ pub async fn lookup(vault: &Vault, key: &str) -> Result<()> {
     if key.trim().is_empty() {
         anyhow::bail!(format!("Empty key '{key}'").red())
     }
-    Box::pin(vault.lookup(key))
+
+    let result = Box::pin(vault.lookup(key))
         .await
-        .with_context(|| format!("Failed to look up key '{key}'").red())
-        .map(|res| print!("{res}"))
+        .with_context(|| format!("Failed to look up key '{key}'").red())?;
+
+    result.output_to_stdout()?;
+    Ok(())
 }
 
 /// List all available keys

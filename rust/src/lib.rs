@@ -1,7 +1,8 @@
 pub mod errors;
 
-use std::env;
 use std::fmt;
+use std::io::Write;
+use std::{env, io};
 
 use aes_gcm::aead::{Aead, Payload};
 use aes_gcm::aes::{cipher, Aes256};
@@ -75,6 +76,24 @@ impl Data {
         match self {
             Self::Utf8(ref string) => string.as_bytes(),
             Self::Binary(ref bytes) => bytes,
+        }
+    }
+
+    /// Outputs the data directly to stdout.
+    /// String data is printed.
+    /// Binary data is outputted raw.
+    pub fn output_to_stdout(&self) -> io::Result<()> {
+        match self {
+            Self::Utf8(ref string) => {
+                println!("{string}");
+                Ok(())
+            }
+            Self::Binary(ref bytes) => {
+                let stdout = io::stdout();
+                let mut handle = stdout.lock();
+                handle.write_all(bytes)?;
+                handle.flush()
+            }
         }
     }
 }
