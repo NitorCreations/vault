@@ -2,130 +2,9 @@ use std::io::{stdin, Read};
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
-use clap::{Parser, Subcommand};
 use colored::Colorize;
 
-use nitor_vault::{Data, Vault};
-
-#[allow(clippy::doc_markdown)]
-#[derive(Parser)]
-#[command(
-    author,
-    version,
-    about,
-    long_about = "Nitor Vault, see https://github.com/nitorcreations/vault for usage examples",
-    arg_required_else_help = true
-)] // Reads info from `Cargo.toml`
-pub struct Args {
-    /// Override the bucket name
-    #[arg(short, long, env = "VAULT_BUCKET")]
-    pub bucket: Option<String>,
-
-    /// Override the KMS key arn for storing or looking up
-    #[arg(short, long, env = "VAULT_KEY")]
-    pub key_arn: Option<String>,
-
-    /// Specify AWS region for the bucket
-    #[arg(short, long, env = "AWS_REGION")]
-    pub region: Option<String>,
-
-    /// Optional CloudFormation stack to lookup key and bucket
-    #[arg(long, env)]
-    pub vault_stack: Option<String>,
-
-    /// Available subcommands
-    #[command(subcommand)]
-    pub command: Option<Command>,
-}
-
-#[allow(clippy::doc_markdown)]
-#[derive(Subcommand)]
-pub enum Command {
-    /// Delete an existing key from the store
-    #[command(short_flag('d'), long_flag("delete"))]
-    Delete { key: String },
-
-    /// Describe CloudFormation stack parameters for current configuration.
-    // This value is useful for Lambdas as you can load the CloudFormation parameters from env.
-    #[command(long_flag("describe"))]
-    Describe {},
-
-    /// Check if a key exists
-    #[command(short_flag('e'), long_flag("exists"), alias("e"))]
-    Exists { key: String },
-
-    /// List available secrets
-    #[command(short_flag('a'), long_flag("all"), alias("a"))]
-    All {},
-
-    /// Output secret value for given key
-    #[command(short_flag('l'), long_flag("lookup"), alias("l"))]
-    Lookup {
-        /// Key name to lookup
-        key: String,
-
-        /// Optional output file
-        #[arg(short, long, value_name = "filepath")]
-        outfile: Option<String>,
-    },
-
-    /// Store a new key-value pair
-    #[command(
-        short_flag('s'),
-        long_flag("store"),
-        alias("s"),
-        long_about = "Store a new key-value pair in the vault.\n\
-                      You can provide the key and value directly, or specify a file to store.\n\n\
-                      Usage examples:\n\
-                      - Store a value: `vault store mykey \"some value\"`\n\
-                      - Store a value from args: `vault store mykey --value \"some value\"`\n\
-                      - Store from a file: `vault store mykey --file path/to/file.txt`\n\
-                      - Store from a file with filename as key: `vault store --file path/to/file.txt`\n\
-                      - Store from stdin: `echo \"some data\" | vault store mykey --value -`\n\
-                      - Store from stdin: `cat file.zip | vault store mykey --file -`"
-    )]
-    Store {
-        /// Key name
-        key: Option<String>,
-
-        /// Value to store
-        value: Option<String>,
-
-        /// Overwrite existing key
-        #[arg(short = 'w', long)]
-        overwrite: bool,
-
-        /// Value to store, use '-' for stdin
-        #[arg(
-            short,
-            long = "value",
-            value_name = "value",
-            conflicts_with_all = vec!["value", "file"]
-        )]
-        value_argument: Option<String>,
-
-        /// File to store, use '-' for stdin
-        #[arg(
-            short,
-            long,
-            value_name = "filepath",
-            conflicts_with_all = vec!["value", "value_opt"]
-        )]
-        file: Option<String>,
-    },
-
-    /// Print region and stack information
-    #[command(short_flag('i'), long_flag("info"), alias("i"))]
-    Info {},
-}
-
-/// Parse command line arguments.
-///
-/// See Clap `Derive` documentation for details:
-/// <https://docs.rs/clap/latest/clap/_derive/index.html>
-pub fn parse_args() -> Args {
-    Args::parse()
-}
+use nitor_vault::{Value, Vault};
 
 /// Store a key-value pair
 pub async fn store(
@@ -160,7 +39,7 @@ pub async fn store(
                 println!("Reading from stdin until EOF");
                 read_data_from_stdin()?
             } else {
-                Data::Utf8(value)
+                Value::Utf8(value)
             }
         } else if let Some(path) = &file {
             match path.as_str() {
@@ -222,7 +101,7 @@ pub async fn lookup(vault: &Vault, key: &str, outfile: Option<String>) -> Result
 }
 
 /// List all available keys
-pub async fn list_all(vault: &Vault) -> Result<()> {
+pub async fn list_all_keys(vault: &Vault) -> Result<()> {
     vault
         .all()
         .await
@@ -249,19 +128,19 @@ pub async fn exists(vault: &Vault, key: &str) -> Result<()> {
 }
 
 /// Read data from filepath, supporting both UTF-8 and non-UTF-8 contents
-fn read_data_from_path(path: &String) -> Result<Data> {
+fn read_data_from_path(path: &String) -> Result<Value> {
     if let Ok(content) = std::fs::read_to_string(path) {
-        Ok(Data::Utf8(content))
+        Ok(Value::Utf8(content))
     } else {
         let binary_data =
             std::fs::read(path).with_context(|| format!("Error reading file: '{path}'").red())?;
 
-        Ok(Data::Binary(binary_data))
+        Ok(Value::Binary(binary_data))
     }
 }
 
 /// Read data from stdin, supporting both UTF-8 and non-UTF-8 input
-pub fn read_data_from_stdin() -> Result<Data> {
+fn read_data_from_stdin() -> Result<Value> {
     let mut buffer = Vec::new();
 
     let stdin = stdin();
@@ -278,8 +157,8 @@ pub fn read_data_from_stdin() -> Result<Data> {
     #[allow(clippy::option_if_let_else)]
     // ^using `map_or` would require cloning buffer
     match std::str::from_utf8(&buffer) {
-        Ok(valid_utf8) => Ok(Data::Utf8(valid_utf8.to_string())),
-        Err(_) => Ok(Data::Binary(buffer)),
+        Ok(valid_utf8) => Ok(Value::Utf8(valid_utf8.to_string())),
+        Err(_) => Ok(Value::Binary(buffer)),
     }
 }
 
@@ -304,7 +183,7 @@ fn get_filename_from_path(path: &str) -> Result<String> {
 /// Resolves an optional output file path and creates all directories if necessary.
 /// Returns `Some(PathBuf)` if the file path is valid,
 /// or `None` if a file path was not provided.
-pub fn resolve_output_file_path(outfile: Option<String>) -> Result<Option<PathBuf>> {
+fn resolve_output_file_path(outfile: Option<String>) -> Result<Option<PathBuf>> {
     if let Some(output) = outfile {
         let path = PathBuf::from(output);
 
