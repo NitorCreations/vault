@@ -36,8 +36,8 @@ async fn main() -> Result<()> {
                 value,
                 overwrite,
                 file,
-                value_opt,
-            } => cli::store(&vault, key, value, file, value_opt, overwrite).await,
+                value_argument,
+            } => cli::store(&vault, key, value, file, value_argument, overwrite).await,
             Command::Info {} => Ok(println!("{vault}")),
         };
     }

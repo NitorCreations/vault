@@ -1,4 +1,4 @@
-use std::io::{stdin, BufRead};
+use std::io::{stdin, Read};
 
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
@@ -119,36 +119,21 @@ pub async fn store(
         } else {
             anyhow::bail!(
                 "Empty key and no {} flag provided, provide at least one of these",
-                "-f".yellow().bold()
+                "--file".yellow().bold()
             )
         }
     };
 
     let data = {
-        if let Some(value) = value.or(value_opt) {
+        if let Some(value) = value_positional.or(value_argument) {
             Data::Utf8(value)
         } else if let Some(path) = &file {
             match path.as_str() {
                 "-" => {
-                    println!("Reading from stdin, empty line stops reading");
-                    Data::Utf8(
-                        stdin()
-                            .lock()
-                            .lines()
-                            .map(|l| l.expect("Failed to read line from stdin"))
-                            .take_while(|l| !l.trim().is_empty())
-                            .fold(String::new(), |acc, line| acc + &line + "\n"),
-                    )
+                    println!("Reading from stdin until EOF");
+                    read_data_from_stdin()
                 }
-                _ => {
-                    if let Ok(content) = std::fs::read_to_string(path) {
-                        Data::Utf8(content)
-                    } else {
-                        let binary_data = std::fs::read(path)
-                            .with_context(|| format!("Error reading file: '{path}'").red())?;
-                        Data::Binary(binary_data)
-                    }
-                }
+                _ => read_data_from_path(path)?,
             }
         } else {
             anyhow::bail!("No value or filename provided".red())
@@ -222,4 +207,37 @@ pub async fn exists(vault: &Vault, key: &str) -> Result<()> {
                 println!("{}", format!("key '{key}' doesn't exist").red());
             }
         })
+}
+
+/// Read data from filepath, supporting both UTF-8 and non-UTF-8 contents
+fn read_data_from_path(path: &String) -> Result<Data> {
+    if let Ok(content) = std::fs::read_to_string(path) {
+        Ok(Data::Utf8(content))
+    } else {
+        let binary_data =
+            std::fs::read(path).with_context(|| format!("Error reading file: '{path}'").red())?;
+
+        Ok(Data::Binary(binary_data))
+    }
+}
+
+/// Read data from stdin, supporting both UTF-8 and non-UTF-8 input
+pub fn read_data_from_stdin() -> Data {
+    let mut buffer = Vec::new();
+
+    let stdin = stdin();
+    let mut stdin_lock = stdin.lock();
+
+    // Read raw bytes from stdin
+    stdin_lock
+        .read_to_end(&mut buffer)
+        .expect("Failed to read from stdin");
+
+    drop(stdin_lock);
+
+    // Try to convert the raw bytes to a UTF-8 string
+    match std::str::from_utf8(&buffer) {
+        Ok(valid_utf8) => Data::Utf8(valid_utf8.to_string()),
+        Err(_) => Data::Binary(buffer),
+    }
 }
