@@ -149,7 +149,12 @@ pub async fn store(
 
     let data = {
         if let Some(value) = value_positional.or(value_argument) {
-            Data::Utf8(value)
+            if value == "-" {
+                println!("Reading from stdin until EOF");
+                read_data_from_stdin()
+            } else {
+                Data::Utf8(value)
+            }
         } else if let Some(path) = &file {
             match path.as_str() {
                 "-" => {
