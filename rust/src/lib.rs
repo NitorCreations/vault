@@ -109,6 +109,10 @@ impl Meta {
         }
     }
 
+    pub fn aesgcm(nonce: &[u8]) -> Self {
+        Self::new("AESGCM", nonce)
+    }
+
     /// Serialize Meta to JSON string.
     pub fn to_json(&self) -> serde_json::Result<String> {
         serde_json::to_string(&self)

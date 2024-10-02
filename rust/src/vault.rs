@@ -148,7 +148,7 @@ impl Vault {
             AesGcm::new_from_slice(plaintext.as_ref())?;
         let nonce = Self::create_random_nonce();
         let nonce = Nonce::from_slice(nonce.as_slice());
-        let meta = Meta::new("AESGCM", nonce).to_json()?;
+        let meta = Meta::aesgcm(nonce).to_json()?;
         let aes_gcm_ciphertext = aesgcm_cipher
             .encrypt(
                 nonce,
