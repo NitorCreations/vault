@@ -24,9 +24,9 @@
     "vault": "tsx cli/vault.ts"
   },
   "dependencies": {
-    "@aws-sdk/client-cloudformation": "^3.658.1",
-    "@aws-sdk/client-kms": "^3.658.1",
-    "@aws-sdk/client-s3": "^3.658.1",
+    "@aws-sdk/client-cloudformation": "^3.665.0",
+    "@aws-sdk/client-kms": "^3.665.0",
+    "@aws-sdk/client-s3": "^3.665.0",
     "sade": "^1.7.0"
   },
   "engines": {
