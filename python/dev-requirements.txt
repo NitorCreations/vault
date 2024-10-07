@@ -8,7 +8,7 @@ botocore==1.35.29
     # via
     #   boto3
     #   s3transfer
-build==1.2.2
+build==1.2.2.post1
     # via nitor-vault (pyproject.toml)
 certifi==2024.8.30
     # via requests
@@ -58,7 +58,7 @@ nh3==0.2.18
     # via readme-renderer
 packaging==24.1
     # via build
-pkginfo==1.10.0
+pkginfo==1.11.1
     # via twine
 pycparser==2.22
     # via cffi
@@ -83,7 +83,7 @@ requests-toolbelt==1.0.0
     # via twine
 rfc3986==2.0.0
     # via twine
-rich==13.8.1
+rich==13.9.2
     # via twine
 s3transfer==0.10.2
     # via boto3
