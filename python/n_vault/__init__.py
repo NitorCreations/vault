@@ -36,5 +36,4 @@ def stop_cov(signum, frame):
         sys.exit(0)
 
 
-# flake8: noqa
-from n_vault.vault import Vault
+from n_vault.vault import Vault as Vault  # noqa: E402
