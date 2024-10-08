@@ -1,3 +1,4 @@
+use std::io::Write;
 use std::{env, fmt};
 
 use aes_gcm::aead::{Aead, Payload};
@@ -17,13 +18,16 @@ use aws_sdk_s3::types::Delete;
 use aws_sdk_s3::Client as S3Client;
 use aws_sdk_sts::Client as stsClient;
 use base64::Engine;
+use colored::Colorize;
 use rand::Rng;
-use tokio::try_join;
+use tokio::time::Duration;
 
 use crate::errors::VaultError;
 use crate::template::{template, VAULT_STACK_VERSION};
 use crate::value::Value;
 use crate::{CloudFormationParams, CloudFormationStackData, EncryptObject, Meta, S3DataKeys};
+
+const WAIT_ANIMATION_DURATION: Duration = Duration::from_millis(500);
 
 #[derive(Debug)]
 pub struct Vault {
@@ -131,9 +135,7 @@ impl Vault {
                     .await
                     .map_err(VaultError::from)?;
                 if let Some(account_id) = identity.account() {
-                    let bucket = format!("{stack_name}-{region}-{account_id}");
-                    println!("Using bucket name: {bucket}");
-                    bucket
+                    format!("{stack_name}-{region}-{account_id}")
                 } else {
                     return Err(VaultError::MissingAccountIdError);
                 }
@@ -143,35 +145,33 @@ impl Vault {
 
         if Self::describe_stack(&cf_client, &stack_name).await.is_ok() {
             println!("Vault stack '{stack_name}' already initialized");
-        } else {
-            let parameters = Parameter::builder()
-                .parameter_key("paramBucketName")
-                .parameter_value(bucket)
-                .build();
-
-            let response = cf_client
-                .create_stack()
-                .stack_name(&stack_name)
-                .template_body(template())
-                .parameters(parameters)
-                .capabilities(Capability::CapabilityIam)
-                .send()
-                .await
-                .map_err(VaultError::from)?;
-
-            if let Some(stack_id) = response.stack_id {
-                println!("{stack_id}");
-            }
-
-            println!("Vault stack '{stack_name}' created");
+            return match Self::get_cloudformation_stack_data(&cf_client, &stack_name).await {
+                Ok(stack_data) => Ok(println!("{stack_data}")),
+                Err(err) => Err(err),
+            };
         }
 
-        match Self::get_cloudformation_stack_data(&cf_client, &stack_name).await {
-            Ok(stack_data) => {
-                println!("{stack_data}");
-            }
-            Err(err) => return Err(err),
+        let parameters = Parameter::builder()
+            .parameter_key("paramBucketName")
+            .parameter_value(bucket)
+            .build();
+
+        let response = cf_client
+            .create_stack()
+            .stack_name(&stack_name)
+            .template_body(template())
+            .parameters(parameters)
+            .capabilities(Capability::CapabilityIam)
+            .send()
+            .await
+            .map_err(VaultError::from)?;
+
+        if let Some(stack_id) = response.stack_id {
+            println!("{stack_id}");
         }
+
+        println!("Waiting for Vault stack '{stack_name}' to be created");
+        Self::wait_for_stack_creation(&cf_client, &stack_name).await?;
 
         Ok(())
     }
@@ -211,6 +211,10 @@ impl Vault {
         }
 
         Ok(())
+    }
+
+    pub async fn stack_status(&self) -> Result<CloudFormationStackData, VaultError> {
+        Self::get_cloudformation_stack_data(&self.cf, &self.cloudformation_params.stack_name).await
     }
 
     /// Get all available secrets
@@ -281,7 +285,7 @@ impl Vault {
         let put_key = self.put_s3_object(keys.key, ByteStream::from(encrypted.data_key));
         let put_meta = self.put_s3_object(keys.meta, ByteStream::from(encrypted.meta.into_bytes()));
 
-        try_join!(put_cipher, put_key, put_meta)?;
+        tokio::try_join!(put_cipher, put_key, put_meta)?;
 
         Ok(())
     }
@@ -314,7 +318,7 @@ impl Vault {
         let data_key = self.get_s3_object(keys.key);
         let cipher_text = self.get_s3_object(keys.cipher);
         let meta_add = self.get_s3_object(keys.meta);
-        let (data_key, cipher_text, meta_add) = try_join!(data_key, cipher_text, meta_add)?;
+        let (data_key, cipher_text, meta_add) = tokio::try_join!(data_key, cipher_text, meta_add)?;
 
         let meta: Meta = serde_json::from_slice(&meta_add)?;
         let cipher: AesGcm<Aes256, cipher::typenum::U12> =
@@ -426,6 +430,56 @@ impl Vault {
             .body(body)
             .send()
             .await?)
+    }
+
+    /// Poll Cloudformation for stack status until it has been created or creation failed.
+    async fn wait_for_stack_creation(
+        cf_client: &CloudFormationClient,
+        stack_name: &str,
+    ) -> Result<(), VaultError> {
+        let mut last_status: Option<StackStatus> = None;
+        let dots = [".", "..", "...", ""];
+        loop {
+            match Self::get_cloudformation_stack_data(cf_client, stack_name).await {
+                Ok(stack_data) => {
+                    if let Some(ref status) = stack_data.status {
+                        // Print status if it has changed
+                        if last_status.as_ref() != Some(status) {
+                            last_status = Some(status.clone());
+                        }
+
+                        // Check if stack has reached a terminal state
+                        match status {
+                            StackStatus::CreateComplete => {
+                                println!("{stack_data}");
+                                println!("{}", "Stack creation completed successfully".green());
+                                break;
+                            }
+                            StackStatus::CreateFailed
+                            | StackStatus::RollbackFailed
+                            | StackStatus::RollbackComplete => {
+                                println!("{status}");
+                                return Err(VaultError::Error("Stack creation failed".to_string()));
+                            }
+                            _ => {
+                                println!("{status}");
+                                // Continue waiting for stack creation to complete
+                                for dot in &dots {
+                                    print!("\r{dot}");
+                                    std::io::stdout().flush()?;
+                                    tokio::time::sleep(WAIT_ANIMATION_DURATION).await;
+                                }
+                            }
+                        }
+                    }
+                }
+                Err(err) => {
+                    return Err(err);
+                }
+            }
+        }
+
+        Ok(())
     }
 
     /// Add prefix to key if prefix has been specified.
