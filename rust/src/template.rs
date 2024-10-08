@@ -533,13 +533,16 @@ mod test {
 
     #[test]
     fn test_write_template_to_file() {
-        let template_str = template();
-
+        // Write Cloudformation template JSON to file.
+        // This way it can be easily compared with the JSON from the Python vault.
+        // ```
+        // uv run python -c "from n_vault.template import TEMPLATE_STRING; print(TEMPLATE_STRING)" > template.json
+        // diff -y template.json ../python/template.json
+        // ```
         let file = std::fs::File::create("template.json").expect("Unable to create template file");
         let mut writer = BufWriter::new(file);
-
         writer
-            .write_all(template_str.as_bytes())
+            .write_all(template().as_bytes())
             .expect("Unable to write data");
         writer
             .write_all("\n".as_ref())
