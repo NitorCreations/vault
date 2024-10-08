@@ -49,7 +49,7 @@ pub enum Command {
     All {},
 
     /// Delete an existing key from the store
-    #[command(short_flag('d'), long_flag("delete"))]
+    #[command(short_flag('d'), long_flag("delete"), alias("d"))]
     Delete { key: String },
 
     /// Describe CloudFormation stack parameters for current configuration.
