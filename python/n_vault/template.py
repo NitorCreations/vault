@@ -1,6 +1,7 @@
-# flake8: noqa: E501
 VAULT_STACK_VERSION = 24
-TEMPLATE_STRING = f"""{{
+
+TEMPLATE_STRING = f"""
+{{
   "Parameters": {{
     "paramBucketName": {{
       "Default": "nitor-core-vault",
@@ -508,4 +509,4 @@ TEMPLATE_STRING = f"""{{
       }}
     }}
   }}
-}}"""
+}}"""  # noqa: E501

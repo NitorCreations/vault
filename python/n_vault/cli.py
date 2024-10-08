@@ -23,7 +23,7 @@ from sys import exit
 import argcomplete
 
 from n_vault import VERSION, stop_cov
-from n_vault.vault import Vault, _to_str
+from n_vault.vault import Vault
 
 SYS_ENCODING = locale.getpreferredencoding()
 
@@ -59,7 +59,7 @@ def main():
         action="store_true",
         help="Initializes a kms key and a s3 bucket with some roles for reading "
         + "and writing on a fresh account via CloudFormation. "
-        + "Means that the account used has to have rights to create the resources",
+        + "The account used has to have rights to create the resources.",
     )
     action.add_argument(
         "-u",
@@ -88,12 +88,14 @@ def main():
         "--decrypt",
         help="Directly decrypt given value",
     )
+
     parser.add_argument(
         "-w",
         "--overwrite",
         action="store_true",
         help="Add this argument if you want to overwrite an existing element",
     )
+
     store_data = parser.add_mutually_exclusive_group(required=False)
     store_data.add_argument(
         "-v",
@@ -106,6 +108,7 @@ def main():
         help="File to store. If no -s argument given, the name of the file is used as the default name. "
         + "Give - for stdin",
     )
+
     parser.add_argument(
         "-o",
         "--outfile",
@@ -114,7 +117,7 @@ def main():
     parser.add_argument(
         "-p",
         "--prefix",
-        help="Optional prefix to store value under. empty by default",
+        help="Optional prefix for key name. Empty by default",
     )
     parser.add_argument(
         "--vaultstack",
@@ -187,6 +190,7 @@ def main():
             else:
                 with open(args.file, "rb") as f:
                     data = bytes(f.read())
+
         if not args.vaultstack:
             if "VAULT_STACK" in os.environ:
                 args.vaultstack = os.environ["VAULT_STACK"]
@@ -201,7 +205,18 @@ def main():
         elif not args.prefix:
             args.prefix = ""
 
-        if not args.init and not args.update:
+        if args.init:
+            Vault(
+                vault_stack=args.vaultstack,
+                vault_key=args.key_arn,
+                vault_bucket=args.bucket,
+                vault_iam_id=args.id,
+                vault_iam_secret=args.secret,
+                vault_prefix=args.prefix,
+                vault_region=args.region,
+                vault_init=args.init,
+            ).init()
+        else:
             vlt = Vault(
                 vault_stack=args.vaultstack,
                 vault_key=args.key_arn,
@@ -211,7 +226,9 @@ def main():
                 vault_prefix=args.prefix,
                 vault_region=args.region,
             )
-            if args.store:
+            if args.update:
+                vlt.update()
+            elif args.store:
                 if args.overwrite or not vlt.exists(args.store):
                     vlt.store(args.store, data)
                 elif not args.overwrite:
@@ -229,9 +246,9 @@ def main():
                 vlt.recrypt(args.recrypt)
                 print(args.recrypt + " successfully recrypted")
             elif args.encrypt:
-                print(_to_str(b64encode(vlt.direct_encrypt(args.encrypt))))
+                print(Vault.to_str(b64encode(vlt.direct_encrypt(args.encrypt))))
             elif args.decrypt:
-                print(_to_str(vlt.direct_decrypt(b64decode(args.decrypt))))
+                print(Vault.to_str(vlt.direct_decrypt(b64decode(args.decrypt))))
             else:
                 data = vlt.lookup(args.lookup)
                 if args.outfile and not args.outfile == "-":
@@ -247,21 +264,6 @@ def main():
                         sys.stdout.buffer.write(data)
                     else:
                         sys.stdout.write(data)
-        else:
-            vlt = Vault(
-                vault_stack=args.vaultstack,
-                vault_key=args.key_arn,
-                vault_bucket=args.bucket,
-                vault_iam_id=args.id,
-                vault_iam_secret=args.secret,
-                vault_prefix=args.prefix,
-                vault_region=args.region,
-                vault_init=args.init,
-            )
-            if args.init:
-                vlt.init()
-            elif args.update:
-                vlt.update()
     finally:
         stop_cov(None, None)
 

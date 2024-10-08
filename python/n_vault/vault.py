@@ -29,24 +29,6 @@ from threadlocal_aws.resources import s3_Bucket as bucket
 from n_vault.template import TEMPLATE_STRING, VAULT_STACK_VERSION
 
 
-def _template():
-    return json.dumps(json.loads(TEMPLATE_STRING))
-
-
-def _to_bytes(data):
-    encode_method = getattr(data, "encode", None)
-    if callable(encode_method):
-        return data.encode("utf-8")
-    return data
-
-
-def _to_str(data):
-    decode_method = getattr(data, "decode", None)
-    if callable(decode_method):
-        return data.decode("utf-8")
-    return data
-
-
 class Vault:
     _session = session()
     _kms = ""
@@ -54,6 +36,28 @@ class Vault:
     _vault_key = ""
     _vault_bucket = ""
     _stack = ""
+    _static_iv = bytes(
+        bytearray(
+            [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0 & 0xFF,
+                int(1337 / 256) & 0xFF,
+                int(1337 % 256) & 0xFF,
+            ]
+        )
+    )
 
     def __init__(
         self,
@@ -108,49 +112,6 @@ class Vault:
             account_id = sts(**self._c_args).get_caller_identity()["Account"]
             self._vault_bucket = self._stack + "-" + self._region + "-" + account_id
 
-    def _encrypt(self, data):
-        ret = {}
-        key_dict = kms(**self._c_args).generate_data_key(KeyId=self._vault_key, KeySpec="AES_256")
-        data_key = key_dict["Plaintext"]
-        ret["datakey"] = key_dict["CiphertextBlob"]
-        aesgcm_cipher = AESGCM(data_key)
-        nonce = os.urandom(12)
-        meta = json.dumps(
-            {"alg": "AESGCM", "nonce": b64encode(nonce).decode()},
-            separators=(",", ":"),
-            sort_keys=True,
-        )
-        ret["aes-gcm-ciphertext"] = aesgcm_cipher.encrypt(nonce, data, _to_bytes(meta))
-        cipher = _get_cipher(data_key)
-        encryptor = cipher.encryptor()
-        ret["ciphertext"] = encryptor.update(data) + encryptor.finalize()
-        ret["meta"] = meta
-        return ret
-
-    def _decrypt(self, data_key, encrypted):
-        decrypted_key = self.direct_decrypt(data_key)
-        cipher = _get_cipher(decrypted_key)
-        decryptor = cipher.decryptor()
-        return decryptor.update(encrypted) + decryptor.finalize()
-
-    def _aes_gcm_decrypt(self, nonce, data_key, encrypted):
-        decrypted_key = self.direct_decrypt(data_key)
-        cipher = AESGCM(decrypted_key)
-        return cipher.decrypt(nonce, encrypted, None)
-
-    def _get_cf_params(self):
-        stack = cloudformation(**self._c_args).describe_stacks(StackName=self._stack)
-        ret = {}
-        if "Stacks" in stack and stack["Stacks"]:
-            for output in stack["Stacks"][0]["Outputs"]:
-                if output["OutputKey"] == "vaultBucketName":
-                    ret["bucket_name"] = output["OutputValue"]
-                if output["OutputKey"] == "kmsKeyArn":
-                    ret["key_arn"] = output["OutputValue"]
-                if output["OutputKey"] == "vaultStackVersion":
-                    ret["deployed_version"] = int(output["OutputValue"])
-        return ret
-
     def store(self, name, data):
         encrypted = self._encrypt(data)
         s3(**self._c_args).put_object(
@@ -181,7 +142,7 @@ class Vault:
 
     def lookup(self, name):
         datakey = bytes(
-            s3(**self._c_args).get_object(Bucket=self._vault_bucket, Key=self._prefix + name + ".key")["Body"].read()
+            s3(**self._c_args).get_object(Bucket=self._vault_bucket, Key=f"{self._prefix}{name}.key")["Body"].read()
         )
         try:
             meta_add = bytes(
@@ -197,7 +158,7 @@ class Vault:
                 )["Body"]
                 .read()
             )
-            meta = json.loads(_to_str(meta_add))
+            meta = json.loads(self.to_str(meta_add))
             return AESGCM(self.direct_decrypt(datakey)).decrypt(b64decode(meta["nonce"]), ciphertext, meta_add)
         except ClientError as e:
             if e.response["Error"]["Code"] == "404" or e.response["Error"]["Code"] == "NoSuchKey":
@@ -274,7 +235,7 @@ class Vault:
             params = {"ParameterKey": "paramBucketName", "ParameterValue": self._vault_bucket}
             cloudformation(**self._c_args).create_stack(
                 StackName=self._stack,
-                TemplateBody=_template(),
+                TemplateBody=self._template(),
                 Parameters=[params],
                 Capabilities=["CAPABILITY_IAM"],
             )
@@ -293,7 +254,7 @@ class Vault:
                 params = {"ParameterKey": "paramBucketName", "UsePreviousValue": True}
                 cloudformation(**self._c_args).update_stack(
                     StackName=self._stack,
-                    TemplateBody=_template(),
+                    TemplateBody=self._template(),
                     Parameters=[params],
                     Capabilities=["CAPABILITY_IAM", "CAPABILITY_NAMED_IAM"],
                 )
@@ -302,29 +263,67 @@ class Vault:
         except Exception as e:
             print(f"Error while updating stack '{self._stack}': {repr(e)}")
 
+    @staticmethod
+    def to_str(data: bytes):
+        """
+        Try to decode data to string, otherwise return bytes.
+        """
+        decode_method = getattr(data, "decode", None)
+        return data.decode("utf-8") if callable(decode_method) else data
 
-STATIC_IV = bytearray(
-    [
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0 & 0xFF,
-        int(1337 / 256) & 0xFF,
-        int(1337 % 256) & 0xFF,
-    ]
-)
+    def _encrypt(self, data):
+        ret = {}
+        key_dict = kms(**self._c_args).generate_data_key(KeyId=self._vault_key, KeySpec="AES_256")
+        data_key = key_dict["Plaintext"]
+        ret["datakey"] = key_dict["CiphertextBlob"]
+        aesgcm_cipher = AESGCM(data_key)
+        nonce = os.urandom(12)
+        meta = json.dumps(
+            {"alg": "AESGCM", "nonce": b64encode(nonce).decode()},
+            separators=(",", ":"),
+            sort_keys=True,
+        )
+        ret["aes-gcm-ciphertext"] = aesgcm_cipher.encrypt(nonce, data, self._to_bytes(meta))
+        cipher = self._get_cipher(data_key)
+        encryptor = cipher.encryptor()
+        ret["ciphertext"] = encryptor.update(data) + encryptor.finalize()
+        ret["meta"] = meta
+        return ret
 
+    def _decrypt(self, data_key, encrypted):
+        decrypted_key = self.direct_decrypt(data_key)
+        cipher = self._get_cipher(decrypted_key)
+        decryptor = cipher.decryptor()
+        return decryptor.update(encrypted) + decryptor.finalize()
 
-def _get_cipher(key):
-    backend = default_backend()
-    return Cipher(AES(key), CTR(bytes(STATIC_IV)), backend=backend)
+    def _aes_gcm_decrypt(self, nonce, data_key, encrypted):
+        decrypted_key = self.direct_decrypt(data_key)
+        cipher = AESGCM(decrypted_key)
+        return cipher.decrypt(nonce, encrypted, None)
+
+    def _get_cf_params(self):
+        stack = cloudformation(**self._c_args).describe_stacks(StackName=self._stack)
+        ret = {}
+        if "Stacks" in stack and stack["Stacks"]:
+            for output in stack["Stacks"][0]["Outputs"]:
+                if output["OutputKey"] == "vaultBucketName":
+                    ret["bucket_name"] = output["OutputValue"]
+                if output["OutputKey"] == "kmsKeyArn":
+                    ret["key_arn"] = output["OutputValue"]
+                if output["OutputKey"] == "vaultStackVersion":
+                    ret["deployed_version"] = int(output["OutputValue"])
+        return ret
+
+    def _get_cipher(self, key: bytes):
+        return Cipher(AES(key), CTR(self._static_iv), backend=default_backend())
+
+    @staticmethod
+    def _template():
+        return json.dumps(json.loads(TEMPLATE_STRING))
+
+    @staticmethod
+    def _to_bytes(data):
+        encode_method = getattr(data, "encode", None)
+        if callable(encode_method):
+            return data.encode("utf-8")
+        return data
