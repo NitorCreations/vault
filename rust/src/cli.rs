@@ -86,7 +86,11 @@ pub async fn list_all_keys(vault: &Vault) -> Result<()> {
         .all()
         .await
         .with_context(|| "Failed to list all keys".red())
-        .map(|list| println!("{}", list.join("\n")))
+        .map(|list| {
+            if !list.is_empty() {
+                println!("{}", list.join("\n"));
+            }
+        })
 }
 
 /// Check if key exists
