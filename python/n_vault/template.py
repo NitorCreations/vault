@@ -1,7 +1,9 @@
-VAULT_STACK_VERSION = 24
+VAULT_STACK_VERSION = 25
 
 TEMPLATE_STRING = f"""
 {{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description": "Nitor Vault stack",
   "Parameters": {{
     "paramBucketName": {{
       "Default": "nitor-core-vault",
