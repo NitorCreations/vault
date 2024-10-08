@@ -79,6 +79,7 @@ pub enum Command {
                       The account used has to have rights to create the resources.\n\n\
                       Usage examples:\n\
                       - `vault init \"vault-name\"`\n\
+                      - `vault -i \"vault-name\"`\n\
                       - `vault --vault-stack \"vault-name\" --init`\n\
                       - `VAULT_STACK=\"vault-name\" vault i`"
     )]
@@ -92,9 +93,17 @@ pub enum Command {
         short_flag('u'),
         long_flag("update"),
         alias("u"),
-        long_about = "Update the CloudFormation stack which declares all resources needed by the vault."
+        long_about = "Update the CloudFormation stack which declares all resources needed by the vault.\n\n\
+                      Usage examples:\n\
+                      - `vault update \"vault-name\"`\n\
+                      - `vault -u \"vault-name\"`\n\
+                      - `vault --vault-stack \"vault-name\" --update`\n\
+                      - `VAULT_STACK=\"vault-name\" vault u`"
     )]
-    Update {},
+    Update {
+        /// Vault stack name
+        name: Option<String>,
+    },
 
     /// Output secret value for given key
     #[command(short_flag('l'), long_flag("lookup"), alias("l"))]
@@ -164,6 +173,21 @@ async fn main() -> Result<()> {
                     .await
                     .with_context(|| "Failed to init vault stack")?;
             }
+            Command::Update { name } => {
+                let vault = Vault::new(
+                    args.vault_stack.or(name),
+                    args.region,
+                    args.bucket,
+                    args.key_arn,
+                    args.prefix,
+                )
+                .await
+                .with_context(|| "Failed to create vault from given params".red())?;
+                vault
+                    .update_stack()
+                    .await
+                    .with_context(|| "Failed to update vault stack")?;
+            }
             Command::All {}
             | Command::Delete { .. }
             | Command::Describe {}
@@ -171,7 +195,6 @@ async fn main() -> Result<()> {
             | Command::Info {}
             | Command::Status {}
             | Command::Lookup { .. }
-            | Command::Update {}
             | Command::Store { .. } => {
                 let vault = Vault::new(
                     args.vault_stack,
@@ -200,13 +223,11 @@ async fn main() -> Result<()> {
                         file,
                         value_argument,
                     } => cli::store(&vault, key, value, file, value_argument, overwrite).await?,
-                    Command::Update {} => vault
-                        .update_stack()
-                        .await
-                        .with_context(|| "Failed to update vault stack")?,
-                    // Init is here again instead of `_` so that if new commands are added,
+                    // These are here again instead of a `_` so that if new commands are added,
                     // there is an error about missing handling for that.
+                    #[allow(clippy::match_same_arms)]
                     Command::Init { .. } => unreachable!(),
+                    Command::Update { .. } => unreachable!(),
                 }
             }
         };
