@@ -461,7 +461,7 @@ impl Vault {
                                 // Print status if it has changed
                                 if last_status.as_ref() != Some(status) {
                                     last_status = Some(status.clone());
-                                    println!("{status}");
+                                    println!("status: {status}");
                                 }
                                 // Continue waiting for stack creation to complete
                                 for dot in &dots {
