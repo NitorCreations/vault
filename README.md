@@ -4,13 +4,33 @@ Command line tools and libraries for encrypting keys and values using client-sid
 
 ## Installation
 
-The easiest installation method is the Python package from PyPI:
+We recommend the Rust or Python version for CLI usage.
 
-```shell
-pip install nitor-vault
+JavaScript and Java versions are available from npm and maven central respectively,
+and installation will depend on your needs.
+
+### Rust
+
+Install the Rust vault CLI binary from [crates.io](https://crates.io/crates/nitor-vault) with:
+
+```terminal
+cargo install nitor-vault
 ```
 
-Javascript and Java versions are available from npm and maven central respectively and installation will depend on your needs.
+See [rustup.rs](https://rustup.rs) if you need to install Rust first.
+
+### Python
+
+Use [pipx](https://github.com/pypa/pipx) or [uv](https://github.com/astral-sh/uv)
+to install the Python vault from [PyPI](https://pypi.org/project/nitor-vault/) globally in an isolated environment.
+
+```shell
+pipx install nameless-deploy-tools
+# or
+uv tool install nameless-deploy-tools
+```
+
+Directly installing with pip is no longer supported by most Python distributions.
 
 ## Example usage
 

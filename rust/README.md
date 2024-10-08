@@ -5,6 +5,17 @@
 Rust CLI and library for encrypting keys and values using client-side encryption
 with [AWS KMS](https://aws.amazon.com/kms/) keys.
 
+Install the Rust vault CLI from [crates.io](https://crates.io/crates/nitor-vault) with:
+
+```terminal
+cargo install nitor-vault
+```
+
+You will need to have Rust installed for this to work.
+See [rustup.rs](https://rustup.rs) if you need to install Rust first.
+By default, cargo puts the vault binary under `~/.cargo/bin/vault`.
+Check with `which -a vault` to see what vault version you have first in path.
+
 ```console
 Encrypted AWS key-value storage utility.
 
@@ -35,7 +46,29 @@ Options:
 
 ANSI color output can be disabled by setting the env variable `NO_COLOR=1`.
 
-## Build
+## Library
+
+The Nitor vault library can be used in other Rust projects directly.
+Add the crate to your project with:
+
+```shell
+cargo add nitor-vault
+```
+
+```rust
+use nitor_vault::Vault;
+
+fn main() -> anyhow::Result<()> {
+    let vault = Vault::default().await?;
+    let value = Box::pin(vault.lookup("secret-name")).await?;
+    println!("{value}");
+    Ok(())
+}
+```
+
+## Development
+
+### Build
 
 Using the shell script:
 
@@ -65,7 +98,7 @@ rust/target/debug/vault
 rust/target/release/vault
 ```
 
-## Install
+### Install
 
 You can install a release binary locally
 using [cargo install](https://doc.rust-lang.org/cargo/commands/cargo-install.html).
@@ -92,7 +125,7 @@ so the binaries installed through Cargo will be found.
 If you still get another version when using vault,
 you will need to put the cargo binary path `$HOME/.cargo/bin` first in path.
 
-## Format code
+### Format code
 
 Using [rustfmt](https://github.com/rust-lang/rustfmt)
 
@@ -100,7 +133,7 @@ Using [rustfmt](https://github.com/rust-lang/rustfmt)
 cargo fmt
 ```
 
-## Lint code
+### Lint code
 
 Using [Clippy](https://github.com/rust-lang/rust-clippy)
 
@@ -109,7 +142,7 @@ cargo clippy
 cargo clippy --fix
 ```
 
-## Update dependencies
+### Update dependencies
 
 ```shell
 cargo update
