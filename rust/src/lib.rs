@@ -1,11 +1,11 @@
 pub mod errors;
+mod template;
 mod value;
 mod vault;
 
 use std::fmt;
 
-use aws_config::SdkConfig;
-use aws_sdk_cloudformation::types::Output;
+use aws_sdk_cloudformation::types::{Output, StackStatus};
 use aws_sdk_cloudformation::Client as CloudFormationClient;
 use aws_sdk_s3::types::ObjectIdentifier;
 use base64::Engine;
@@ -21,6 +21,16 @@ pub use crate::vault::Vault;
 pub struct CloudFormationParams {
     bucket_name: String,
     key_arn: Option<String>,
+    stack_name: String,
+}
+
+#[derive(Debug, Default)]
+pub struct CloudFormationStackData {
+    pub bucket_name: Option<String>,
+    pub key_arn: Option<String>,
+    pub version: Option<u32>,
+    pub status: Option<StackStatus>,
+    pub status_reason: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -45,23 +55,25 @@ struct S3DataKeys {
 
 impl CloudFormationParams {
     #[must_use]
-    pub const fn new(bucket_name: String, key_arn: Option<String>) -> Self {
+    pub const fn new(bucket_name: String, key_arn: Option<String>, stack_name: String) -> Self {
         Self {
             bucket_name,
             key_arn,
+            stack_name,
         }
     }
 
-    pub fn from(bucket_name: &str, key_arn: Option<&str>) -> Self {
+    pub fn from(bucket_name: &str, key_arn: Option<&str>, stack_name: &str) -> Self {
         Self {
             bucket_name: bucket_name.to_owned(),
             key_arn: key_arn.map(std::borrow::ToOwned::to_owned),
+            stack_name: stack_name.to_owned(),
         }
     }
 
     /// Get `CloudFormation` parameters based on config and stack name
-    async fn from_stack(config: &SdkConfig, stack: String) -> Result<Self, VaultError> {
-        let describe_stack_output = CloudFormationClient::new(config)
+    async fn from_stack(client: &CloudFormationClient, stack: String) -> Result<Self, VaultError> {
+        let describe_stack_output = client
             .describe_stacks()
             .stack_name(stack.clone())
             .send()
@@ -78,7 +90,7 @@ impl CloudFormationParams {
 
         let key_arn = Self::parse_output_value_from_key("kmsKeyArn", stack_output);
 
-        Ok(Self::new(bucket_name, key_arn))
+        Ok(Self::new(bucket_name, key_arn, stack))
     }
 
     fn parse_output_value_from_key(key: &str, out: &[Output]) -> Option<String> {
@@ -138,9 +150,28 @@ impl fmt::Display for CloudFormationParams {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
-            "bucket: {}\nkey: {}",
+            "bucket: {}\nkey: {}\nstack: {}",
             self.bucket_name,
-            self.key_arn.as_ref().map_or("None", |k| k)
+            self.key_arn.as_ref().map_or("None", |k| k),
+            self.stack_name
+        )
+    }
+}
+
+impl fmt::Display for CloudFormationStackData {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "status: {}\nbucket: {}\nkey ARN: {}\nversion: {}{}",
+            self.status
+                .as_ref()
+                .map_or("None".to_string(), std::string::ToString::to_string),
+            self.bucket_name.as_deref().unwrap_or("None"),
+            self.key_arn.as_deref().unwrap_or("None"),
+            self.version.map_or("None".to_string(), |v| v.to_string()),
+            self.status_reason
+                .as_ref()
+                .map_or_else(String::new, |reason| format!("\nreason: {reason}"))
         )
     }
 }

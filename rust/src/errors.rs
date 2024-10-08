@@ -2,7 +2,10 @@ use std::io;
 use std::string::FromUtf8Error;
 
 use aws_sdk_cloudformation::error::SdkError;
+use aws_sdk_cloudformation::operation::create_stack::CreateStackError;
 use aws_sdk_cloudformation::operation::describe_stacks::DescribeStacksError;
+use aws_sdk_cloudformation::operation::update_stack::UpdateStackError;
+use aws_sdk_cloudformation::Error as cloudformationError;
 use aws_sdk_kms::operation::decrypt::DecryptError;
 use aws_sdk_kms::operation::generate_data_key::GenerateDataKeyError;
 use aws_sdk_s3::error::BuildError;
@@ -12,7 +15,7 @@ use aws_sdk_s3::operation::get_object::GetObjectError;
 use aws_sdk_s3::operation::head_object::HeadObjectError;
 use aws_sdk_s3::operation::list_objects_v2::ListObjectsV2Error;
 use aws_sdk_s3::operation::put_object::PutObjectError;
-
+use aws_sdk_sts::operation::get_caller_identity::GetCallerIdentityError;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -71,4 +74,18 @@ pub enum VaultError {
     FileReadError(String, #[source] io::Error),
     #[error("Failed to read from stdin")]
     StdinReadError(#[from] io::Error),
+    #[error("Deployed stack version not found in the stack data")]
+    StackVersionNotFoundError,
+    #[error("CloudFormation error: {0}")]
+    CloudFormationError(#[from] Box<cloudformationError>),
+    #[error("CloudFormation stack update failed: {0}")]
+    UpdateStackError(#[from] SdkError<UpdateStackError>),
+    #[error("Account ID missing from caller ID")]
+    MissingAccountIdError,
+    #[error("Failed to get called ID: {0}")]
+    CallerIdError(#[from] SdkError<GetCallerIdentityError>),
+    #[error("Failed to create stack: {0}")]
+    CreateStackError(#[from] SdkError<CreateStackError>),
+    #[error("{0}")]
+    Error(String),
 }

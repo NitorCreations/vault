@@ -20,8 +20,8 @@ pub struct Args {
     #[arg(short, long, env = "VAULT_BUCKET")]
     pub bucket: Option<String>,
 
-    /// Override the KMS key arn for storing or looking up
-    #[arg(short, long, env = "VAULT_KEY")]
+    /// Override the KMS key ARN
+    #[arg(short, long, name = "ARN", env = "VAULT_KEY")]
     pub key_arn: Option<String>,
 
     /// Optional prefix for key name
@@ -32,8 +32,8 @@ pub struct Args {
     #[arg(short, long, env = "AWS_REGION")]
     pub region: Option<String>,
 
-    /// Optional CloudFormation stack name to lookup key and bucket
-    #[arg(long, env)]
+    /// Specify CloudFormation stack name to use
+    #[arg(long, name = "NAME", env = "VAULT_STACK")]
     pub vault_stack: Option<String>,
 
     /// Available subcommands
@@ -61,9 +61,49 @@ pub enum Command {
     #[command(short_flag('e'), long_flag("exists"), alias("e"))]
     Exists { key: String },
 
-    /// Print region and stack information
-    #[command(short_flag('i'), long_flag("info"), alias("i"))]
+    /// Print vault information
+    #[command(long_flag("info"))]
     Info {},
+
+    /// Print vault stack information
+    #[command(long_flag("status"))]
+    Status {},
+
+    /// Initialize a new KMS key and S3 bucket
+    #[command(
+        short_flag('i'),
+        long_flag("init"),
+        alias("i"),
+        long_about = "Initialize a KMS key and a S3 bucket with roles for reading\n\
+                      and writing on a fresh account via CloudFormation.\n\
+                      The account used has to have rights to create the resources.\n\n\
+                      Usage examples:\n\
+                      - `vault init \"vault-name\"`\n\
+                      - `vault -i \"vault-name\"`\n\
+                      - `vault --vault-stack \"vault-name\" --init`\n\
+                      - `VAULT_STACK=\"vault-name\" vault i`"
+    )]
+    Init {
+        /// Vault stack name
+        name: Option<String>,
+    },
+
+    /// Update the vault CloudFormation stack.
+    #[command(
+        short_flag('u'),
+        long_flag("update"),
+        alias("u"),
+        long_about = "Update the CloudFormation stack which declares all resources needed by the vault.\n\n\
+                      Usage examples:\n\
+                      - `vault update \"vault-name\"`\n\
+                      - `vault -u \"vault-name\"`\n\
+                      - `vault --vault-stack \"vault-name\" --update`\n\
+                      - `VAULT_STACK=\"vault-name\" vault u`"
+    )]
+    Update {
+        /// Vault stack name
+        name: Option<String>,
+    },
 
     /// Output secret value for given key
     #[command(short_flag('l'), long_flag("lookup"), alias("l"))]
@@ -126,32 +166,70 @@ pub enum Command {
 async fn main() -> Result<()> {
     let args = Args::parse();
 
-    let vault = Vault::new(
-        args.vault_stack,
-        args.region,
-        args.bucket,
-        args.key_arn,
-        args.prefix,
-    )
-    .await
-    .with_context(|| "Failed to create vault from given params".red())?;
-
-    // Handle subcommands
     if let Some(command) = args.command {
-        return match command {
-            Command::All {} => cli::list_all_keys(&vault).await,
-            Command::Delete { key } => cli::delete(&vault, &key).await,
-            Command::Describe {} => Ok(println!("{}", vault.stack_info())),
-            Command::Exists { key } => cli::exists(&vault, &key).await,
-            Command::Info {} => Ok(println!("{vault}")),
-            Command::Lookup { key, outfile } => cli::lookup(&vault, &key, outfile).await,
-            Command::Store {
-                key,
-                value,
-                overwrite,
-                file,
-                value_argument,
-            } => cli::store(&vault, key, value, file, value_argument, overwrite).await,
+        match command {
+            Command::Init { name } => {
+                Vault::init(args.vault_stack.or(name), args.region, args.bucket)
+                    .await
+                    .with_context(|| "Failed to init vault stack")?;
+            }
+            Command::Update { name } => {
+                let vault = Vault::new(
+                    args.vault_stack.or(name),
+                    args.region,
+                    args.bucket,
+                    args.key_arn,
+                    args.prefix,
+                )
+                .await
+                .with_context(|| "Failed to create vault from given params".red())?;
+                vault
+                    .update_stack()
+                    .await
+                    .with_context(|| "Failed to update vault stack")?;
+            }
+            Command::All {}
+            | Command::Delete { .. }
+            | Command::Describe {}
+            | Command::Exists { .. }
+            | Command::Info {}
+            | Command::Status {}
+            | Command::Lookup { .. }
+            | Command::Store { .. } => {
+                let vault = Vault::new(
+                    args.vault_stack,
+                    args.region,
+                    args.bucket,
+                    args.key_arn,
+                    args.prefix,
+                )
+                .await
+                .with_context(|| "Failed to create vault from given params".red())?;
+
+                match command {
+                    Command::All {} => cli::list_all_keys(&vault).await?,
+                    Command::Delete { key } => cli::delete(&vault, &key).await?,
+                    Command::Describe {} => println!("{}", vault.stack_info()),
+                    Command::Exists { key } => cli::exists(&vault, &key).await?,
+                    Command::Info {} => println!("{vault}"),
+                    Command::Status {} => {
+                        println!("{}", vault.stack_status().await?);
+                    }
+                    Command::Lookup { key, outfile } => cli::lookup(&vault, &key, outfile).await?,
+                    Command::Store {
+                        key,
+                        value,
+                        overwrite,
+                        file,
+                        value_argument,
+                    } => cli::store(&vault, key, value, file, value_argument, overwrite).await?,
+                    // These are here again instead of a `_` so that if new commands are added,
+                    // there is an error about missing handling for that.
+                    #[allow(clippy::match_same_arms)]
+                    Command::Init { .. } => unreachable!(),
+                    Command::Update { .. } => unreachable!(),
+                }
+            }
         };
     }
     Ok(())
