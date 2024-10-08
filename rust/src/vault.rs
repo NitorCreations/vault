@@ -27,7 +27,7 @@ use crate::template::{template, VAULT_STACK_VERSION};
 use crate::value::Value;
 use crate::{CloudFormationParams, CloudFormationStackData, EncryptObject, Meta, S3DataKeys};
 
-const WAIT_ANIMATION_DURATION: Duration = Duration::from_millis(500);
+const WAIT_ANIMATION_DURATION: Duration = Duration::from_millis(1000);
 
 #[derive(Debug)]
 pub struct Vault {
@@ -438,16 +438,11 @@ impl Vault {
         stack_name: &str,
     ) -> Result<(), VaultError> {
         let mut last_status: Option<StackStatus> = None;
-        let dots = [".", "..", "...", ""];
+        let dots = ["    ", ".", "..", "..."];
         loop {
             match Self::get_cloudformation_stack_data(cf_client, stack_name).await {
                 Ok(stack_data) => {
                     if let Some(ref status) = stack_data.status {
-                        // Print status if it has changed
-                        if last_status.as_ref() != Some(status) {
-                            last_status = Some(status.clone());
-                        }
-
                         // Check if stack has reached a terminal state
                         match status {
                             StackStatus::CreateComplete => {
@@ -462,7 +457,11 @@ impl Vault {
                                 return Err(VaultError::Error("Stack creation failed".to_string()));
                             }
                             _ => {
-                                println!("{status}");
+                                // Print status if it has changed
+                                if last_status.as_ref() != Some(status) {
+                                    last_status = Some(status.clone());
+                                    println!("{status}");
+                                }
                                 // Continue waiting for stack creation to complete
                                 for dot in &dots {
                                     print!("\r{dot}");
