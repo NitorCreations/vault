@@ -62,8 +62,28 @@ pub enum Command {
     Exists { key: String },
 
     /// Print region and stack information
-    #[command(short_flag('i'), long_flag("info"), alias("i"))]
+    #[command(long_flag("info"))]
     Info {},
+
+    /// Initialize a new KMS key and S3 bucket
+    #[command(
+        short_flag('i'),
+        long_flag("init"),
+        alias("i"),
+        long_about = "Initialize a KMS key and a S3 bucket with roles for reading\n\
+                      and writing on a fresh account via CloudFormation.\n\n\
+                      The account used has to have rights to create the resources."
+    )]
+    Init {},
+
+    /// Update the vault CloudFormation stack.
+    #[command(
+        short_flag('u'),
+        long_flag("update"),
+        alias("u"),
+        long_about = "Update the CloudFormation stack which declares all resources needed by the vault."
+    )]
+    Update {},
 
     /// Output secret value for given key
     #[command(short_flag('l'), long_flag("lookup"), alias("l"))]
@@ -126,32 +146,54 @@ pub enum Command {
 async fn main() -> Result<()> {
     let args = Args::parse();
 
-    let vault = Vault::new(
-        args.vault_stack,
-        args.region,
-        args.bucket,
-        args.key_arn,
-        args.prefix,
-    )
-    .await
-    .with_context(|| "Failed to create vault from given params".red())?;
-
-    // Handle subcommands
     if let Some(command) = args.command {
-        return match command {
-            Command::All {} => cli::list_all_keys(&vault).await,
-            Command::Delete { key } => cli::delete(&vault, &key).await,
-            Command::Describe {} => Ok(println!("{}", vault.stack_info())),
-            Command::Exists { key } => cli::exists(&vault, &key).await,
-            Command::Info {} => Ok(println!("{vault}")),
-            Command::Lookup { key, outfile } => cli::lookup(&vault, &key, outfile).await,
-            Command::Store {
-                key,
-                value,
-                overwrite,
-                file,
-                value_argument,
-            } => cli::store(&vault, key, value, file, value_argument, overwrite).await,
+        match command {
+            Command::Init {} => {
+                Vault::init(args.vault_stack, args.region, args.bucket)
+                    .await
+                    .with_context(|| "Failed to init vault stack")?;
+            }
+            Command::All {}
+            | Command::Delete { .. }
+            | Command::Describe {}
+            | Command::Exists { .. }
+            | Command::Info {}
+            | Command::Lookup { .. }
+            | Command::Update {}
+            | Command::Store { .. } => {
+                let vault = Vault::new(
+                    args.vault_stack,
+                    args.region,
+                    args.bucket,
+                    args.key_arn,
+                    args.prefix,
+                )
+                .await
+                .with_context(|| "Failed to create vault from given params".red())?;
+
+                match command {
+                    Command::All {} => cli::list_all_keys(&vault).await?,
+                    Command::Delete { key } => cli::delete(&vault, &key).await?,
+                    Command::Describe {} => println!("{}", vault.stack_info()),
+                    Command::Exists { key } => cli::exists(&vault, &key).await?,
+                    Command::Info {} => println!("{vault}"),
+                    Command::Lookup { key, outfile } => cli::lookup(&vault, &key, outfile).await?,
+                    Command::Store {
+                        key,
+                        value,
+                        overwrite,
+                        file,
+                        value_argument,
+                    } => cli::store(&vault, key, value, file, value_argument, overwrite).await?,
+                    Command::Update {} => vault
+                        .update_stack()
+                        .await
+                        .with_context(|| "Failed to update vault stack")?,
+                    // Init is here again instead of `_` so that if new commands are added,
+                    // there is an error about missing handling for that.
+                    Command::Init { .. } => unreachable!(),
+                }
+            }
         };
     }
     Ok(())

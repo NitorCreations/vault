@@ -1290,7 +1290,7 @@ dependencies = [
 
 [[package]]
 name = "nitor-vault"
-version = "0.10.0"
+version = "1.0.0"
 dependencies = [
  "aes-gcm",
  "anyhow",
@@ -1298,6 +1298,7 @@ dependencies = [
  "aws-sdk-cloudformation",
  "aws-sdk-kms",
  "aws-sdk-s3",
+ "aws-sdk-sts",
  "base64 0.22.1",
  "clap",
  "colored",
