@@ -1,10 +1,12 @@
 use std::sync::LazyLock;
 
-pub const VAULT_STACK_VERSION: u32 = 24;
+pub const VAULT_STACK_VERSION: u32 = 25;
 
 static TEMPLATE_STRING: LazyLock<String> = LazyLock::new(|| {
     let raw_template = r#"
 {
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description": "Nitor Vault stack",
   "Parameters": {
     "paramBucketName": {
       "Default": "nitor-core-vault",
