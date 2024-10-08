@@ -20,8 +20,8 @@ pub struct Args {
     #[arg(short, long, env = "VAULT_BUCKET")]
     pub bucket: Option<String>,
 
-    /// Override the KMS key arn for storing or looking up
-    #[arg(short, long, env = "VAULT_KEY")]
+    /// Override the KMS key ARN
+    #[arg(short, long, name = "ARN", env = "VAULT_KEY")]
     pub key_arn: Option<String>,
 
     /// Optional prefix for key name
@@ -32,8 +32,8 @@ pub struct Args {
     #[arg(short, long, env = "AWS_REGION")]
     pub region: Option<String>,
 
-    /// Optional CloudFormation stack name to lookup key and bucket
-    #[arg(long, env)]
+    /// Specify CloudFormation stack name to use
+    #[arg(long, name = "NAME", env = "VAULT_STACK")]
     pub vault_stack: Option<String>,
 
     /// Available subcommands
@@ -78,7 +78,10 @@ pub enum Command {
                       and writing on a fresh account via CloudFormation.\n\n\
                       The account used has to have rights to create the resources."
     )]
-    Init {},
+    Init {
+        /// Vault stack name
+        name: Option<String>,
+    },
 
     /// Update the vault CloudFormation stack.
     #[command(
@@ -152,8 +155,8 @@ async fn main() -> Result<()> {
 
     if let Some(command) = args.command {
         match command {
-            Command::Init {} => {
-                Vault::init(args.vault_stack, args.region, args.bucket)
+            Command::Init { name } => {
+                Vault::init(args.vault_stack.or(name), args.region, args.bucket)
                     .await
                     .with_context(|| "Failed to init vault stack")?;
             }

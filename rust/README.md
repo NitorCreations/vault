@@ -24,13 +24,13 @@ Commands:
   help                  Print this message or the help of the given subcommand(s)
 
 Options:
-  -b, --bucket <BUCKET>            Override the bucket name [env: VAULT_BUCKET=]
-  -k, --key-arn <KEY_ARN>          Override the KMS key arn for storing or looking up [env: VAULT_KEY=]
-  -p, --prefix <PREFIX>            Optional prefix for key name [env: VAULT_PREFIX=]
-  -r, --region <REGION>            Specify AWS region for the bucket [env: AWS_REGION=]
-      --vault-stack <VAULT_STACK>  Optional CloudFormation stack name to lookup key and bucket [env: VAULT_STACK=]
-  -h, --help                       Print help (see more with '--help')
-  -V, --version                    Print version
+  -b, --bucket <BUCKET>     Override the bucket name [env: VAULT_BUCKET=]
+  -k, --key-arn <ARN>       Override the KMS key ARN [env: VAULT_KEY=]
+  -p, --prefix <PREFIX>     Optional prefix for key name [env: VAULT_PREFIX=]
+  -r, --region <REGION>     Specify AWS region for the bucket [env: AWS_REGION=]
+      --vault-stack <NAME>  Specify CloudFormation stack name to use [env: VAULT_STACK=]
+  -h, --help                Print help (see more with '--help')
+  -V, --version             Print version
 ```
 
 ANSI color output can be disabled by setting the env variable `NO_COLOR=1`.
