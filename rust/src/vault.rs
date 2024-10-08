@@ -166,11 +166,11 @@ impl Vault {
 
     /// Delete data in S3 for given key
     pub async fn delete(&self, name: &str) -> Result<(), VaultError> {
-        let key = &self.full_key_name(name);
-        if !self.exists(key).await? {
+        if !self.exists(name).await? {
             return Err(VaultError::S3DeleteObjectKeyMissingError);
         }
 
+        let key = &self.full_key_name(name);
         let identifiers = S3DataKeys::new(key).to_object_identifiers()?;
         self.s3
             .delete_objects()
