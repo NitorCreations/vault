@@ -30,6 +30,7 @@ pub struct CloudFormationStackData {
     pub key_arn: Option<String>,
     pub version: Option<u32>,
     pub status: Option<StackStatus>,
+    pub status_reason: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -161,13 +162,16 @@ impl fmt::Display for CloudFormationStackData {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "bucket: {}\nkey ARN: {}\nversion: {}\nstatus: {}",
-            self.bucket_name.as_deref().unwrap_or("None"),
-            self.key_arn.as_deref().unwrap_or("None"),
-            self.version.map_or("None".to_string(), |v| v.to_string()),
+            "status: {}\nbucket: {}\nkey ARN: {}\nversion: {}{}",
             self.status
                 .as_ref()
                 .map_or("None".to_string(), std::string::ToString::to_string),
+            self.bucket_name.as_deref().unwrap_or("None"),
+            self.key_arn.as_deref().unwrap_or("None"),
+            self.version.map_or("None".to_string(), |v| v.to_string()),
+            self.status_reason
+                .as_ref()
+                .map_or_else(String::new, |reason| format!("\nreason: {reason}"))
         )
     }
 }

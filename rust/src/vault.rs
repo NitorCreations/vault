@@ -438,7 +438,8 @@ impl Vault {
         stack_name: &str,
     ) -> Result<(), VaultError> {
         let mut last_status: Option<StackStatus> = None;
-        let dots = ["    ", ".", "..", "..."];
+        let clear_line = "\x1b[2K";
+        let dots = [".", "..", "...", ""];
         loop {
             match Self::get_cloudformation_stack_data(cf_client, stack_name).await {
                 Ok(stack_data) => {
@@ -446,14 +447,14 @@ impl Vault {
                         // Check if stack has reached a terminal state
                         match status {
                             StackStatus::CreateComplete => {
-                                println!("{stack_data}");
+                                println!("{clear_line}{stack_data}");
                                 println!("{}", "Stack creation completed successfully".green());
                                 break;
                             }
                             StackStatus::CreateFailed
                             | StackStatus::RollbackFailed
                             | StackStatus::RollbackComplete => {
-                                println!("{status}");
+                                println!("{clear_line}{stack_data}");
                                 return Err(VaultError::Error("Stack creation failed".to_string()));
                             }
                             _ => {
@@ -464,7 +465,7 @@ impl Vault {
                                 }
                                 // Continue waiting for stack creation to complete
                                 for dot in &dots {
-                                    print!("\r{dot}");
+                                    print!("\r{clear_line}{dot}");
                                     std::io::stdout().flush()?;
                                     tokio::time::sleep(WAIT_ANIMATION_DURATION).await;
                                 }
@@ -517,6 +518,7 @@ impl Vault {
         if let Some(stacks) = stack_response.stacks {
             if let Some(stack) = stacks.first() {
                 data.status.clone_from(&stack.stack_status);
+                data.status_reason.clone_from(&stack.stack_status_reason);
                 if let Some(outputs) = &stack.outputs {
                     for output in outputs {
                         if let Some(output_key) = output.output_key() {
