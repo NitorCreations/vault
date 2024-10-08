@@ -1,119 +1,71 @@
+pub mod cloudformation;
 pub mod errors;
+
 mod template;
 mod value;
 mod vault;
-
-use std::fmt;
-
-use aws_sdk_cloudformation::types::{Output, StackStatus};
-use aws_sdk_cloudformation::Client as CloudFormationClient;
-use aws_sdk_s3::types::ObjectIdentifier;
-use base64::Engine;
-use serde::{Deserialize, Serialize};
-
-use crate::errors::VaultError;
 
 // Expose `Vault` and `Value` so they can be used as if they were defined here
 pub use crate::value::Value;
 pub use crate::vault::Vault;
 
-#[derive(Debug, Clone)]
-pub struct CloudFormationParams {
-    bucket_name: String,
-    key_arn: Option<String>,
-    stack_name: String,
-}
+use aws_sdk_s3::types::ObjectIdentifier;
+use base64::Engine;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Default)]
-pub struct CloudFormationStackData {
-    pub bucket_name: Option<String>,
-    pub key_arn: Option<String>,
-    pub version: Option<u32>,
-    pub status: Option<StackStatus>,
-    pub status_reason: Option<String>,
-}
+use crate::cloudformation::CloudFormationStackData;
+use crate::errors::VaultError;
 
 #[derive(Debug, Clone)]
-struct EncryptObject {
+/// Result data for initializing a new vault stack
+pub enum CreateStackResult {
+    AlreadyInitialized {
+        data: CloudFormationStackData,
+    },
+    Created {
+        stack_name: String,
+        stack_id: String,
+        region: aws_config::Region,
+    },
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct EncryptObject {
     data_key: Vec<u8>,
     aes_gcm_ciphertext: Vec<u8>,
     meta: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-struct Meta {
+pub(crate) struct Meta {
     alg: String,
     nonce: String,
 }
 
 #[derive(Debug, Clone)]
-struct S3DataKeys {
+/// S3 object identifier names for a single value.
+pub(crate) struct S3DataKeys {
     key: String,
     cipher: String,
     meta: String,
 }
 
-impl CloudFormationParams {
-    #[must_use]
-    pub const fn new(bucket_name: String, key_arn: Option<String>, stack_name: String) -> Self {
-        Self {
-            bucket_name,
-            key_arn,
-            stack_name,
-        }
-    }
-
-    pub fn from(bucket_name: &str, key_arn: Option<&str>, stack_name: &str) -> Self {
-        Self {
-            bucket_name: bucket_name.to_owned(),
-            key_arn: key_arn.map(std::borrow::ToOwned::to_owned),
-            stack_name: stack_name.to_owned(),
-        }
-    }
-
-    /// Get `CloudFormation` parameters based on config and stack name
-    async fn from_stack(client: &CloudFormationClient, stack: String) -> Result<Self, VaultError> {
-        let describe_stack_output = client
-            .describe_stacks()
-            .stack_name(stack.clone())
-            .send()
-            .await?;
-
-        let stack_output = describe_stack_output
-            .stacks()
-            .first()
-            .map(aws_sdk_cloudformation::types::Stack::outputs)
-            .ok_or(VaultError::StackOutputsMissingError)?;
-
-        let bucket_name = Self::parse_output_value_from_key("vaultBucketName", stack_output)
-            .ok_or(VaultError::BucketNameMissingError)?;
-
-        let key_arn = Self::parse_output_value_from_key("kmsKeyArn", stack_output);
-
-        Ok(Self::new(bucket_name, key_arn, stack))
-    }
-
-    fn parse_output_value_from_key(key: &str, out: &[Output]) -> Option<String> {
-        out.iter()
-            .find(|output| output.output_key() == Some(key))
-            .map(|output| output.output_value().unwrap_or_default().to_owned())
-    }
-}
-
 impl Meta {
-    pub fn new(algorithm: &str, nonce: &[u8]) -> Self {
+    #[must_use]
+    fn new(algorithm: &str, nonce: &[u8]) -> Self {
         Self {
             alg: algorithm.to_owned(),
             nonce: base64::engine::general_purpose::STANDARD.encode(nonce),
         }
     }
 
-    pub fn aesgcm(nonce: &[u8]) -> Self {
+    #[must_use]
+    fn aesgcm(nonce: &[u8]) -> Self {
         Self::new("AESGCM", nonce)
     }
 
     /// Serialize Meta to JSON string.
-    pub fn to_json(&self) -> serde_json::Result<String> {
+    fn to_json(&self) -> serde_json::Result<String> {
         serde_json::to_string(&self)
     }
 }
@@ -143,35 +95,5 @@ impl S3DataKeys {
                     .map_err(VaultError::from)
             })
             .collect()
-    }
-}
-
-impl fmt::Display for CloudFormationParams {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "bucket: {}\nkey: {}\nstack: {}",
-            self.bucket_name,
-            self.key_arn.as_ref().map_or("None", |k| k),
-            self.stack_name
-        )
-    }
-}
-
-impl fmt::Display for CloudFormationStackData {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "status: {}\nbucket: {}\nkey ARN: {}\nversion: {}{}",
-            self.status
-                .as_ref()
-                .map_or("None".to_string(), std::string::ToString::to_string),
-            self.bucket_name.as_deref().unwrap_or("None"),
-            self.key_arn.as_deref().unwrap_or("None"),
-            self.version.map_or("None".to_string(), |v| v.to_string()),
-            self.status_reason
-                .as_ref()
-                .map_or_else(String::new, |reason| format!("\nreason: {reason}"))
-        )
     }
 }
