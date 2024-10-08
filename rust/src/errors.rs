@@ -1,3 +1,4 @@
+use std::io;
 use std::string::FromUtf8Error;
 
 use aws_sdk_cloudformation::error::SdkError;
@@ -66,4 +67,8 @@ pub enum VaultError {
     NoRegionError,
     #[error("Failed parsing Nonce from base64")]
     NonceParseError(#[from] base64::DecodeError),
+    #[error("Failed to read file: {0}")]
+    FileReadError(String, #[source] io::Error),
+    #[error("Failed to read from stdin")]
+    StdinReadError(#[from] io::Error),
 }

@@ -24,11 +24,15 @@ pub struct Args {
     #[arg(short, long, env = "VAULT_KEY")]
     pub key_arn: Option<String>,
 
+    /// Optional prefix for key name
+    #[arg(short, long, env = "VAULT_PREFIX")]
+    pub prefix: Option<String>,
+
     /// Specify AWS region for the bucket
     #[arg(short, long, env = "AWS_REGION")]
     pub region: Option<String>,
 
-    /// Optional CloudFormation stack to lookup key and bucket
+    /// Optional CloudFormation stack name to lookup key and bucket
     #[arg(long, env)]
     pub vault_stack: Option<String>,
 
@@ -45,7 +49,7 @@ pub enum Command {
     All {},
 
     /// Delete an existing key from the store
-    #[command(short_flag('d'), long_flag("delete"))]
+    #[command(short_flag('d'), long_flag("delete"), alias("d"))]
     Delete { key: String },
 
     /// Describe CloudFormation stack parameters for current configuration.
@@ -91,12 +95,8 @@ pub enum Command {
         /// Key name
         key: Option<String>,
 
-        /// Value to store
+        /// Value to store, use '-' for stdin
         value: Option<String>,
-
-        /// Overwrite existing key
-        #[arg(short = 'w', long)]
-        overwrite: bool,
 
         /// Value to store, use '-' for stdin
         #[arg(
@@ -115,6 +115,10 @@ pub enum Command {
             conflicts_with_all = vec!["value", "value_opt"]
         )]
         file: Option<String>,
+
+        /// Overwrite existing key
+        #[arg(short = 'w', long)]
+        overwrite: bool,
     },
 }
 
@@ -122,18 +126,15 @@ pub enum Command {
 async fn main() -> Result<()> {
     let args = Args::parse();
 
-    // Bucket and key were either given as args or found in env variables
-    let vault = if let (Some(bucket), key_arn) = (args.bucket.as_deref(), args.key_arn.as_deref()) {
-        Vault::from_cli_params(bucket, key_arn, args.region.as_deref())
-            .await
-            // Note: `with_context` is used instead of the simpler `context`
-            // as it is lazily evaluated.
-            .with_context(|| "Failed to create vault from given params".red())?
-    } else {
-        Vault::new(args.vault_stack.as_deref(), args.region.as_deref())
-            .await
-            .with_context(|| "Failed to create vault".red())?
-    };
+    let vault = Vault::new(
+        args.vault_stack,
+        args.region,
+        args.bucket,
+        args.key_arn,
+        args.prefix,
+    )
+    .await
+    .with_context(|| "Failed to create vault from given params".red())?;
 
     // Handle subcommands
     if let Some(command) = args.command {

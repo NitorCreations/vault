@@ -1,4 +1,3 @@
-use std::io::{stdin, Read};
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
@@ -33,26 +32,7 @@ pub async fn store(
         }
     };
 
-    let data = {
-        if let Some(value) = value_positional.or(value_argument) {
-            if value == "-" {
-                println!("Reading from stdin until EOF");
-                read_data_from_stdin()?
-            } else {
-                Value::Utf8(value)
-            }
-        } else if let Some(path) = &file {
-            match path.as_str() {
-                "-" => {
-                    println!("Reading from stdin until EOF");
-                    read_data_from_stdin()?
-                }
-                _ => read_data_from_path(path)?,
-            }
-        } else {
-            anyhow::bail!("No value or filename provided".red())
-        }
-    };
+    let value = read_value(value_positional, value_argument, file)?;
 
     if !overwrite
         && vault
@@ -66,7 +46,7 @@ pub async fn store(
         )
     }
 
-    Box::pin(vault.store(&key, data.as_bytes()))
+    Box::pin(vault.store(&key, value.as_bytes()))
         .await
         .with_context(|| format!("Failed to store key '{key}'").red())
 }
@@ -127,41 +107,6 @@ pub async fn exists(vault: &Vault, key: &str) -> Result<()> {
         })
 }
 
-/// Read data from filepath, supporting both UTF-8 and non-UTF-8 contents
-fn read_data_from_path(path: &String) -> Result<Value> {
-    if let Ok(content) = std::fs::read_to_string(path) {
-        Ok(Value::Utf8(content))
-    } else {
-        let binary_data =
-            std::fs::read(path).with_context(|| format!("Error reading file: '{path}'").red())?;
-
-        Ok(Value::Binary(binary_data))
-    }
-}
-
-/// Read data from stdin, supporting both UTF-8 and non-UTF-8 input
-fn read_data_from_stdin() -> Result<Value> {
-    let mut buffer = Vec::new();
-
-    let stdin = stdin();
-    let mut stdin_lock = stdin.lock();
-
-    // Read raw bytes from stdin
-    stdin_lock
-        .read_to_end(&mut buffer)
-        .context("Failed to read from stdin")?;
-
-    drop(stdin_lock);
-
-    // Try to convert the raw bytes to a UTF-8 string
-    #[allow(clippy::option_if_let_else)]
-    // ^using `map_or` would require cloning buffer
-    match std::str::from_utf8(&buffer) {
-        Ok(valid_utf8) => Ok(Value::Utf8(valid_utf8.to_string())),
-        Err(_) => Ok(Value::Binary(buffer)),
-    }
-}
-
 /// Try to get the filename for the given filepath
 fn get_filename_from_path(path: &str) -> Result<String> {
     let path = Path::new(path);
@@ -193,9 +138,29 @@ fn resolve_output_file_path(outfile: Option<String>) -> Result<Option<PathBuf>> 
                 format!("Failed to create directories for '{}'", parent.display())
             })?;
         }
-
         Ok(Some(path))
     } else {
         Ok(None)
     }
+}
+
+fn read_value(
+    value_positional: Option<String>,
+    value_argument: Option<String>,
+    file: Option<String>,
+) -> Result<Value> {
+    Ok(if let Some(value) = value_positional.or(value_argument) {
+        if value == "-" {
+            Value::from_stdin()?
+        } else {
+            Value::Utf8(value)
+        }
+    } else if let Some(path) = file {
+        match path.as_str() {
+            "-" => Value::from_stdin()?,
+            _ => Value::from_path(path)?,
+        }
+    } else {
+        anyhow::bail!("No value or filename provided".red())
+    })
 }

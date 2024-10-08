@@ -60,17 +60,16 @@ impl CloudFormationParams {
     }
 
     /// Get `CloudFormation` parameters based on config and stack name
-    async fn get_from_stack(config: &SdkConfig, stack: &str) -> Result<Self, VaultError> {
+    async fn from_stack(config: &SdkConfig, stack: String) -> Result<Self, VaultError> {
         let describe_stack_output = CloudFormationClient::new(config)
             .describe_stacks()
-            .stack_name(stack)
+            .stack_name(stack.clone())
             .send()
             .await?;
 
         let stack_output = describe_stack_output
             .stacks()
-            .iter()
-            .next()
+            .first()
             .map(aws_sdk_cloudformation::types::Stack::outputs)
             .ok_or(VaultError::StackOutputsMissingError)?;
 
