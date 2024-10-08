@@ -75,8 +75,12 @@ pub enum Command {
         long_flag("init"),
         alias("i"),
         long_about = "Initialize a KMS key and a S3 bucket with roles for reading\n\
-                      and writing on a fresh account via CloudFormation.\n\n\
-                      The account used has to have rights to create the resources."
+                      and writing on a fresh account via CloudFormation.\n\
+                      The account used has to have rights to create the resources.\n\n\
+                      Usage examples:\n\
+                      - `vault init \"vault-name\"`\n\
+                      - `vault --vault-stack \"vault-name\" --init`\n\
+                      - `VAULT_STACK=\"vault-name\" vault i`"
     )]
     Init {
         /// Vault stack name
