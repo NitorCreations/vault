@@ -6,7 +6,7 @@ use aes_gcm::{AesGcm, KeyInit, Nonce};
 use aws_config::meta::region::RegionProviderChain;
 use aws_config::Region;
 use aws_sdk_cloudformation::operation::describe_stacks::DescribeStacksOutput;
-use aws_sdk_cloudformation::types::{Capability, Parameter};
+use aws_sdk_cloudformation::types::{Capability, Parameter, StackStatus};
 use aws_sdk_cloudformation::Client as CloudFormationClient;
 use aws_sdk_kms::primitives::Blob;
 use aws_sdk_kms::types::DataKeySpec;
@@ -460,14 +460,10 @@ impl Vault {
             .send()
             .await?;
 
-        let mut data = CloudFormationStackData {
-            bucket_name: None,
-            key_arn: None,
-            deployed_version: None,
-        };
-
+        let mut data = CloudFormationStackData::default();
         if let Some(stacks) = stack_response.stacks {
             if let Some(stack) = stacks.first() {
+                data.status.clone_from(&stack.stack_status);
                 if let Some(outputs) = &stack.outputs {
                     for output in outputs {
                         if let Some(output_key) = output.output_key() {

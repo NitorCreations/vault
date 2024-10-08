@@ -86,4 +86,6 @@ pub enum VaultError {
     CallerIdError(#[from] SdkError<GetCallerIdentityError>),
     #[error("Failed to create stack: {0}")]
     CreateStackError(#[from] SdkError<CreateStackError>),
+    #[error("{0}")]
+    Error(String),
 }

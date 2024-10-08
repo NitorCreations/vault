@@ -5,7 +5,7 @@ mod vault;
 
 use std::fmt;
 
-use aws_sdk_cloudformation::types::Output;
+use aws_sdk_cloudformation::types::{Output, StackStatus};
 use aws_sdk_cloudformation::Client as CloudFormationClient;
 use aws_sdk_s3::types::ObjectIdentifier;
 use base64::Engine;
@@ -24,11 +24,12 @@ pub struct CloudFormationParams {
     stack_name: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct CloudFormationStackData {
     pub bucket_name: Option<String>,
     pub key_arn: Option<String>,
     pub deployed_version: Option<u32>,
+    pub status: Option<StackStatus>,
 }
 
 #[derive(Debug, Clone)]
@@ -164,11 +165,18 @@ impl fmt::Display for CloudFormationStackData {
             self.bucket_name.as_deref().unwrap_or("None")
         )?;
         writeln!(f, "Key ARN: {}", self.key_arn.as_deref().unwrap_or("None"))?;
-        write!(
+        writeln!(
             f,
             "Deployed version: {}",
             self.deployed_version
                 .map_or("None".to_string(), |v| v.to_string())
+        )?;
+        write!(
+            f,
+            "Status: {}",
+            self.status
+                .as_ref()
+                .map_or("None".to_string(), std::string::ToString::to_string)
         )?;
         Ok(())
     }

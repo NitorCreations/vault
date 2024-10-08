@@ -61,9 +61,13 @@ pub enum Command {
     #[command(short_flag('e'), long_flag("exists"), alias("e"))]
     Exists { key: String },
 
-    /// Print region and stack information
+    /// Print vault information
     #[command(long_flag("info"))]
     Info {},
+
+    /// Print vault stack information
+    #[command(long_flag("status"))]
+    Status {},
 
     /// Initialize a new KMS key and S3 bucket
     #[command(
@@ -158,6 +162,7 @@ async fn main() -> Result<()> {
             | Command::Describe {}
             | Command::Exists { .. }
             | Command::Info {}
+            | Command::Status {}
             | Command::Lookup { .. }
             | Command::Update {}
             | Command::Store { .. } => {
@@ -177,6 +182,9 @@ async fn main() -> Result<()> {
                     Command::Describe {} => println!("{}", vault.stack_info()),
                     Command::Exists { key } => cli::exists(&vault, &key).await?,
                     Command::Info {} => println!("{vault}"),
+                    Command::Status {} => {
+                        println!("{}", vault.stack_status().await?);
+                    }
                     Command::Lookup { key, outfile } => cli::lookup(&vault, &key, outfile).await?,
                     Command::Store {
                         key,
