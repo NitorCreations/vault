@@ -181,7 +181,7 @@ impl Vault {
         let stack_data = Self::get_cloudformation_stack_data(&self.cf, stack_name).await?;
         println!("{stack_data}");
         let deployed_version = stack_data
-            .deployed_version
+            .version
             .map_or_else(|| Err(VaultError::StackVersionNotFoundError), Ok)?;
 
         if deployed_version < VAULT_STACK_VERSION {
@@ -535,7 +535,7 @@ impl Vault {
                                 "vaultStackVersion" => {
                                     if let Some(output_value) = output.output_value() {
                                         if let Ok(version) = output_value.parse::<u32>() {
-                                            data.deployed_version = Some(version);
+                                            data.version = Some(version);
                                         }
                                     }
                                 }

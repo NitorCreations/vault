@@ -15,7 +15,8 @@ Commands:
   delete, -d, --delete  Delete an existing key from the store
   describe, --describe  Describe CloudFormation stack parameters for current configuration
   exists, -e, --exists  Check if a key exists
-  info, --info          Print region and stack information
+  info, --info          Print vault information
+  status, --status      Print vault stack information
   init, -i, --init      Initialize a new KMS key and S3 bucket
   update, -u, --update  Update the vault CloudFormation stack
   lookup, -l, --lookup  Output secret value for given key

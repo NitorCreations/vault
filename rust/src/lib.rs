@@ -28,7 +28,7 @@ pub struct CloudFormationParams {
 pub struct CloudFormationStackData {
     pub bucket_name: Option<String>,
     pub key_arn: Option<String>,
-    pub deployed_version: Option<u32>,
+    pub version: Option<u32>,
     pub status: Option<StackStatus>,
 }
 
@@ -159,25 +159,15 @@ impl fmt::Display for CloudFormationParams {
 
 impl fmt::Display for CloudFormationStackData {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(
-            f,
-            "Bucket: {}",
-            self.bucket_name.as_deref().unwrap_or("None")
-        )?;
-        writeln!(f, "Key ARN: {}", self.key_arn.as_deref().unwrap_or("None"))?;
-        writeln!(
-            f,
-            "Deployed version: {}",
-            self.deployed_version
-                .map_or("None".to_string(), |v| v.to_string())
-        )?;
         write!(
             f,
-            "Status: {}",
+            "bucket: {}\nkey ARN: {}\nversion: {}\nstatus: {}",
+            self.bucket_name.as_deref().unwrap_or("None"),
+            self.key_arn.as_deref().unwrap_or("None"),
+            self.version.map_or("None".to_string(), |v| v.to_string()),
             self.status
                 .as_ref()
-                .map_or("None".to_string(), std::string::ToString::to_string)
-        )?;
-        Ok(())
+                .map_or("None".to_string(), std::string::ToString::to_string),
+        )
     }
 }
