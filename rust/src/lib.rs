@@ -17,11 +17,13 @@ use crate::cloudformation::CloudFormationStackData;
 use crate::errors::VaultError;
 
 #[derive(Debug, Clone)]
-/// Result data for initializing a new vault stack
+/// Result data for initializing a new vault stack.
 pub enum CreateStackResult {
-    AlreadyInitialized {
-        data: CloudFormationStackData,
-    },
+    /// Vault stack has already been initialized.
+    Exists { data: CloudFormationStackData },
+    /// Vault stack exists but is not in a usable state.
+    ExistsWithFailedState { data: CloudFormationStackData },
+    /// A new vault stack has been created.
     Created {
         stack_name: String,
         stack_id: String,

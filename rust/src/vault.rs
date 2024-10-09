@@ -5,7 +5,7 @@ use aes_gcm::aes::{cipher, Aes256};
 use aes_gcm::{AesGcm, KeyInit, Nonce};
 use aws_config::meta::region::RegionProviderChain;
 use aws_config::{Region, SdkConfig};
-use aws_sdk_cloudformation::types::{Capability, Parameter};
+use aws_sdk_cloudformation::types::{Capability, Parameter, StackStatus};
 use aws_sdk_cloudformation::Client as CloudFormationClient;
 use aws_sdk_kms::primitives::Blob;
 use aws_sdk_kms::types::DataKeySpec;
@@ -134,10 +134,22 @@ impl Vault {
 
         let cf_client = CloudFormationClient::new(&config);
 
-        // TODO: Stack might technically exist but not be in a usable state.
-        //       Check `StackStatus` is green and not in error state
         if let Ok(data) = cloudformation::get_stack_data(&cf_client, &stack_name).await {
-            return Ok(CreateStackResult::AlreadyInitialized { data });
+            return if let Some(ref status) = data.status {
+                match status {
+                    // Stack might exist but not be in a usable state.
+                    StackStatus::CreateFailed
+                    | StackStatus::RollbackFailed
+                    | StackStatus::DeleteFailed
+                    | StackStatus::DeleteInProgress
+                    | StackStatus::DeleteComplete => {
+                        Ok(CreateStackResult::ExistsWithFailedState { data })
+                    }
+                    _ => Ok(CreateStackResult::Exists { data }),
+                }
+            } else {
+                Err(VaultError::MissingStackStatusError)
+            };
         }
 
         let parameters = Parameter::builder()

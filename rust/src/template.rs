@@ -1,6 +1,13 @@
 use std::sync::LazyLock;
 
+/// Cloudformation stack version.
 pub const VAULT_STACK_VERSION: u32 = 25;
+
+/// Return Cloudformation stack template JSON.
+/// Workaround for accessing string inside `LazyLock`.
+pub fn template() -> &'static str {
+    &TEMPLATE_STRING
+}
 
 static TEMPLATE_STRING: LazyLock<String> = LazyLock::new(|| {
     let raw_template = r#"
@@ -520,11 +527,6 @@ static TEMPLATE_STRING: LazyLock<String> = LazyLock::new(|| {
         VAULT_STACK_VERSION.to_string().as_str(),
     )
 });
-
-/// Workaround for accessing string inside `LazyLock`.
-pub fn template() -> &'static str {
-    &TEMPLATE_STRING
-}
 
 #[cfg(test)]
 mod test {

@@ -16,9 +16,15 @@ pub async fn init_vault_stack(
     bucket: Option<String>,
 ) -> Result<()> {
     match Vault::init(stack_name, region, bucket).await? {
-        CreateStackResult::AlreadyInitialized { data } => {
+        CreateStackResult::Exists { data } => {
             println!("Vault stack already initialized");
             println!("{data}");
+        }
+        CreateStackResult::ExistsWithFailedState { data } => {
+            anyhow::bail!(
+                "{}\n{data}",
+                "Vault stack exists but is in a failed state".red()
+            )
         }
         CreateStackResult::Created {
             stack_name,
