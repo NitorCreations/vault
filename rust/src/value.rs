@@ -48,7 +48,7 @@ impl Value {
         }
     }
 
-    /// Returns the data as a byte slice (`&[u8]`)
+    /// Returns the data as a byte slice `&[u8]`
     #[must_use]
     pub fn as_bytes(&self) -> &[u8] {
         match self {
@@ -79,14 +79,7 @@ impl Value {
     pub fn output_to_file(&self, path: &Path) -> io::Result<()> {
         let file = std::fs::File::create(path)?;
         let mut writer = BufWriter::new(file);
-        match self {
-            Self::Utf8(ref string) => {
-                writer.write_all(string.as_bytes())?;
-            }
-            Self::Binary(ref bytes) => {
-                writer.write_all(bytes)?;
-            }
-        }
+        writer.write_all(self.as_bytes())?;
         writer.flush()
     }
 }
