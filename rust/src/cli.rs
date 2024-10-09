@@ -8,7 +8,7 @@ use tokio::time::Duration;
 
 use nitor_vault::{cloudformation, CreateStackResult, Value, Vault};
 
-const INIT_WAIT_ANIMATION_DURATION: Duration = Duration::from_millis(700);
+const INIT_WAIT_ANIMATION_DURATION: Duration = Duration::from_millis(600);
 
 pub async fn init_vault_stack(
     stack_name: Option<String>,
