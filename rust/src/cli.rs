@@ -1,9 +1,39 @@
+use std::io::Write;
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
+use aws_sdk_cloudformation::types::StackStatus;
 use colored::Colorize;
+use tokio::time::Duration;
 
-use nitor_vault::{Value, Vault};
+use nitor_vault::{cloudformation, CreateStackResult, Value, Vault};
+
+const INIT_WAIT_ANIMATION_DURATION: Duration = Duration::from_millis(600);
+
+pub async fn init_vault_stack(
+    stack_name: Option<String>,
+    region: Option<String>,
+    bucket: Option<String>,
+) -> Result<()> {
+    match Vault::init(stack_name, region, bucket).await? {
+        CreateStackResult::AlreadyInitialized { data } => {
+            println!("Vault stack already initialized");
+            println!("{data}");
+        }
+        CreateStackResult::Created {
+            stack_name,
+            stack_id,
+            region,
+        } => {
+            println!("Stack created with ID: {stack_id}");
+            let config = aws_config::from_env().region(region).load().await;
+            let client = aws_sdk_cloudformation::Client::new(&config);
+            wait_for_stack_creation_to_finish(&client, &stack_name).await?;
+        }
+    }
+
+    Ok(())
+}
 
 /// Store a key-value pair
 pub async fn store(
@@ -109,6 +139,51 @@ pub async fn exists(vault: &Vault, key: &str) -> Result<()> {
                 println!("{}", format!("key '{key}' doesn't exist").red());
             }
         })
+}
+
+/// Poll Cloudformation for stack status until it has been created or creation failed.
+async fn wait_for_stack_creation_to_finish(
+    cf_client: &aws_sdk_cloudformation::Client,
+    stack_name: &str,
+) -> Result<()> {
+    let mut last_status: Option<StackStatus> = None;
+    let clear_line = "\x1b[2K";
+    let dots = [".", "..", "...", ""];
+    loop {
+        let stack_data = cloudformation::get_stack_data(cf_client, stack_name).await?;
+
+        if let Some(ref status) = stack_data.status {
+            // Check if stack has reached a terminal state
+            match status {
+                StackStatus::CreateComplete => {
+                    println!("{clear_line}{stack_data}");
+                    println!("{}", "Stack creation completed successfully".green());
+                    break;
+                }
+                StackStatus::CreateFailed
+                | StackStatus::RollbackFailed
+                | StackStatus::RollbackComplete => {
+                    println!("{clear_line}{stack_data}");
+                    anyhow::bail!("Stack creation failed");
+                }
+                _ => {
+                    // Print status if it has changed
+                    if last_status.as_ref() != Some(status) {
+                        last_status = Some(status.clone());
+                        println!("status: {status}");
+                    }
+                    // Continue waiting for stack creation to complete
+                    for dot in &dots {
+                        print!("\r{clear_line}{dot}");
+                        std::io::stdout().flush()?;
+                        tokio::time::sleep(INIT_WAIT_ANIMATION_DURATION).await;
+                    }
+                }
+            }
+        }
+    }
+
+    Ok(())
 }
 
 /// Try to get the filename for the given filepath

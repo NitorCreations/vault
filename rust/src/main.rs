@@ -169,7 +169,7 @@ async fn main() -> Result<()> {
     if let Some(command) = args.command {
         match command {
             Command::Init { name } => {
-                Vault::init(args.vault_stack.or(name), args.region, args.bucket)
+                cli::init_vault_stack(args.vault_stack.or(name), args.region, args.bucket)
                     .await
                     .with_context(|| "Failed to init vault stack")?;
             }

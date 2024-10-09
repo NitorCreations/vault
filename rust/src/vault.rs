@@ -1,13 +1,11 @@
-use std::io::Write;
 use std::{env, fmt};
 
 use aes_gcm::aead::{Aead, Payload};
 use aes_gcm::aes::{cipher, Aes256};
 use aes_gcm::{AesGcm, KeyInit, Nonce};
 use aws_config::meta::region::RegionProviderChain;
-use aws_config::Region;
-use aws_sdk_cloudformation::operation::describe_stacks::DescribeStacksOutput;
-use aws_sdk_cloudformation::types::{Capability, Parameter, StackStatus};
+use aws_config::{Region, SdkConfig};
+use aws_sdk_cloudformation::types::{Capability, Parameter};
 use aws_sdk_cloudformation::Client as CloudFormationClient;
 use aws_sdk_kms::primitives::Blob;
 use aws_sdk_kms::types::DataKeySpec;
@@ -18,16 +16,14 @@ use aws_sdk_s3::types::Delete;
 use aws_sdk_s3::Client as S3Client;
 use aws_sdk_sts::Client as stsClient;
 use base64::Engine;
-use colored::Colorize;
 use rand::Rng;
-use tokio::time::Duration;
 
+use crate::cloudformation;
+use crate::cloudformation::{CloudFormationParams, CloudFormationStackData};
 use crate::errors::VaultError;
 use crate::template::{template, VAULT_STACK_VERSION};
 use crate::value::Value;
-use crate::{CloudFormationParams, CloudFormationStackData, EncryptObject, Meta, S3DataKeys};
-
-const WAIT_ANIMATION_DURATION: Duration = Duration::from_millis(1000);
+use crate::{CreateStackResult, EncryptObject, Meta, S3DataKeys};
 
 #[derive(Debug)]
 pub struct Vault {
@@ -43,17 +39,18 @@ pub struct Vault {
 }
 
 impl Vault {
-    /// Construct Vault with defaults for an existing stack.
+    /// Construct Vault for an existing vault stack with defaults.
     /// This will try reading environment variables for the config values,
-    /// and otherwise fall back to current AWS config.
+    /// and otherwise fall back to current AWS config and/or retrieve config values from the
+    /// Cloudformation stack description.
     ///
     /// The Default trait can't be implemented for Vault since it can fail.
     pub async fn default() -> Result<Self, VaultError> {
         Self::new(None, None, None, None, None).await
     }
 
-    /// Construct Vault with optional arguments for an existing stack.
-    /// This will try reading environment variables for the config values if they are `None`.
+    /// Construct Vault for an existing vault stack with optional arguments.
+    /// This will try reading environment variables for the config values that are `None`.
     pub async fn new(
         vault_stack: Option<String>,
         region: Option<String>,
@@ -61,11 +58,7 @@ impl Vault {
         key: Option<String>,
         prefix: Option<String>,
     ) -> Result<Self, VaultError> {
-        let config = aws_config::from_env()
-            .region(get_region_provider(region))
-            .load()
-            .await;
-
+        let config = Self::get_aws_config(region).await;
         let region = config
             .region()
             .map(ToOwned::to_owned)
@@ -103,17 +96,15 @@ impl Vault {
         })
     }
 
-    /// Initialize new Vault stack
+    /// Initialize new Vault stack.
+    /// This will create all required resources in AWS,
+    /// after which the Vault can be used to store and lookup values.
     pub async fn init(
         vault_stack: Option<String>,
         region: Option<String>,
         bucket: Option<String>,
-    ) -> Result<(), VaultError> {
-        let config = aws_config::from_env()
-            .region(get_region_provider(region))
-            .load()
-            .await;
-
+    ) -> Result<CreateStackResult, VaultError> {
+        let config = Self::get_aws_config(region).await;
         let region = config
             .region()
             .map(ToOwned::to_owned)
@@ -143,12 +134,10 @@ impl Vault {
 
         let cf_client = CloudFormationClient::new(&config);
 
-        if Self::describe_stack(&cf_client, &stack_name).await.is_ok() {
-            println!("Vault stack '{stack_name}' already initialized");
-            return match Self::get_cloudformation_stack_data(&cf_client, &stack_name).await {
-                Ok(stack_data) => Ok(println!("{stack_data}")),
-                Err(err) => Err(err),
-            };
+        // TODO: Stack might technically exist but not be in a usable state.
+        //       Check `StackStatus` is green and not in error state
+        if let Ok(data) = cloudformation::get_stack_data(&cf_client, &stack_name).await {
+            return Ok(CreateStackResult::AlreadyInitialized { data });
         }
 
         let parameters = Parameter::builder()
@@ -166,19 +155,18 @@ impl Vault {
             .await
             .map_err(VaultError::from)?;
 
-        if let Some(stack_id) = response.stack_id {
-            println!("{stack_id}");
-        }
+        let stack_id = response.stack_id.ok_or(VaultError::MissingStackIdError)?;
 
-        println!("Waiting for Vault stack '{stack_name}' to be created");
-        Self::wait_for_stack_creation(&cf_client, &stack_name).await?;
-
-        Ok(())
+        Ok(CreateStackResult::Created {
+            stack_name,
+            stack_id,
+            region,
+        })
     }
 
     pub async fn update_stack(&self) -> Result<(), VaultError> {
         let stack_name = &self.cloudformation_params.stack_name;
-        let stack_data = Self::get_cloudformation_stack_data(&self.cf, stack_name).await?;
+        let stack_data = cloudformation::get_stack_data(&self.cf, stack_name).await?;
         println!("{stack_data}");
         let deployed_version = stack_data
             .version
@@ -213,8 +201,9 @@ impl Vault {
         Ok(())
     }
 
+    /// Get Cloudformation stack status
     pub async fn stack_status(&self) -> Result<CloudFormationStackData, VaultError> {
-        Self::get_cloudformation_stack_data(&self.cf, &self.cloudformation_params.stack_name).await
+        cloudformation::get_stack_data(&self.cf, &self.cloudformation_params.stack_name).await
     }
 
     /// Get all available secrets
@@ -242,7 +231,7 @@ impl Vault {
             .collect::<Vec<_>>())
     }
 
-    /// Get `CloudFormation` stack information
+    /// Get Cloudformation parameters
     #[must_use]
     pub fn stack_info(&self) -> CloudFormationParams {
         self.cloudformation_params.clone()
@@ -341,6 +330,13 @@ impl Vault {
         }
     }
 
+    pub async fn get_aws_config(region: Option<String>) -> SdkConfig {
+        aws_config::from_env()
+            .region(get_region_provider(region))
+            .load()
+            .await
+    }
+
     /// Get S3 Object data for given key as a vec of bytes
     async fn get_s3_object(&self, key: String) -> Result<Vec<u8>, VaultError> {
         self.s3
@@ -432,56 +428,6 @@ impl Vault {
             .await?)
     }
 
-    /// Poll Cloudformation for stack status until it has been created or creation failed.
-    async fn wait_for_stack_creation(
-        cf_client: &CloudFormationClient,
-        stack_name: &str,
-    ) -> Result<(), VaultError> {
-        let mut last_status: Option<StackStatus> = None;
-        let clear_line = "\x1b[2K";
-        let dots = [".", "..", "...", ""];
-        loop {
-            match Self::get_cloudformation_stack_data(cf_client, stack_name).await {
-                Ok(stack_data) => {
-                    if let Some(ref status) = stack_data.status {
-                        // Check if stack has reached a terminal state
-                        match status {
-                            StackStatus::CreateComplete => {
-                                println!("{clear_line}{stack_data}");
-                                println!("{}", "Stack creation completed successfully".green());
-                                break;
-                            }
-                            StackStatus::CreateFailed
-                            | StackStatus::RollbackFailed
-                            | StackStatus::RollbackComplete => {
-                                println!("{clear_line}{stack_data}");
-                                return Err(VaultError::Error("Stack creation failed".to_string()));
-                            }
-                            _ => {
-                                // Print status if it has changed
-                                if last_status.as_ref() != Some(status) {
-                                    last_status = Some(status.clone());
-                                    println!("status: {status}");
-                                }
-                                // Continue waiting for stack creation to complete
-                                for dot in &dots {
-                                    print!("\r{clear_line}{dot}");
-                                    std::io::stdout().flush()?;
-                                    tokio::time::sleep(WAIT_ANIMATION_DURATION).await;
-                                }
-                            }
-                        }
-                    }
-                }
-                Err(err) => {
-                    return Err(err);
-                }
-            }
-        }
-
-        Ok(())
-    }
-
     /// Add prefix to key if prefix has been specified.
     fn full_key_name(&self, name: &str) -> String {
         if self.prefix.is_empty() {
@@ -489,66 +435,6 @@ impl Vault {
         } else {
             format!("{}{}", self.prefix, name)
         }
-    }
-
-    async fn describe_stack(
-        cf_client: &CloudFormationClient,
-        stack_name: &str,
-    ) -> Result<DescribeStacksOutput, VaultError> {
-        cf_client
-            .describe_stacks()
-            .stack_name(stack_name)
-            .send()
-            .await
-            .map_err(VaultError::from)
-    }
-
-    /// Extract relevant information from `CloudFormation` stack outputs
-    async fn get_cloudformation_stack_data(
-        cf_client: &CloudFormationClient,
-        stack_name: &str,
-    ) -> Result<CloudFormationStackData, VaultError> {
-        let stack_response = cf_client
-            .describe_stacks()
-            .stack_name(stack_name)
-            .send()
-            .await?;
-
-        let mut data = CloudFormationStackData::default();
-        if let Some(stacks) = stack_response.stacks {
-            if let Some(stack) = stacks.first() {
-                data.status.clone_from(&stack.stack_status);
-                data.status_reason.clone_from(&stack.stack_status_reason);
-                if let Some(outputs) = &stack.outputs {
-                    for output in outputs {
-                        if let Some(output_key) = output.output_key() {
-                            match output_key {
-                                "vaultBucketName" => {
-                                    if let Some(output_value) = output.output_value() {
-                                        data.bucket_name = Some(output_value.to_string());
-                                    }
-                                }
-                                "kmsKeyArn" => {
-                                    if let Some(output_value) = output.output_value() {
-                                        data.key_arn = Some(output_value.to_string());
-                                    }
-                                }
-                                "vaultStackVersion" => {
-                                    if let Some(output_value) = output.output_value() {
-                                        if let Ok(version) = output_value.parse::<u32>() {
-                                            data.version = Some(version);
-                                        }
-                                    }
-                                }
-                                _ => {}
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        Ok(data)
     }
 }
 

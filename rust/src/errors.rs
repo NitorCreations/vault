@@ -16,6 +16,7 @@ use aws_sdk_s3::operation::head_object::HeadObjectError;
 use aws_sdk_s3::operation::list_objects_v2::ListObjectsV2Error;
 use aws_sdk_s3::operation::put_object::PutObjectError;
 use aws_sdk_sts::operation::get_caller_identity::GetCallerIdentityError;
+
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -86,6 +87,6 @@ pub enum VaultError {
     CallerIdError(#[from] SdkError<GetCallerIdentityError>),
     #[error("Failed to create stack: {0}")]
     CreateStackError(#[from] SdkError<CreateStackError>),
-    #[error("{0}")]
-    Error(String),
+    #[error("Failed to get stack ID for new vault stack")]
+    MissingStackIdError,
 }
