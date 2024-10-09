@@ -89,4 +89,6 @@ pub enum VaultError {
     CreateStackError(#[from] SdkError<CreateStackError>),
     #[error("Failed to get stack ID for new vault stack")]
     MissingStackIdError,
+    #[error("Failed to get stack status for vault stack")]
+    MissingStackStatusError,
 }

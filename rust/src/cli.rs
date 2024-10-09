@@ -16,9 +16,15 @@ pub async fn init_vault_stack(
     bucket: Option<String>,
 ) -> Result<()> {
     match Vault::init(stack_name, region, bucket).await? {
-        CreateStackResult::AlreadyInitialized { data } => {
+        CreateStackResult::Exists { data } => {
             println!("Vault stack already initialized");
             println!("{data}");
+        }
+        CreateStackResult::ExistsWithFailedState { data } => {
+            anyhow::bail!(
+                "{}\n{data}",
+                "Vault stack exists but is in a failed state".red()
+            )
         }
         CreateStackResult::Created {
             stack_name,
@@ -27,11 +33,9 @@ pub async fn init_vault_stack(
         } => {
             println!("Stack created with ID: {stack_id}");
             let config = aws_config::from_env().region(region).load().await;
-            let client = aws_sdk_cloudformation::Client::new(&config);
-            wait_for_stack_creation_to_finish(&client, &stack_name).await?;
+            wait_for_stack_creation_to_finish(&config, &stack_name).await?;
         }
     }
-
     Ok(())
 }
 
@@ -143,17 +147,16 @@ pub async fn exists(vault: &Vault, key: &str) -> Result<()> {
 
 /// Poll Cloudformation for stack status until it has been created or creation failed.
 async fn wait_for_stack_creation_to_finish(
-    cf_client: &aws_sdk_cloudformation::Client,
+    config: &aws_config::SdkConfig,
     stack_name: &str,
 ) -> Result<()> {
-    let mut last_status: Option<StackStatus> = None;
+    let client = aws_sdk_cloudformation::Client::new(config);
     let clear_line = "\x1b[2K";
     let dots = [".", "..", "...", ""];
+    let mut last_status: Option<StackStatus> = None;
     loop {
-        let stack_data = cloudformation::get_stack_data(cf_client, stack_name).await?;
-
+        let stack_data = cloudformation::get_stack_data(&client, stack_name).await?;
         if let Some(ref status) = stack_data.status {
-            // Check if stack has reached a terminal state
             match status {
                 StackStatus::CreateComplete => {
                     println!("{clear_line}{stack_data}");
@@ -182,7 +185,6 @@ async fn wait_for_stack_creation_to_finish(
             }
         }
     }
-
     Ok(())
 }
 

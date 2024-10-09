@@ -171,7 +171,7 @@ async fn main() -> Result<()> {
             Command::Init { name } => {
                 cli::init_vault_stack(args.vault_stack.or(name), args.region, args.bucket)
                     .await
-                    .with_context(|| "Failed to init vault stack")?;
+                    .with_context(|| "Failed to init vault stack".red())?;
             }
             Command::Update { name } => {
                 let vault = Vault::new(
@@ -186,7 +186,7 @@ async fn main() -> Result<()> {
                 vault
                     .update_stack()
                     .await
-                    .with_context(|| "Failed to update vault stack")?;
+                    .with_context(|| "Failed to update vault stack".red())?;
             }
             Command::All {}
             | Command::Delete { .. }
