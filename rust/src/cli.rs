@@ -150,7 +150,7 @@ async fn wait_for_stack_creation_to_finish(
     config: &aws_config::SdkConfig,
     stack_name: &str,
 ) -> Result<()> {
-    let client = aws_sdk_cloudformation::Client::new(&config);
+    let client = aws_sdk_cloudformation::Client::new(config);
     let clear_line = "\x1b[2K";
     let dots = [".", "..", "...", ""];
     let mut last_status: Option<StackStatus> = None;
