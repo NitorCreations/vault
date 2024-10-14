@@ -18,7 +18,7 @@ aws-config = { version = "1.5.8", features = ["behavior-version-latest"] }
 aws-sdk-cloudformation = "1.50.0"
 aws-sdk-kms = "1.46.0"
 aws-sdk-s3 = "1.54.0"
-aws-sdk-sts = { version = "1.45.0", features = ["behavior-version-latest"] }
+aws-sdk-sts = { version = "1.46.0", features = ["behavior-version-latest"] }
 base64 = "0.22.1"
 clap = { version = "4.5.20", features = ["derive", "env"] }
 colored = "2.1.0"
