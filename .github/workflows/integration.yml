@@ -31,7 +31,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         if: ${{ matrix.lang == 'rust'}}
 
-      - uses: Swatinem/rust-cache@v2.7.3
+      - uses: Swatinem/rust-cache@v2.7.5
         if: ${{ matrix.lang == 'rust'}}
         with:
           workspaces: ./rust -> target
