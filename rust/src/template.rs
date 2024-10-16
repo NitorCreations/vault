@@ -321,7 +321,7 @@ static TEMPLATE_STRING: LazyLock<String> = LazyLock::new(|| {
         },
         "Handler": "index.handler",
         "MemorySize": 128,
-        "Runtime": "python3.10",
+        "Runtime": "python3.12",
         "Timeout": 300,
         "Role": {
           "Fn::GetAtt": [
