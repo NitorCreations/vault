@@ -14,7 +14,7 @@
 
 [project]
 name = "nitor-vault"
-version = "0.54"
+version = "0.55"
 description = "Vault for storing locally encrypted data in S3 using KMS keys"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -41,7 +41,7 @@ build-backend = "setuptools.build_meta"
 
 [project.urls]
 Repository = "http://github.com/NitorCreations/vault"
-Download = "https://github.com/NitorCreations/vault/tarball/0.54"
+Download = "https://github.com/NitorCreations/vault/tarball/0.55"
 
 [project.scripts]
 vault = "n_vault.cli:main"

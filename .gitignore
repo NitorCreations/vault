@@ -112,3 +112,4 @@ dependency-reduced-pom.xml
 # Go binary
 /go/vault
 /go/vault
+.venv

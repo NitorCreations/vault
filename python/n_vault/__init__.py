@@ -20,7 +20,7 @@ import sys
 from os import environ
 
 cov = None
-VERSION = "0.54"
+VERSION = "0.55"
 if "VAULT_MEASURE_COVERAGE" in environ:
     from coverage import Coverage
 
