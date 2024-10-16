@@ -1,7 +1,7 @@
 use std::sync::LazyLock;
 
 /// Cloudformation stack version.
-pub const VAULT_STACK_VERSION: u32 = 25;
+pub const VAULT_STACK_VERSION: u32 = 26;
 
 /// Return Cloudformation stack template JSON.
 /// Workaround for accessing string inside `LazyLock`.
@@ -321,7 +321,7 @@ static TEMPLATE_STRING: LazyLock<String> = LazyLock::new(|| {
         },
         "Handler": "index.handler",
         "MemorySize": 128,
-        "Runtime": "python3.8",
+        "Runtime": "python3.10",
         "Timeout": 300,
         "Role": {
           "Fn::GetAtt": [

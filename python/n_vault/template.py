@@ -1,4 +1,4 @@
-VAULT_STACK_VERSION = 25
+VAULT_STACK_VERSION = 26
 
 TEMPLATE_STRING = f"""
 {{
@@ -311,7 +311,7 @@ TEMPLATE_STRING = f"""
         }},
         "Handler": "index.handler",
         "MemorySize": 128,
-        "Runtime": "python3.8",
+        "Runtime": "python3.10",
         "Timeout": 300,
         "Role": {{
           "Fn::GetAtt": [
