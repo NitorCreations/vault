@@ -1,0 +1,25 @@
+[package]
+name = "nitor-vault-decrypter-lambda"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+aws-config = { version = "1", features = ["behavior-version-latest"] }
+aws-sdk-kms = "1"
+aws_lambda_events = { version = "0.15.1", default-features = false, features = ["cloudformation"] }
+base64 = "0.22.1"
+lambda_runtime = "0.13.0"
+reqwest = { version = "0.12.8", default-features = false, features = ["http2", "charset", "json", "rustls-tls", "rustls-tls-native-roots"] }
+serde_json = "1.0.128"
+tokio = { version = "1", features = ["macros"] }
+
+[profile.release]
+lto = true
+codegen-units = 1
+
+[lints.clippy]
+# https://rust-lang.github.io/rust-clippy/master/index.html
+enum_glob_use = "deny"
+unwrap_used = "deny"
+nursery = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
