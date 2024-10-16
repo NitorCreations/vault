@@ -1,7 +1,7 @@
 use std::sync::LazyLock;
 
 /// Cloudformation stack version.
-pub const VAULT_STACK_VERSION: u32 = 26;
+pub const VAULT_STACK_VERSION: u32 = 27;
 
 /// Return Cloudformation stack template JSON.
 /// Workaround for accessing string inside `LazyLock`.
