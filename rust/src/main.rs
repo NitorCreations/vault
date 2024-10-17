@@ -183,8 +183,7 @@ async fn main() -> Result<()> {
                 )
                 .await
                 .with_context(|| "Failed to create vault from given params".red())?;
-                vault
-                    .update_stack()
+                cli::update_vault_stack(&vault)
                     .await
                     .with_context(|| "Failed to update vault stack".red())?;
             }

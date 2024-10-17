@@ -8,8 +8,11 @@ use tokio::time::Duration;
 
 use nitor_vault::{cloudformation, CreateStackResult, Value, Vault};
 
-const INIT_WAIT_ANIMATION_DURATION: Duration = Duration::from_millis(600);
+static WAIT_ANIMATION_DURATION: Duration = Duration::from_millis(500);
+static CLEAR_LINE: &str = "\x1b[2K";
+static WAIT_DOTS: [&str; 4] = [".", "..", "...", ""];
 
+/// Initialize a new vault stack with Cloudformation and wait for creation to finish.
 pub async fn init_vault_stack(
     stack_name: Option<String>,
     region: Option<String>,
@@ -37,6 +40,22 @@ pub async fn init_vault_stack(
         }
     }
     Ok(())
+}
+
+/// Update existing Cloudformation vault stack and wait for update to finish.
+pub async fn update_vault_stack(vault: &Vault) -> Result<()> {
+    vault
+        .update_stack()
+        .await
+        .with_context(|| "Failed to update vault stack".red())?;
+
+    // TODO: maybe store SdkConfig in vault struct for reuse
+    let config = aws_config::from_env()
+        .region(vault.region.clone())
+        .load()
+        .await;
+
+    wait_for_stack_update_to_finish(&config, &vault.cloudformation_params.stack_name).await
 }
 
 /// Store a key-value pair
@@ -151,22 +170,20 @@ async fn wait_for_stack_creation_to_finish(
     stack_name: &str,
 ) -> Result<()> {
     let client = aws_sdk_cloudformation::Client::new(config);
-    let clear_line = "\x1b[2K";
-    let dots = [".", "..", "...", ""];
     let mut last_status: Option<StackStatus> = None;
     loop {
         let stack_data = cloudformation::get_stack_data(&client, stack_name).await?;
         if let Some(ref status) = stack_data.status {
             match status {
                 StackStatus::CreateComplete => {
-                    println!("{clear_line}{stack_data}");
+                    println!("{CLEAR_LINE}{stack_data}");
                     println!("{}", "Stack creation completed successfully".green());
                     break;
                 }
                 StackStatus::CreateFailed
                 | StackStatus::RollbackFailed
                 | StackStatus::RollbackComplete => {
-                    println!("{clear_line}{stack_data}");
+                    println!("{CLEAR_LINE}{stack_data}");
                     anyhow::bail!("Stack creation failed");
                 }
                 _ => {
@@ -176,13 +193,56 @@ async fn wait_for_stack_creation_to_finish(
                         println!("status: {status}");
                     }
                     // Continue waiting for stack creation to complete
-                    for dot in &dots {
-                        print!("\r{clear_line}{dot}");
+                    for dot in WAIT_DOTS {
+                        print!("\r{CLEAR_LINE}{dot}");
                         std::io::stdout().flush()?;
-                        tokio::time::sleep(INIT_WAIT_ANIMATION_DURATION).await;
+                        tokio::time::sleep(WAIT_ANIMATION_DURATION).await;
                     }
                 }
             }
+        } else {
+            anyhow::bail!("Failed to get stack status for stack '{stack_name}'");
+        }
+    }
+    Ok(())
+}
+
+/// Poll Cloudformation for stack status until it has been updated or update failed.
+async fn wait_for_stack_update_to_finish(
+    config: &aws_config::SdkConfig,
+    stack_name: &str,
+) -> Result<()> {
+    let client = aws_sdk_cloudformation::Client::new(config);
+    let mut last_status: Option<StackStatus> = None;
+    loop {
+        let stack_data = cloudformation::get_stack_data(&client, stack_name).await?;
+        if let Some(ref status) = stack_data.status {
+            match status {
+                StackStatus::UpdateComplete => {
+                    println!("{CLEAR_LINE}{stack_data}");
+                    println!("{}", "Stack update completed successfully".green());
+                    break;
+                }
+                StackStatus::UpdateFailed | StackStatus::RollbackFailed => {
+                    println!("{CLEAR_LINE}{stack_data}");
+                    anyhow::bail!("Stack update failed");
+                }
+                _ => {
+                    // Print status if it has changed
+                    if last_status.as_ref() != Some(status) {
+                        last_status = Some(status.clone());
+                        println!("status: {status}");
+                    }
+                    // Continue waiting for stack update to complete
+                    for dot in WAIT_DOTS {
+                        print!("\r{CLEAR_LINE}{dot}");
+                        std::io::stdout().flush()?;
+                        tokio::time::sleep(WAIT_ANIMATION_DURATION).await;
+                    }
+                }
+            }
+        } else {
+            anyhow::bail!("Failed to get stack status for stack '{stack_name}'");
         }
     }
     Ok(())
