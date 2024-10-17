@@ -49,13 +49,7 @@ pub async fn update_vault_stack(vault: &Vault) -> Result<()> {
         .await
         .with_context(|| "Failed to update vault stack".red())?;
 
-    // TODO: maybe store SdkConfig in vault struct for reuse
-    let config = aws_config::from_env()
-        .region(vault.region.clone())
-        .load()
-        .await;
-
-    wait_for_stack_update_to_finish(&config, &vault.cloudformation_params.stack_name).await
+    wait_for_stack_update_to_finish(vault).await
 }
 
 /// Store a key-value pair
@@ -222,14 +216,10 @@ async fn wait_for_stack_creation_to_finish(
 }
 
 /// Poll Cloudformation for stack status until it has been updated or update failed.
-async fn wait_for_stack_update_to_finish(
-    config: &aws_config::SdkConfig,
-    stack_name: &str,
-) -> Result<()> {
-    let client = aws_sdk_cloudformation::Client::new(config);
+async fn wait_for_stack_update_to_finish(vault: &Vault) -> Result<()> {
     let mut last_status: Option<StackStatus> = None;
     loop {
-        let stack_data = cloudformation::get_stack_data(&client, stack_name).await?;
+        let stack_data = vault.stack_status().await?;
         if let Some(ref status) = stack_data.status {
             match status {
                 StackStatus::UpdateComplete => {
@@ -256,7 +246,10 @@ async fn wait_for_stack_update_to_finish(
                 }
             }
         } else {
-            anyhow::bail!("Failed to get stack status for stack '{stack_name}'");
+            anyhow::bail!(
+                "Failed to get stack status for stack '{}'",
+                vault.cloudformation_params.stack_name
+            );
         }
     }
     Ok(())
