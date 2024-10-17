@@ -1,6 +1,6 @@
 [package]
 name = "nitor-vault"
-version = "1.2.1"
+version = "1.2.2"
 edition = "2021"
 description = "Encrypted AWS key-value storage utility."
 license = "Apache-2.0"
@@ -17,7 +17,7 @@ anyhow = "1.0.89"
 aws-config = { version = "1.5.8", features = ["behavior-version-latest"] }
 aws-sdk-cloudformation = "1.51.1"
 aws-sdk-kms = "1.47.0"
-aws-sdk-s3 = "1.56.0"
+aws-sdk-s3 = "1.57.0"
 aws-sdk-sts = { version = "1.46.0", features = ["behavior-version-latest"] }
 base64 = "0.22.1"
 clap = { version = "4.5.20", features = ["derive", "env"] }
