@@ -65,6 +65,10 @@ pub enum Command {
     #[command(long_flag("info"))]
     Info {},
 
+    /// Print AWS user account information
+    #[command(long_flag("id"))]
+    Id {},
+
     /// Print vault stack information
     #[command(long_flag("status"))]
     Status {},
@@ -162,6 +166,7 @@ pub enum Command {
     },
 }
 
+#[allow(clippy::match_same_arms)]
 #[tokio::main]
 async fn main() -> Result<()> {
     let args = Args::parse();
@@ -186,6 +191,9 @@ async fn main() -> Result<()> {
                 cli::update_vault_stack(&vault)
                     .await
                     .with_context(|| "Failed to update vault stack".red())?;
+            }
+            Command::Id {} => {
+                cli::print_aws_account(args.region).await?;
             }
             Command::All {}
             | Command::Delete { .. }
@@ -224,9 +232,9 @@ async fn main() -> Result<()> {
                     } => cli::store(&vault, key, value, file, value_argument, overwrite).await?,
                     // These are here again instead of a `_` so that if new commands are added,
                     // there is an error about missing handling for that.
-                    #[allow(clippy::match_same_arms)]
                     Command::Init { .. } => unreachable!(),
                     Command::Update { .. } => unreachable!(),
+                    Command::Id { .. } => unreachable!(),
                 }
             }
         };

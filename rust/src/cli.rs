@@ -164,6 +164,20 @@ pub async fn exists(vault: &Vault, key: &str) -> Result<()> {
         })
 }
 
+/// Print the information from AWS STS "get caller identity" call
+pub async fn print_aws_account(region: Option<String>) -> Result<()> {
+    let config = Vault::get_aws_config(region).await;
+    let client = aws_sdk_sts::Client::new(&config);
+    let result = client.get_caller_identity().send().await?;
+    println!(
+        "user: {}\naccount: {}\narn: {}",
+        result.user_id.unwrap_or_else(|| "None".to_string()),
+        result.account.unwrap_or_else(|| "None".to_string()),
+        result.arn.unwrap_or_else(|| "None".to_string())
+    );
+    Ok(())
+}
+
 /// Poll Cloudformation for stack status until it has been created or creation failed.
 async fn wait_for_stack_creation_to_finish(
     config: &aws_config::SdkConfig,
