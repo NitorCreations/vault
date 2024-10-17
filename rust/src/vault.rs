@@ -29,10 +29,10 @@ use crate::{CreateStackResult, EncryptObject, Meta, S3DataKeys};
 pub struct Vault {
     /// AWS region to use with Vault.
     /// Will fall back to default provider if nothing is specified.
-    region: Region,
+    pub region: Region,
     /// Prefix for key name
-    prefix: String,
-    cloudformation_params: CloudFormationParams,
+    pub prefix: String,
+    pub cloudformation_params: CloudFormationParams,
     cf: CloudFormationClient,
     kms: KmsClient,
     s3: S3Client,
