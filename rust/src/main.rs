@@ -195,6 +195,7 @@ async fn main() -> Result<()> {
             Command::Id {} => {
                 cli::print_aws_account(args.region).await?;
             }
+            // All other commands can use the same single Vault
             Command::All {}
             | Command::Delete { .. }
             | Command::Describe {}

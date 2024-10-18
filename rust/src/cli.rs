@@ -52,7 +52,7 @@ pub async fn update_vault_stack(vault: &Vault) -> Result<()> {
     wait_for_stack_update_to_finish(vault).await
 }
 
-/// Store a key-value pair
+/// Store a key-value pair.
 pub async fn store(
     vault: &Vault,
     key: Option<String>,
@@ -98,7 +98,7 @@ pub async fn store(
         .with_context(|| format!("Failed to store key '{key}'").red())
 }
 
-/// Delete key value
+/// Delete key value.
 pub async fn delete(vault: &Vault, key: &str) -> Result<()> {
     if key.trim().is_empty() {
         anyhow::bail!(format!("Empty key '{key}'").red())
@@ -109,7 +109,7 @@ pub async fn delete(vault: &Vault, key: &str) -> Result<()> {
         .with_context(|| format!("Failed to delete key '{key}'").red())
 }
 
-/// Get key value
+/// Get key value.
 pub async fn lookup(vault: &Vault, key: &str, outfile: Option<String>) -> Result<()> {
     if key.trim().is_empty() {
         anyhow::bail!(format!("Empty key '{key}'").red())
@@ -127,7 +127,7 @@ pub async fn lookup(vault: &Vault, key: &str, outfile: Option<String>) -> Result
     Ok(())
 }
 
-/// List all available keys
+/// List all available keys.
 pub async fn list_all_keys(vault: &Vault) -> Result<()> {
     vault
         .all()
@@ -140,7 +140,7 @@ pub async fn list_all_keys(vault: &Vault) -> Result<()> {
         })
 }
 
-/// Check if key exists
+/// Check if key exists.
 pub async fn exists(vault: &Vault, key: &str) -> Result<()> {
     if key.trim().is_empty() {
         anyhow::bail!(format!("Empty key: '{key}'").red())
@@ -158,7 +158,7 @@ pub async fn exists(vault: &Vault, key: &str) -> Result<()> {
         })
 }
 
-/// Print the information from AWS STS "get caller identity" call
+/// Print the information from AWS STS "get caller identity" call.
 pub async fn print_aws_account(region: Option<String>) -> Result<()> {
     let config = Vault::get_aws_config(region).await;
     let client = aws_sdk_sts::Client::new(&config);
@@ -201,11 +201,7 @@ async fn wait_for_stack_creation_to_finish(
                         println!("status: {status}");
                     }
                     // Continue waiting for stack creation to complete
-                    for dot in WAIT_DOTS {
-                        print!("\r{CLEAR_LINE}{dot}");
-                        std::io::stdout().flush()?;
-                        tokio::time::sleep(WAIT_ANIMATION_DURATION).await;
-                    }
+                    print_wait_animation().await?;
                 }
             }
         } else {
@@ -238,11 +234,7 @@ async fn wait_for_stack_update_to_finish(vault: &Vault) -> Result<()> {
                         println!("status: {status}");
                     }
                     // Continue waiting for stack update to complete
-                    for dot in WAIT_DOTS {
-                        print!("\r{CLEAR_LINE}{dot}");
-                        std::io::stdout().flush()?;
-                        tokio::time::sleep(WAIT_ANIMATION_DURATION).await;
-                    }
+                    print_wait_animation().await?;
                 }
             }
         } else {
@@ -255,7 +247,7 @@ async fn wait_for_stack_update_to_finish(vault: &Vault) -> Result<()> {
     Ok(())
 }
 
-/// Try to get the filename for the given filepath
+/// Try to get the filename for the given filepath.
 fn get_filename_from_path(path: &str) -> Result<String> {
     let path = Path::new(path);
     if !path.exists() {
@@ -292,6 +284,7 @@ fn resolve_output_file_path(outfile: Option<String>) -> Result<Option<PathBuf>> 
     }
 }
 
+/// Read value depending on given CLI arguments.
 fn read_value(
     value_positional: Option<String>,
     value_argument: Option<String>,
@@ -311,4 +304,16 @@ fn read_value(
     } else {
         anyhow::bail!("No value or filename provided".red())
     })
+}
+
+/// Print simple wait animation with dots.
+///
+/// Takes ~2 seconds (`4 * WAIT_ANIMATION_DURATION`)
+async fn print_wait_animation() -> Result<()> {
+    for dot in WAIT_DOTS {
+        print!("\r{CLEAR_LINE}{dot}");
+        std::io::stdout().flush()?;
+        tokio::time::sleep(WAIT_ANIMATION_DURATION).await;
+    }
+    Ok(())
 }

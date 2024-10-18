@@ -62,6 +62,7 @@ impl Meta {
     }
 
     #[must_use]
+    /// Shorthand to initialize new Meta with AES-GCM algorithm.
     fn aesgcm(nonce: &[u8]) -> Self {
         Self::new("AESGCM", nonce)
     }

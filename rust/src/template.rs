@@ -4,6 +4,7 @@ use std::sync::LazyLock;
 pub const VAULT_STACK_VERSION: u32 = 27;
 
 /// Return Cloudformation stack template JSON.
+///
 /// Workaround for accessing string inside `LazyLock`.
 pub fn template() -> &'static str {
     &TEMPLATE_STRING
@@ -534,7 +535,7 @@ mod test {
     use std::io::{BufWriter, Write};
 
     #[test]
-    fn test_write_template_to_file() {
+    fn write_template_to_file() {
         // Write Cloudformation template JSON to file.
         // This way it can be easily compared with the JSON from the Python vault.
         // ```

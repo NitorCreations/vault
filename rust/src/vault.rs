@@ -213,12 +213,12 @@ impl Vault {
         Ok(())
     }
 
-    /// Get Cloudformation stack status
+    /// Get Cloudformation stack status.
     pub async fn stack_status(&self) -> Result<CloudFormationStackData, VaultError> {
         cloudformation::get_stack_data(&self.cf, &self.cloudformation_params.stack_name).await
     }
 
-    /// Get all available secrets
+    /// Get all available secrets.
     pub async fn all(&self) -> Result<Vec<String>, VaultError> {
         let output = self
             .s3
@@ -243,13 +243,13 @@ impl Vault {
             .collect::<Vec<_>>())
     }
 
-    /// Get Cloudformation parameters
+    /// Get Cloudformation parameters.
     #[must_use]
     pub fn stack_info(&self) -> CloudFormationParams {
         self.cloudformation_params.clone()
     }
 
-    /// Check if key already exists in bucket
+    /// Check if key already exists in bucket.
     pub async fn exists(&self, name: &str) -> Result<bool, VaultError> {
         let name = self.full_key_name(name);
         match self
@@ -274,7 +274,7 @@ impl Vault {
         }
     }
 
-    /// Store encrypted data in S3
+    /// Store encrypted data in S3.
     pub async fn store(&self, name: &str, data: &[u8]) -> Result<(), VaultError> {
         let encrypted = self.encrypt(data).await?;
 
@@ -291,7 +291,7 @@ impl Vault {
         Ok(())
     }
 
-    /// Delete data in S3 for given key
+    /// Delete data in S3 for given key.
     pub async fn delete(&self, name: &str) -> Result<(), VaultError> {
         if !self.exists(name).await? {
             return Err(VaultError::S3DeleteObjectKeyMissingError);
@@ -349,7 +349,7 @@ impl Vault {
             .await
     }
 
-    /// Get S3 Object data for given key as a vec of bytes
+    /// Get S3 Object data for given key as a vec of bytes.
     async fn get_s3_object(&self, key: String) -> Result<Vec<u8>, VaultError> {
         self.s3
             .get_object()
@@ -364,7 +364,7 @@ impl Vault {
             .map(aws_sdk_s3::primitives::AggregatedBytes::to_vec)
     }
 
-    /// Get decrypted data
+    /// Get decrypted data.
     async fn direct_decrypt(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, VaultError> {
         self.kms
             .decrypt()
@@ -378,15 +378,16 @@ impl Vault {
 
     /// Encrypt data
     async fn encrypt(&self, data: &[u8]) -> Result<EncryptObject, VaultError> {
+        let key = self
+            .cloudformation_params
+            .key_arn
+            .clone()
+            .ok_or(VaultError::KeyARNMissingError)?;
+
         let key_dict = self
             .kms
             .generate_data_key()
-            .key_id(
-                self.cloudformation_params
-                    .key_arn
-                    .clone()
-                    .ok_or(VaultError::KeyARNMissingError)?,
-            )
+            .key_id(key)
             .key_spec(DataKeySpec::Aes256)
             .send()
             .await?;
@@ -423,7 +424,7 @@ impl Vault {
         })
     }
 
-    /// Send PUT request with the given byte data
+    /// Send PUT request with the given byte data.
     async fn put_s3_object(
         &self,
         key: String,
@@ -463,12 +464,12 @@ fn create_random_nonce() -> [u8; 12] {
     nonce
 }
 
-/// Get AWS region from optional argument or fallback to default
+/// Get AWS region from optional argument or fallback to default.
 fn get_region_provider(region: Option<String>) -> RegionProviderChain {
     RegionProviderChain::first_try(region.map(Region::new)).or_default_provider()
 }
 
-/// Return possible env variable value as Option
+/// Return possible env variable value as Option.
 fn get_env_variable(name: &str) -> Option<String> {
     env::var(name).ok()
 }
