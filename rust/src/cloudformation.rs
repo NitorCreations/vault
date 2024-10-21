@@ -93,7 +93,7 @@ impl fmt::Display for CloudFormationStackData {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "status: {}\nbucket: {}\nkey ARN: {}\nversion: {}{}",
+            "status: {}\nbucket: {}\nkey: {}\nversion: {}{}",
             self.status
                 .as_ref()
                 .map_or("None".to_string(), std::string::ToString::to_string),

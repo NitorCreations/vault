@@ -23,7 +23,7 @@ use crate::cloudformation::{CloudFormationParams, CloudFormationStackData};
 use crate::errors::VaultError;
 use crate::template::{template, VAULT_STACK_VERSION};
 use crate::value::Value;
-use crate::{CreateStackResult, EncryptObject, Meta, S3DataKeys};
+use crate::{CreateStackResult, EncryptObject, Meta, S3DataKeys, UpdateStackResult};
 
 #[derive(Debug)]
 pub struct Vault {
@@ -99,6 +99,9 @@ impl Vault {
     /// Initialize new Vault stack.
     /// This will create all required resources in AWS,
     /// after which the Vault can be used to store and lookup values.
+    ///
+    /// Returns a `CreateStackResult` with relevant data whether a new vault stack was initialized,
+    /// or it already exists.
     pub async fn init(
         vault_stack: Option<String>,
         region: Option<String>,
@@ -176,10 +179,13 @@ impl Vault {
         })
     }
 
-    pub async fn update_stack(&self) -> Result<(), VaultError> {
+    /// Update the vault Cloudformation stack with the current template.
+    ///
+    /// Returns an `UpdateStackResult` enum that indicates if the vault was updated,
+    /// or is already up to date.
+    pub async fn update_stack(&self) -> Result<UpdateStackResult, VaultError> {
         let stack_name = &self.cloudformation_params.stack_name;
         let stack_data = cloudformation::get_stack_data(&self.cf, stack_name).await?;
-        println!("{stack_data}");
         let deployed_version = stack_data
             .version
             .map_or_else(|| Err(VaultError::StackVersionNotFoundError), Ok)?;
@@ -201,16 +207,15 @@ impl Vault {
                 .send()
                 .await?;
 
-            if let Some(stack_id) = response.stack_id {
-                println!("{stack_id}");
-            }
-
-            println!("Updated vault stack '{stack_name}' version from {deployed_version} to {VAULT_STACK_VERSION}");
+            let stack_id = response.stack_id.ok_or(VaultError::MissingStackIdError)?;
+            Ok(UpdateStackResult::Update {
+                stack_id,
+                previous_version: deployed_version,
+                new_version: VAULT_STACK_VERSION,
+            })
         } else {
-            println!("Current stack version {deployed_version} does not need to be updated to version {VAULT_STACK_VERSION}");
+            Ok(UpdateStackResult::UpToDate { data: stack_data })
         }
-
-        Ok(())
     }
 
     /// Get Cloudformation stack status.
@@ -342,6 +347,7 @@ impl Vault {
         }
     }
 
+    /// Return AWS SDK config with optional region name to use.
     pub async fn get_aws_config(region: Option<String>) -> SdkConfig {
         aws_config::from_env()
             .region(get_region_provider(region))
