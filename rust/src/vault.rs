@@ -99,6 +99,9 @@ impl Vault {
     /// Initialize new Vault stack.
     /// This will create all required resources in AWS,
     /// after which the Vault can be used to store and lookup values.
+    ///
+    /// Returns a `CreateStackResult` with relevant data whether a new vault stack was initialized,
+    /// or it already exists.
     pub async fn init(
         vault_stack: Option<String>,
         region: Option<String>,
@@ -176,6 +179,10 @@ impl Vault {
         })
     }
 
+    /// Update the vault Cloudformation stack with the current template.
+    ///
+    /// Returns an `UpdateStackResult` enum that indicates if the vault was updated,
+    /// or is already up to date.
     pub async fn update_stack(&self) -> Result<UpdateStackResult, VaultError> {
         let stack_name = &self.cloudformation_params.stack_name;
         let stack_data = cloudformation::get_stack_data(&self.cf, stack_name).await?;
@@ -340,6 +347,7 @@ impl Vault {
         }
     }
 
+    /// Return AWS SDK config with optional region name to use.
     pub async fn get_aws_config(region: Option<String>) -> SdkConfig {
         aws_config::from_env()
             .region(get_region_provider(region))
