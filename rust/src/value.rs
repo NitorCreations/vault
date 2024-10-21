@@ -13,6 +13,18 @@ pub enum Value {
 }
 
 impl Value {
+    #[must_use]
+    /// Create a `Value` from raw bytes.
+    ///
+    /// This will check if the given bytes are valid UTF-8,
+    /// and return the corresponding enum value.
+    pub fn new(bytes: &[u8]) -> Self {
+        std::str::from_utf8(bytes).map_or_else(
+            |_| Self::Binary(Vec::from(bytes)),
+            |valid_utf8| Self::Utf8(valid_utf8.to_string()),
+        )
+    }
+
     /// Read data from given filepath.
     /// Supports both UTF-8 and non-UTF-8 contents.
     pub fn from_path(path: String) -> Result<Self, VaultError> {

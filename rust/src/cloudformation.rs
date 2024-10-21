@@ -13,7 +13,7 @@ pub struct CloudFormationParams {
     pub stack_name: String,
 }
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Clone, Default)]
 /// Cloudformation stack status information.
 pub struct CloudFormationStackData {
     pub bucket_name: Option<String>,
@@ -25,7 +25,7 @@ pub struct CloudFormationStackData {
 
 impl CloudFormationParams {
     #[must_use]
-    /// Create `CloudFormationParams` from owned parameters.
+    /// Create `CloudFormationParams` from owned values.
     pub const fn new(bucket_name: String, key_arn: Option<String>, stack_name: String) -> Self {
         Self {
             bucket_name,
