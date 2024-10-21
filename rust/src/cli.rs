@@ -6,7 +6,7 @@ use aws_sdk_cloudformation::types::StackStatus;
 use colored::Colorize;
 use tokio::time::Duration;
 
-use nitor_vault::{cloudformation, CreateStackResult, Value, Vault};
+use nitor_vault::{cloudformation, CreateStackResult, UpdateStackResult, Value, Vault};
 
 static WAIT_ANIMATION_DURATION: Duration = Duration::from_millis(500);
 static CLEAR_LINE: &str = "\x1b[2K";
@@ -44,12 +44,30 @@ pub async fn init_vault_stack(
 
 /// Update existing Cloudformation vault stack and wait for update to finish.
 pub async fn update_vault_stack(vault: &Vault) -> Result<()> {
-    vault
+    match vault
         .update_stack()
         .await
-        .with_context(|| "Failed to update vault stack".red())?;
-
-    wait_for_stack_update_to_finish(vault).await
+        .with_context(|| "Failed to update vault stack".red())?
+    {
+        UpdateStackResult::UpToDate { data } => {
+            println!("{}", "Vault stack is up to date:".bold());
+            println!("{data}");
+            Ok(())
+        }
+        UpdateStackResult::Update {
+            stack_id,
+            previous_version: current_version,
+            new_version,
+        } => {
+            println!(
+                "{}",
+                format!("Updating vault stack from version {current_version} to {new_version}")
+                    .bold()
+            );
+            println!("{stack_id}");
+            wait_for_stack_update_to_finish(vault).await
+        }
+    }
 }
 
 /// Store a key-value pair.
@@ -225,7 +243,7 @@ async fn wait_for_stack_update_to_finish(vault: &Vault) -> Result<()> {
                 }
                 StackStatus::UpdateFailed | StackStatus::RollbackFailed => {
                     println!("{CLEAR_LINE}{stack_data}");
-                    anyhow::bail!("Stack update failed");
+                    anyhow::bail!("Stack update failed".red());
                 }
                 _ => {
                     // Print status if it has changed

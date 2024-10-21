@@ -23,7 +23,7 @@ use crate::cloudformation::{CloudFormationParams, CloudFormationStackData};
 use crate::errors::VaultError;
 use crate::template::{template, VAULT_STACK_VERSION};
 use crate::value::Value;
-use crate::{CreateStackResult, EncryptObject, Meta, S3DataKeys};
+use crate::{CreateStackResult, EncryptObject, Meta, S3DataKeys, UpdateStackResult};
 
 #[derive(Debug)]
 pub struct Vault {
@@ -176,10 +176,9 @@ impl Vault {
         })
     }
 
-    pub async fn update_stack(&self) -> Result<(), VaultError> {
+    pub async fn update_stack(&self) -> Result<UpdateStackResult, VaultError> {
         let stack_name = &self.cloudformation_params.stack_name;
         let stack_data = cloudformation::get_stack_data(&self.cf, stack_name).await?;
-        println!("{stack_data}");
         let deployed_version = stack_data
             .version
             .map_or_else(|| Err(VaultError::StackVersionNotFoundError), Ok)?;
@@ -201,16 +200,15 @@ impl Vault {
                 .send()
                 .await?;
 
-            if let Some(stack_id) = response.stack_id {
-                println!("{stack_id}");
-            }
-
-            println!("Updated vault stack '{stack_name}' version from {deployed_version} to {VAULT_STACK_VERSION}");
+            let stack_id = response.stack_id.ok_or(VaultError::MissingStackIdError)?;
+            Ok(UpdateStackResult::Update {
+                stack_id,
+                previous_version: deployed_version,
+                new_version: VAULT_STACK_VERSION,
+            })
         } else {
-            println!("Current stack version {deployed_version} does not need to be updated to version {VAULT_STACK_VERSION}");
+            Ok(UpdateStackResult::UpToDate { data: stack_data })
         }
-
-        Ok(())
     }
 
     /// Get Cloudformation stack status.
