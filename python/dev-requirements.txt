@@ -16,13 +16,13 @@ cffi==1.17.1
     # via cryptography
 charset-normalizer==3.4.0
     # via requests
-coverage==7.6.3
+coverage==7.6.4
     # via
     #   nitor-vault (pyproject.toml)
     #   coveralls
 coveralls==4.0.1
     # via nitor-vault (pyproject.toml)
-cryptography==43.0.1
+cryptography==43.0.3
     # via nitor-vault (pyproject.toml)
 docopt==0.6.2
     # via coveralls
@@ -87,7 +87,7 @@ rich==13.9.2
     # via twine
 s3transfer==0.10.3
     # via boto3
-setuptools==75.1.0
+setuptools==75.2.0
     # via nitor-vault (pyproject.toml)
 six==1.16.0
     # via python-dateutil
