@@ -27,6 +27,7 @@ Commands:
   describe, --describe  Describe CloudFormation stack parameters for current configuration
   exists, -e, --exists  Check if a key exists
   info, --info          Print vault information
+  id, --id              Print AWS user account information
   status, --status      Print vault stack information
   init, -i, --init      Initialize a new KMS key and S3 bucket
   update, -u, --update  Update the vault CloudFormation stack
@@ -60,7 +61,7 @@ use nitor_vault::Vault;
 
 fn main() -> anyhow::Result<()> {
     let vault = Vault::default().await?;
-    let value = Box::pin(vault.lookup("secret-name")).await?;
+    let value = Box::pin(vault.lookup("secret-key")).await?;
     println!("{value}");
     Ok(())
 }
