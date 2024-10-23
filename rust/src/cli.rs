@@ -444,6 +444,8 @@ async fn print_wait_animation() -> Result<()> {
 fn get_shell_completion_dir(shell: Shell) -> Result<PathBuf> {
     let home = dirs::home_dir().ok_or_else(|| anyhow!("Failed to get home directory"))?;
 
+    // Special handling for oh-my-zsh: https://ohmyz.sh/
+    // Create custom "plugin", which will then have to be loaded in .zshrc
     if shell == Shell::Zsh {
         let omz_plugins = home.join(".oh-my-zsh/custom/plugins");
         if omz_plugins.exists() {
@@ -454,6 +456,13 @@ fn get_shell_completion_dir(shell: Shell) -> Result<PathBuf> {
     }
 
     let user_dir = match shell {
+        Shell::PowerShell => {
+            if cfg!(windows) {
+                home.join(r"Documents\PowerShell\completions")
+            } else {
+                home.join(".config/powershell/completions")
+            }
+        }
         Shell::Bash => home.join(".bash_completion.d"),
         Shell::Elvish => home.join(".elvish"),
         Shell::Fish => home.join(".config/fish/completions"),
@@ -466,6 +475,13 @@ fn get_shell_completion_dir(shell: Shell) -> Result<PathBuf> {
     }
 
     let global_dir = match shell {
+        Shell::PowerShell => {
+            if cfg!(windows) {
+                home.join(r"Documents\PowerShell\completions")
+            } else {
+                home.join(".config/powershell/completions")
+            }
+        }
         Shell::Bash => PathBuf::from("/etc/bash_completion.d"),
         Shell::Fish => PathBuf::from("/usr/share/fish/completions"),
         Shell::Zsh => PathBuf::from("/usr/share/zsh/site-functions"),
