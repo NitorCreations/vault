@@ -77,7 +77,7 @@ enum Command {
             short,
             long,
             value_name = "filepath",
-            conflicts_with_all = vec!["value", "value_opt"]
+            conflicts_with_all = vec!["value", "value_argument"]
         )]
         file: Option<String>,
 
@@ -106,7 +106,7 @@ enum Command {
             short,
             long,
             value_name = "filepath",
-            conflicts_with_all = vec!["value", "value_opt"]
+            conflicts_with_all = vec!["value", "value_argument"]
         )]
         file: Option<String>,
 
@@ -214,7 +214,7 @@ enum Command {
             short,
             long,
             value_name = "filepath",
-            conflicts_with_all = vec!["value", "value_opt"]
+            conflicts_with_all = vec!["value", "value_argument"]
         )]
         file: Option<String>,
 
