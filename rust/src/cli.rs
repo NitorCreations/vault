@@ -189,8 +189,8 @@ pub async fn encrypt(
     let value = Value::new(bytes);
 
     match resolve_output_file_path(outfile)? {
-        Some(path) => value.output_to_file(&path)?,
-        None => value.output_to_stdout()?,
+        Some(path) => value.output_base64_to_file(&path)?,
+        None => value.output_base64_to_stdout()?,
     };
 
     Ok(())
@@ -352,7 +352,7 @@ fn read_value(
         if value == "-" {
             Value::from_stdin()?
         } else {
-            Value::Utf8(value)
+            Value::from_possibly_base64_encoded(value)
         }
     } else if let Some(path) = file {
         match path.as_str() {

@@ -2,6 +2,8 @@ use std::io::{stdin, BufWriter, Read, Write};
 use std::path::Path;
 use std::{fmt, io};
 
+use base64::Engine;
+
 use crate::errors::VaultError;
 
 #[derive(Debug, Clone)]
@@ -39,12 +41,20 @@ impl Value {
         )
     }
 
+    /// Try to decode the value as base64 binary data,
+    /// otherwise return UTF-8 string.
+    pub fn from_possibly_base64_encoded(value: String) -> Self {
+        base64::engine::general_purpose::STANDARD
+            .decode(&value)
+            .map_or(Self::Utf8(value), Value::Binary)
+    }
+
     /// Read data from given filepath.
     ///
     /// Supports both UTF-8 and non-UTF-8 contents.
     pub fn from_path(path: String) -> Result<Self, VaultError> {
         if let Ok(content) = std::fs::read_to_string(&path) {
-            Ok(Self::Utf8(content))
+            Ok(Self::from_possibly_base64_encoded(content))
         } else {
             let binary_data =
                 std::fs::read(&path).map_err(|e| VaultError::FileReadError(path, e))?;
@@ -69,7 +79,7 @@ impl Value {
         #[allow(clippy::option_if_let_else)]
         // ^using `map_or` would require cloning buffer
         match std::str::from_utf8(&bytes) {
-            Ok(valid_utf8) => Ok(Self::Utf8(valid_utf8.to_string())),
+            Ok(valid_utf8) => Ok(Self::from_possibly_base64_encoded(valid_utf8.to_string())),
             Err(_) => Ok(Self::Binary(bytes)),
         }
     }
@@ -102,11 +112,52 @@ impl Value {
         }
     }
 
+    /// Outputs the data as Base64 to stdout.
+    ///
+    /// String data is printed as-is.
+    /// Binary data is printed as Base64-encoded.
+    pub fn output_base64_to_stdout(&self) -> io::Result<()> {
+        match self {
+            Self::Utf8(ref string) => {
+                print!("{string}");
+                Ok(())
+            }
+            Self::Binary(ref bytes) => {
+                let base64_encoded = base64::engine::general_purpose::STANDARD.encode(bytes);
+                print!("{base64_encoded}");
+                Ok(())
+            }
+        }
+    }
+
     /// Outputs the data to the specified file path.
     pub fn output_to_file(&self, path: &Path) -> io::Result<()> {
         let file = std::fs::File::create(path)?;
         let mut writer = BufWriter::new(file);
         writer.write_all(self.as_bytes())?;
+        writer.flush()
+    }
+
+    /// Outputs the data as Base64 to the specified file path.
+    ///
+    /// String data is written as-is.
+    /// Binary data is written as Base64-encoded.
+    pub fn output_base64_to_file(&self, path: &Path) -> io::Result<()> {
+        let file = std::fs::File::create(path)?;
+        let mut writer = BufWriter::new(file);
+        match self {
+            Self::Utf8(string) => {
+                writer.write_all(string.as_bytes())?;
+            }
+            Self::Binary(bytes) => {
+                writer.write_all(
+                    base64::engine::general_purpose::STANDARD
+                        .encode(bytes)
+                        .as_bytes(),
+                )?;
+            }
+        }
+
         writer.flush()
     }
 }
