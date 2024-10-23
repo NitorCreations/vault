@@ -22,20 +22,21 @@ Encrypted AWS key-value storage utility.
 Usage: vault [OPTIONS] [COMMAND]
 
 Commands:
-  all, -a, --all          List available secrets
-  delete, -d, --delete    Delete an existing key from the store
-  describe, --describe    Describe CloudFormation stack parameters for current configuration
-  decrypt, -y, --decrypt  Directly decrypt given value
-  encrypt, -e, --encrypt  Directly encrypt given value
-  exists, --exists        Check if a key exists
-  info, --info            Print vault information
-  id, --id                Print AWS user account information
-  status, --status        Print vault stack information
-  init, -i, --init        Initialize a new KMS key and S3 bucket
-  update, -u, --update    Update the vault CloudFormation stack
-  lookup, -l, --lookup    Output secret value for given key
-  store, -s, --store      Store a new key-value pair
-  help                    Print this message or the help of the given subcommand(s)
+  all, -a, --all            List available secrets
+  completion, --completion  Generate shell completion
+  delete, -d, --delete      Delete an existing key from the store
+  describe, --describe      Describe CloudFormation stack parameters for current configuration
+  decrypt, -y, --decrypt    Directly decrypt given value
+  encrypt, -e, --encrypt    Directly encrypt given value
+  exists, --exists          Check if a key exists
+  info, --info              Print vault information
+  id, --id                  Print AWS user account information
+  status, --status          Print vault stack information
+  init, -i, --init          Initialize a new KMS key and S3 bucket
+  update, -u, --update      Update the vault CloudFormation stack
+  lookup, -l, --lookup      Output secret value for given key
+  store, -s, --store        Store a new key-value pair
+  help                      Print this message or the help of the given subcommand(s)
 
 Options:
   -b, --bucket <BUCKET>     Override the bucket name [env: VAULT_BUCKET=]
@@ -43,6 +44,7 @@ Options:
   -p, --prefix <PREFIX>     Optional prefix for key name [env: VAULT_PREFIX=]
   -r, --region <REGION>     Specify AWS region for the bucket [env: AWS_REGION=]
       --vault-stack <NAME>  Specify CloudFormation stack name to use [env: VAULT_STACK=]
+  -q, --quiet               Suppress additional output and error messages
   -h, --help                Print help (see more with '--help')
   -V, --version             Print version
 ```
@@ -66,6 +68,45 @@ fn main() -> anyhow::Result<()> {
     let value = Box::pin(vault.lookup("secret-key")).await?;
     println!("{value}");
     Ok(())
+}
+```
+
+## Shell completion
+
+Use the `completion` command to generate auto-completion scripts.
+
+```console
+Generate shell completion
+
+Usage: vault {completion|--completion} [OPTIONS] <SHELL>
+
+Arguments:
+  <SHELL>  [possible values: bash, elvish, fish, powershell, zsh]
+
+Options:
+  -i, --install  Output completion directly to the correct directory instead of stdout
+  -h, --help     Print help
+```
+
+### Oh My Zsh
+
+If the `~/.oh-my-zsh/custom/plugins` dir is found when outputting for `zsh`,
+the completions will be outputted as a custom plugin called `vault`.
+Enable the completions by adding `vault` to the plugin list in `~/.zshrc` config.
+
+### Powershell
+
+A `completions` subdirectory will be created under the default profile directory path for the current user.
+This will need to be loaded in the user profile, for example:
+
+```powershell
+# Load all completions scripts in the completions directory
+$completionScriptsPath = "$HOME/.config/powershell/completions/"
+if (Test-Path $completionScriptsPath)
+{
+    Get-ChildItem -Path $completionScriptsPath -Filter *.ps1 | ForEach-Object {
+        . $_.FullName
+    }
 }
 ```
 
@@ -167,5 +208,4 @@ Try publishing with `cargo publish --dry-run` and then run with `cargo publish`.
 
 ## TODO
 
-- Direct encrypt and decrypt to match Python implementation
 - Add test cases with mocking: https://docs.aws.amazon.com/sdk-for-rust/latest/dg/testing.html

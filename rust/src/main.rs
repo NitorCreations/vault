@@ -58,7 +58,7 @@ enum Command {
     Completion {
         shell: Shell,
 
-        /// Output completion directly to the correct directory instead of stdout
+        /// Output completion directly to the default directory instead of stdout
         #[arg(short, long, default_value_t = false)]
         install: bool,
     },
