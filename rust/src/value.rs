@@ -14,11 +14,25 @@ pub enum Value {
 
 impl Value {
     #[must_use]
-    /// Create a `Value` from raw bytes.
+    /// Create a `Value` from owned raw bytes.
     ///
     /// This will check if the given bytes are valid UTF-8,
     /// and return the corresponding enum value.
-    pub fn new(bytes: &[u8]) -> Self {
+    pub fn new(bytes: Vec<u8>) -> Self {
+        #[allow(clippy::option_if_let_else)]
+        // ^using `map_or` would require cloning buffer
+        match std::str::from_utf8(&bytes) {
+            Ok(valid_utf8) => Self::Utf8(valid_utf8.to_string()),
+            Err(_) => Self::Binary(bytes),
+        }
+    }
+
+    #[must_use]
+    /// Create a `Value` from raw bytes slice.
+    ///
+    /// This will check if the given bytes are valid UTF-8,
+    /// and return the corresponding enum value.
+    pub fn from(bytes: &[u8]) -> Self {
         std::str::from_utf8(bytes).map_or_else(
             |_| Self::Binary(Vec::from(bytes)),
             |valid_utf8| Self::Utf8(valid_utf8.to_string()),

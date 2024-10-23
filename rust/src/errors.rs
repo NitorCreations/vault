@@ -7,6 +7,7 @@ use aws_sdk_cloudformation::operation::describe_stacks::DescribeStacksError;
 use aws_sdk_cloudformation::operation::update_stack::UpdateStackError;
 use aws_sdk_cloudformation::Error as cloudformationError;
 use aws_sdk_kms::operation::decrypt::DecryptError;
+use aws_sdk_kms::operation::encrypt::EncryptError;
 use aws_sdk_kms::operation::generate_data_key::GenerateDataKeyError;
 use aws_sdk_s3::error::BuildError;
 use aws_sdk_s3::operation::delete_object::DeleteObjectError;
@@ -28,15 +29,17 @@ pub enum VaultError {
     #[error("Failed to get bucket name from stack")]
     BucketNameMissingError,
     #[error("No KEY_ARN provided, can't encrypt")]
-    KeyARNMissingError,
+    KeyArnMissingError,
     #[error("Failed to generate KMS Data key")]
-    KMSGenerateDataKeyError(#[from] SdkError<GenerateDataKeyError>),
+    KmsGenerateDataKeyError(#[from] SdkError<GenerateDataKeyError>),
     #[error("Failed to decrypt Ciphertext with KMS")]
-    KMSDecryptError(#[from] SdkError<DecryptError>),
+    KmsDecryptError(#[from] SdkError<DecryptError>),
+    #[error("Failed to encrypt data with KMS")]
+    KmsEncryptError(#[from] SdkError<EncryptError>),
     #[error("No Plaintext for generated data key")]
-    KMSDataKeyPlainTextMissingError,
+    KmsDataKeyPlainTextMissingError,
     #[error("No ciphertextBlob for generated data key")]
-    KMSDataKeyCiphertextBlobMissingError,
+    KmsDataKeyCiphertextBlobMissingError,
     #[error("Invalid length for encryption cipher")]
     InvalidNonceLengthError(#[from] aes_gcm::aes::cipher::InvalidLength),
     #[error("Invalid length for encryption cipher")]

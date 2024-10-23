@@ -15,35 +15,35 @@ use nitor_vault::Vault;
     long_about = "Nitor Vault, see https://github.com/nitorcreations/vault for usage examples",
     arg_required_else_help = true
 )]
-pub struct Args {
+struct Args {
     /// Override the bucket name
     #[arg(short, long, env = "VAULT_BUCKET")]
-    pub bucket: Option<String>,
+    bucket: Option<String>,
 
     /// Override the KMS key ARN
     #[arg(short, long, name = "ARN", env = "VAULT_KEY")]
-    pub key_arn: Option<String>,
+    key_arn: Option<String>,
 
     /// Optional prefix for key name
     #[arg(short, long, env = "VAULT_PREFIX")]
-    pub prefix: Option<String>,
+    prefix: Option<String>,
 
     /// Specify AWS region for the bucket
     #[arg(short, long, env = "AWS_REGION")]
-    pub region: Option<String>,
+    region: Option<String>,
 
     /// Specify CloudFormation stack name to use
     #[arg(long, name = "NAME", env = "VAULT_STACK")]
-    pub vault_stack: Option<String>,
+    vault_stack: Option<String>,
 
     /// Available subcommands
     #[command(subcommand)]
-    pub command: Option<Command>,
+    command: Option<Command>,
 }
 
 #[allow(clippy::doc_markdown)]
 #[derive(Subcommand)]
-pub enum Command {
+enum Command {
     /// List available secrets
     #[command(short_flag('a'), long_flag("all"), alias("a"))]
     All {},
@@ -57,8 +57,66 @@ pub enum Command {
     #[command(long_flag("describe"))]
     Describe {},
 
+    /// Directly decrypt given value
+    #[command(short_flag('y'), long_flag("decrypt"), alias("y"))]
+    Decrypt {
+        /// Value to decrypt, use '-' for stdin
+        value: Option<String>,
+
+        /// Value to decrypt, use '-' for stdin
+        #[arg(
+            short,
+            long = "value",
+            value_name = "value",
+            conflicts_with_all = vec!["value", "file"]
+        )]
+        value_argument: Option<String>,
+
+        /// File to decrypt, use '-' for stdin
+        #[arg(
+            short,
+            long,
+            value_name = "filepath",
+            conflicts_with_all = vec!["value", "value_opt"]
+        )]
+        file: Option<String>,
+
+        /// Optional output file
+        #[arg(short, long, value_name = "filepath")]
+        outfile: Option<String>,
+    },
+
+    /// Directly encrypt given value
+    #[command(short_flag('e'), long_flag("encrypt"), alias("e"))]
+    Encrypt {
+        /// Value to encrypt, use '-' for stdin
+        value: Option<String>,
+
+        /// Value to encrypt, use '-' for stdin
+        #[arg(
+            short,
+            long = "value",
+            value_name = "value",
+            conflicts_with_all = vec!["value", "file"]
+        )]
+        value_argument: Option<String>,
+
+        /// File to encrypt, use '-' for stdin
+        #[arg(
+            short,
+            long,
+            value_name = "filepath",
+            conflicts_with_all = vec!["value", "value_opt"]
+        )]
+        file: Option<String>,
+
+        /// Optional output file
+        #[arg(short, long, value_name = "filepath")]
+        outfile: Option<String>,
+    },
+
     /// Check if a key exists
-    #[command(short_flag('e'), long_flag("exists"), alias("e"))]
+    #[command(long_flag("exists"))]
     Exists { key: String },
 
     /// Print vault information
@@ -198,12 +256,14 @@ async fn main() -> Result<()> {
             }
             // All other commands can use the same single Vault
             Command::All {}
+            | Command::Decrypt { .. }
             | Command::Delete { .. }
             | Command::Describe {}
+            | Command::Encrypt { .. }
             | Command::Exists { .. }
             | Command::Info {}
-            | Command::Status {}
             | Command::Lookup { .. }
+            | Command::Status {}
             | Command::Store { .. } => {
                 let vault = Vault::new(
                     args.vault_stack,
@@ -219,6 +279,18 @@ async fn main() -> Result<()> {
                     Command::All {} => cli::list_all_keys(&vault).await?,
                     Command::Delete { key } => cli::delete(&vault, &key).await?,
                     Command::Describe {} => println!("{}", vault.stack_info()),
+                    Command::Decrypt {
+                        value,
+                        file,
+                        value_argument,
+                        outfile,
+                    } => cli::decrypt(&vault, value, file, value_argument, outfile).await?,
+                    Command::Encrypt {
+                        value,
+                        file,
+                        value_argument,
+                        outfile,
+                    } => cli::encrypt(&vault, value, file, value_argument, outfile).await?,
                     Command::Exists { key } => cli::exists(&vault, &key).await?,
                     Command::Info {} => println!("{vault}"),
                     Command::Status {} => {

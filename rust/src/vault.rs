@@ -347,6 +347,43 @@ impl Vault {
         }
     }
 
+    /// Decrypt data with KMS.
+    pub async fn direct_decrypt(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, VaultError> {
+        self.kms
+            .decrypt()
+            .ciphertext_blob(Blob::new(encrypted_data))
+            .send()
+            .await?
+            .plaintext()
+            .map(|blob| blob.to_owned().into_inner())
+            .ok_or(VaultError::KmsDataKeyPlainTextMissingError)
+    }
+
+    /// Encrypt data with KMS.
+    pub async fn direct_encrypt(&self, data: &[u8]) -> Result<Vec<u8>, VaultError> {
+        let key = self
+            .cloudformation_params
+            .key_arn
+            .as_ref()
+            .ok_or(VaultError::KeyArnMissingError)?;
+
+        let response = self
+            .kms
+            .encrypt()
+            .key_id(key)
+            .plaintext(Blob::new(data))
+            .send()
+            .await
+            .map_err(VaultError::from)?;
+
+        let ciphertext = response
+            .ciphertext_blob
+            .ok_or(VaultError::CiphertextEncryptionError)?
+            .into_inner();
+
+        Ok(ciphertext)
+    }
+
     #[inline]
     /// Return AWS SDK config with optional region name to use.
     pub async fn get_aws_config(region: Option<String>) -> SdkConfig {
@@ -371,25 +408,13 @@ impl Vault {
             .map(aws_sdk_s3::primitives::AggregatedBytes::to_vec)
     }
 
-    /// Get decrypted data.
-    async fn direct_decrypt(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, VaultError> {
-        self.kms
-            .decrypt()
-            .ciphertext_blob(Blob::new(encrypted_data))
-            .send()
-            .await?
-            .plaintext()
-            .map(|blob| blob.to_owned().into_inner())
-            .ok_or(VaultError::KMSDataKeyPlainTextMissingError)
-    }
-
     /// Encrypt data
     async fn encrypt(&self, data: &[u8]) -> Result<EncryptObject, VaultError> {
         let key = self
             .cloudformation_params
             .key_arn
             .clone()
-            .ok_or(VaultError::KeyARNMissingError)?;
+            .ok_or(VaultError::KeyArnMissingError)?;
 
         let key_dict = self
             .kms
@@ -401,7 +426,7 @@ impl Vault {
 
         let plaintext = key_dict
             .plaintext()
-            .ok_or(VaultError::KMSDataKeyPlainTextMissingError)?;
+            .ok_or(VaultError::KmsDataKeyPlainTextMissingError)?;
 
         let aesgcm_cipher: AesGcm<Aes256, cipher::typenum::U12> =
             AesGcm::new_from_slice(plaintext.as_ref())?;
