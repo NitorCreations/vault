@@ -1,8 +1,10 @@
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 use aws_sdk_cloudformation::types::StackStatus;
+use clap::Command;
+use clap_complete::Shell;
 use colored::Colorize;
 use tokio::time::Duration;
 
@@ -343,6 +345,26 @@ async fn wait_for_stack_update_to_finish(vault: &Vault, quiet: bool) -> Result<(
     Ok(())
 }
 
+/// Generate a shell completion script for the given shell.
+pub fn generate_shell_completion(
+    shell: Shell,
+    mut command: Command,
+    install: bool,
+    quiet: bool,
+) -> Result<()> {
+    if install {
+        let out_dir = get_shell_completion_dir(shell)?;
+        let path = clap_complete::generate_to(shell, &mut command, "vault", out_dir)?;
+        if !quiet {
+            println!("Completion file generated to: {:?}", path.display());
+        }
+    } else {
+        clap_complete::generate(shell, &mut command, "vault", &mut std::io::stdout());
+    }
+
+    Ok(())
+}
+
 /// Try to get the filename for the given filepath.
 fn get_filename_from_path(path: &str) -> Result<String> {
     let path = Path::new(path);
@@ -412,4 +434,48 @@ async fn print_wait_animation() -> Result<()> {
         tokio::time::sleep(WAIT_ANIMATION_DURATION).await;
     }
     Ok(())
+}
+
+/// Determine the appropriate directory for storing shell completions.
+///
+/// First checks if the user-specific directory exists,
+/// then checks for the global directory.
+/// If neither exist, creates and uses the user-specific dir.
+fn get_shell_completion_dir(shell: Shell) -> Result<PathBuf> {
+    let home = dirs::home_dir().ok_or_else(|| anyhow!("Failed to get home directory"))?;
+
+    if shell == Shell::Zsh {
+        let omz_plugins = home.join(".oh-my-zsh/custom/plugins");
+        if omz_plugins.exists() {
+            let plugin_dir = omz_plugins.join("vault");
+            std::fs::create_dir_all(&plugin_dir)?;
+            return Ok(plugin_dir);
+        }
+    }
+
+    let user_dir = match shell {
+        Shell::Bash => home.join(".bash_completion.d"),
+        Shell::Elvish => home.join(".elvish"),
+        Shell::Fish => home.join(".config/fish/completions"),
+        Shell::Zsh => home.join(".zsh/completions"),
+        _ => anyhow::bail!("Unsupported shell"),
+    };
+
+    if user_dir.exists() {
+        return Ok(user_dir);
+    }
+
+    let global_dir = match shell {
+        Shell::Bash => PathBuf::from("/etc/bash_completion.d"),
+        Shell::Fish => PathBuf::from("/usr/share/fish/completions"),
+        Shell::Zsh => PathBuf::from("/usr/share/zsh/site-functions"),
+        _ => anyhow::bail!("Unsupported shell"),
+    };
+
+    if global_dir.exists() {
+        return Ok(global_dir);
+    }
+
+    std::fs::create_dir_all(&user_dir)?;
+    Ok(user_dir)
 }

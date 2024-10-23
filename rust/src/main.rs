@@ -1,7 +1,8 @@
 mod cli;
 
 use anyhow::{Context, Result};
-use clap::{Parser, Subcommand};
+use clap::{CommandFactory, Parser, Subcommand};
+use clap_complete::Shell;
 use colored::Colorize;
 
 use nitor_vault::Vault;
@@ -51,6 +52,16 @@ enum Command {
     /// List available secrets
     #[command(short_flag('a'), long_flag("all"), alias("a"))]
     All {},
+
+    /// Generate shell completion
+    #[command(long_flag("completion"))]
+    Completion {
+        shell: Shell,
+
+        /// Output completion directly to the correct directory instead of stdout
+        #[arg(short, long, default_value_t = false)]
+        install: bool,
+    },
 
     /// Delete an existing key from the store
     #[command(short_flag('d'), long_flag("delete"), alias("d"))]
@@ -258,6 +269,9 @@ async fn run(args: Args) -> Result<()> {
                     .await
                     .with_context(|| "Failed to update vault stack".red())?;
             }
+            Command::Completion { shell, install } => {
+                cli::generate_shell_completion(shell, Args::command(), install, args.quiet)?;
+            }
             Command::Id {} => {
                 cli::print_aws_account(args.region).await?;
             }
@@ -335,6 +349,7 @@ async fn run(args: Args) -> Result<()> {
                     Command::Init { .. } => unreachable!(),
                     Command::Update { .. } => unreachable!(),
                     Command::Id { .. } => unreachable!(),
+                    Command::Completion { .. } => unreachable!(),
                 }
             }
         };
