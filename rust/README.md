@@ -162,3 +162,8 @@ If you need to publish an older version (that is not the current git HEAD commit
 first checkout the version you want to publish.
 
 Try publishing with `cargo publish --dry-run` and then run with `cargo publish`.
+
+## TODO
+
+- Direct encrypt and decrypt to match Python implementation
+- Add test cases with mocking: https://docs.aws.amazon.com/sdk-for-rust/latest/dg/testing.html
