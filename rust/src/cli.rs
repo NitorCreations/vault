@@ -188,7 +188,7 @@ pub async fn exists(vault: &Vault, key: &str, quiet: bool) -> Result<bool> {
         if exists {
             println!("key '{key}' exists");
         } else {
-            println!("{}", format!("key '{key}' doesn't exist").red());
+            println!("{}", format!("key '{key}' does not exist").red());
         }
     }
 
