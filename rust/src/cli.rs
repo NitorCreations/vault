@@ -176,6 +176,46 @@ pub async fn exists(vault: &Vault, key: &str) -> Result<()> {
         })
 }
 
+/// Directly encrypt given value with KMS.
+pub async fn encrypt(
+    vault: &Vault,
+    value_positional: Option<String>,
+    file: Option<String>,
+    value_argument: Option<String>,
+    outfile: Option<String>,
+) -> Result<()> {
+    let data = read_value(value_positional, value_argument, file)?;
+    let bytes = vault.direct_encrypt(data.as_bytes()).await?;
+    let value = Value::new(bytes);
+
+    match resolve_output_file_path(outfile)? {
+        Some(path) => value.output_to_file(&path)?,
+        None => value.output_to_stdout()?,
+    };
+
+    Ok(())
+}
+
+/// Directly decrypt given value with KMS.
+pub async fn decrypt(
+    vault: &Vault,
+    value_positional: Option<String>,
+    file: Option<String>,
+    value_argument: Option<String>,
+    outfile: Option<String>,
+) -> Result<()> {
+    let data = read_value(value_positional, value_argument, file)?;
+    let bytes = vault.direct_decrypt(data.as_bytes()).await?;
+    let value = Value::new(bytes);
+
+    match resolve_output_file_path(outfile)? {
+        Some(path) => value.output_to_file(&path)?,
+        None => value.output_to_stdout()?,
+    };
+
+    Ok(())
+}
+
 /// Print the information from AWS STS "get caller identity" call.
 pub async fn print_aws_account(region: Option<String>) -> Result<()> {
     let config = Vault::get_aws_config(region).await;

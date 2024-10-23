@@ -22,18 +22,20 @@ Encrypted AWS key-value storage utility.
 Usage: vault [OPTIONS] [COMMAND]
 
 Commands:
-  all, -a, --all        List available secrets
-  delete, -d, --delete  Delete an existing key from the store
-  describe, --describe  Describe CloudFormation stack parameters for current configuration
-  exists, -e, --exists  Check if a key exists
-  info, --info          Print vault information
-  id, --id              Print AWS user account information
-  status, --status      Print vault stack information
-  init, -i, --init      Initialize a new KMS key and S3 bucket
-  update, -u, --update  Update the vault CloudFormation stack
-  lookup, -l, --lookup  Output secret value for given key
-  store, -s, --store    Store a new key-value pair
-  help                  Print this message or the help of the given subcommand(s)
+  all, -a, --all          List available secrets
+  delete, -d, --delete    Delete an existing key from the store
+  describe, --describe    Describe CloudFormation stack parameters for current configuration
+  decrypt, -y, --decrypt  Directly decrypt given value
+  encrypt, -e, --encrypt  Directly encrypt given value
+  exists, --exists        Check if a key exists
+  info, --info            Print vault information
+  id, --id                Print AWS user account information
+  status, --status        Print vault stack information
+  init, -i, --init        Initialize a new KMS key and S3 bucket
+  update, -u, --update    Update the vault CloudFormation stack
+  lookup, -l, --lookup    Output secret value for given key
+  store, -s, --store      Store a new key-value pair
+  help                    Print this message or the help of the given subcommand(s)
 
 Options:
   -b, --bucket <BUCKET>     Override the bucket name [env: VAULT_BUCKET=]
