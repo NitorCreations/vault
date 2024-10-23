@@ -36,6 +36,10 @@ struct Args {
     #[arg(long, name = "NAME", env = "VAULT_STACK")]
     vault_stack: Option<String>,
 
+    /// Suppress additional output and error messages
+    #[arg(short, long)]
+    quiet: bool,
+
     /// Available subcommands
     #[command(subcommand)]
     command: Option<Command>,
@@ -225,16 +229,19 @@ enum Command {
 }
 
 #[allow(clippy::match_same_arms)]
-#[tokio::main]
-async fn main() -> Result<()> {
-    let args = Args::parse();
-
+#[allow(clippy::too_many_lines)]
+async fn run(args: Args) -> Result<()> {
     if let Some(command) = args.command {
         match command {
             Command::Init { name } => {
-                cli::init_vault_stack(args.vault_stack.or(name), args.region, args.bucket)
-                    .await
-                    .with_context(|| "Failed to init vault stack".red())?;
+                cli::init_vault_stack(
+                    args.vault_stack.or(name),
+                    args.region,
+                    args.bucket,
+                    args.quiet,
+                )
+                .await
+                .with_context(|| "Failed to init vault stack".red())?;
             }
             Command::Update { name } => {
                 let vault = Vault::new(
@@ -247,7 +254,7 @@ async fn main() -> Result<()> {
                 .await
                 .with_context(|| "Failed to create vault from given params".red())?;
 
-                cli::update_vault_stack(&vault)
+                cli::update_vault_stack(&vault, args.quiet)
                     .await
                     .with_context(|| "Failed to update vault stack".red())?;
             }
@@ -291,10 +298,18 @@ async fn main() -> Result<()> {
                         value_argument,
                         outfile,
                     } => cli::encrypt(&vault, value, file, value_argument, outfile).await?,
-                    Command::Exists { key } => cli::exists(&vault, &key).await?,
+                    Command::Exists { key } => {
+                        if !cli::exists(&vault, &key, args.quiet).await? {
+                            drop(vault);
+                            std::process::exit(1);
+                        }
+                    }
                     Command::Info {} => println!("{vault}"),
                     Command::Status {} => {
-                        println!("{}", vault.stack_status().await?);
+                        let status = vault.stack_status().await?;
+                        if !args.quiet {
+                            println!("{status}");
+                        }
                     }
                     Command::Lookup { key, outfile } => cli::lookup(&vault, &key, outfile).await?,
                     Command::Store {
@@ -303,7 +318,18 @@ async fn main() -> Result<()> {
                         overwrite,
                         file,
                         value_argument,
-                    } => cli::store(&vault, key, value, file, value_argument, overwrite).await?,
+                    } => {
+                        cli::store(
+                            &vault,
+                            key,
+                            value,
+                            file,
+                            value_argument,
+                            overwrite,
+                            args.quiet,
+                        )
+                        .await?;
+                    }
                     // These are here again instead of a `_` so that if new commands are added,
                     // there is an error about missing handling for that.
                     Command::Init { .. } => unreachable!(),
@@ -313,5 +339,22 @@ async fn main() -> Result<()> {
             }
         };
     }
+    Ok(())
+}
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    let args = Args::parse();
+    let quiet = args.quiet;
+
+    // Suppress error output if flag given
+    if let Err(error) = run(args).await {
+        if quiet {
+            std::process::exit(1);
+        } else {
+            return Err(error);
+        }
+    }
+
     Ok(())
 }
