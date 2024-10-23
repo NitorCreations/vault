@@ -208,7 +208,7 @@ impl Vault {
                 .await?;
 
             let stack_id = response.stack_id.ok_or(VaultError::MissingStackIdError)?;
-            Ok(UpdateStackResult::Update {
+            Ok(UpdateStackResult::Updated {
                 stack_id,
                 previous_version: deployed_version,
                 new_version: VAULT_STACK_VERSION,
@@ -347,6 +347,7 @@ impl Vault {
         }
     }
 
+    #[inline]
     /// Return AWS SDK config with optional region name to use.
     pub async fn get_aws_config(region: Option<String>) -> SdkConfig {
         aws_config::from_env()
@@ -463,6 +464,7 @@ impl fmt::Display for Vault {
     }
 }
 
+#[inline]
 fn create_random_nonce() -> [u8; 12] {
     let mut nonce: [u8; 12] = [0; 12];
     let mut rng = rand::thread_rng();
@@ -470,11 +472,13 @@ fn create_random_nonce() -> [u8; 12] {
     nonce
 }
 
+#[inline]
 /// Get AWS region from optional argument or fallback to default.
 fn get_region_provider(region: Option<String>) -> RegionProviderChain {
     RegionProviderChain::first_try(region.map(Region::new)).or_default_provider()
 }
 
+#[inline]
 /// Return possible env variable value as Option.
 fn get_env_variable(name: &str) -> Option<String> {
     env::var(name).ok()

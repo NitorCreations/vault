@@ -5,7 +5,8 @@ pub const VAULT_STACK_VERSION: u32 = 27;
 
 /// Return Cloudformation stack template JSON.
 ///
-/// Workaround for accessing string inside `LazyLock`.
+/// Helper for accessing string inside `LazyLock`.
+#[inline]
 pub fn template() -> &'static str {
     &TEMPLATE_STRING
 }

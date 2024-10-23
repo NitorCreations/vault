@@ -26,6 +26,7 @@ impl Value {
     }
 
     /// Read data from given filepath.
+    ///
     /// Supports both UTF-8 and non-UTF-8 contents.
     pub fn from_path(path: String) -> Result<Self, VaultError> {
         if let Ok(content) = std::fs::read_to_string(&path) {
@@ -39,24 +40,23 @@ impl Value {
     }
 
     /// Read data from stdin.
+    ///
     /// Supports both UTF-8 and non-UTF-8 input.
     pub fn from_stdin() -> Result<Self, VaultError> {
-        let mut buffer = Vec::new();
-
         let stdin = stdin();
         let mut stdin_lock = stdin.lock();
 
         // Read raw bytes from stdin
-        stdin_lock.read_to_end(&mut buffer)?;
-
+        let mut bytes = Vec::new();
+        stdin_lock.read_to_end(&mut bytes)?;
         drop(stdin_lock);
 
         // Try to convert the raw bytes to a UTF-8 string
         #[allow(clippy::option_if_let_else)]
         // ^using `map_or` would require cloning buffer
-        match std::str::from_utf8(&buffer) {
+        match std::str::from_utf8(&bytes) {
             Ok(valid_utf8) => Ok(Self::Utf8(valid_utf8.to_string())),
-            Err(_) => Ok(Self::Binary(buffer)),
+            Err(_) => Ok(Self::Binary(bytes)),
         }
     }
 
@@ -70,6 +70,7 @@ impl Value {
     }
 
     /// Outputs the data directly to stdout.
+    ///
     /// String data is printed.
     /// Binary data is outputted raw.
     pub fn output_to_stdout(&self) -> io::Result<()> {

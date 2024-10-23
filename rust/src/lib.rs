@@ -34,10 +34,10 @@ pub enum CreateStackResult {
 #[derive(Debug, Clone)]
 /// Result data for updating the vault stack.
 pub enum UpdateStackResult {
-    /// Vault stack is up to date.
+    /// Vault stack is up to date. No update needed.
     UpToDate { data: CloudFormationStackData },
     /// Vault stack was updated.
-    Update {
+    Updated {
         stack_id: String,
         previous_version: u32,
         new_version: u32,

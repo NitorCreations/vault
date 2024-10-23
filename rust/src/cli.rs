@@ -54,7 +54,7 @@ pub async fn update_vault_stack(vault: &Vault) -> Result<()> {
             println!("{data}");
             Ok(())
         }
-        UpdateStackResult::Update {
+        UpdateStackResult::Updated {
             stack_id,
             previous_version: current_version,
             new_version,

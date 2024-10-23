@@ -151,6 +151,7 @@ pub async fn get_stack_data(
     Ok(data)
 }
 
+#[inline]
 // Get Cloudformation describe stack output.
 pub async fn describe_stack(
     cf_client: &aws_sdk_cloudformation::Client,
