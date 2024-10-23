@@ -252,7 +252,7 @@ async fn run(args: Args) -> Result<()> {
                     args.quiet,
                 )
                 .await
-                .with_context(|| "Failed to init vault stack".red())?;
+                .with_context(|| "Vault stack initialization failed".red())?;
             }
             Command::Update { name } => {
                 let vault = Vault::new(
@@ -263,7 +263,7 @@ async fn run(args: Args) -> Result<()> {
                     args.prefix,
                 )
                 .await
-                .with_context(|| "Failed to create vault from given params".red())?;
+                .with_context(|| "Failed to create vault with given parameters".red())?;
 
                 cli::update_vault_stack(&vault, args.quiet)
                     .await
@@ -294,7 +294,7 @@ async fn run(args: Args) -> Result<()> {
                     args.prefix,
                 )
                 .await
-                .with_context(|| "Failed to create vault from given params".red())?;
+                .with_context(|| "Failed to create vault with given parameters".red())?;
 
                 match command {
                     Command::All {} => cli::list_all_keys(&vault).await?,
