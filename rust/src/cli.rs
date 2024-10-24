@@ -177,6 +177,8 @@ pub async fn exists(vault: &Vault, key: &str) -> Result<()> {
 }
 
 /// Directly encrypt given value with KMS.
+///
+/// Always encode resulting binary data as Base64.
 pub async fn encrypt(
     vault: &Vault,
     value_positional: Option<String>,
@@ -186,7 +188,7 @@ pub async fn encrypt(
 ) -> Result<()> {
     let data = read_value(value_positional, value_argument, file)?;
     let bytes = vault.direct_encrypt(data.as_bytes()).await?;
-    let value = Value::new(bytes);
+    let value = Value::new(bytes).encode_base64();
 
     match resolve_output_file_path(outfile)? {
         Some(path) => value.output_to_file(&path)?,
@@ -197,6 +199,8 @@ pub async fn encrypt(
 }
 
 /// Directly decrypt given value with KMS.
+///
+/// Assumes input data is base64 encoded.
 pub async fn decrypt(
     vault: &Vault,
     value_positional: Option<String>,
@@ -204,7 +208,7 @@ pub async fn decrypt(
     value_argument: Option<String>,
     outfile: Option<String>,
 ) -> Result<()> {
-    let data = read_value(value_positional, value_argument, file)?;
+    let data = read_value(value_positional, value_argument, file)?.decode_base64();
     let bytes = vault.direct_decrypt(data.as_bytes()).await?;
     let value = Value::new(bytes);
 
