@@ -41,12 +41,24 @@ impl Value {
         )
     }
 
-    /// Try to decode the value as base64 binary data,
-    /// otherwise return UTF-8 string.
+    /// Create a `Value` from a string,
+    /// and try to decode the value as base64 binary data.
+    ///
+    /// If the decoded result is valid UTF-8, return `Value::Utf8`.
+    /// Otherwise, return `Value::Binary`.
+    #[must_use]
     pub fn from_possibly_base64_encoded(value: String) -> Self {
+        #[allow(clippy::option_if_let_else)]
+        // ^using `map_or` would require cloning buffer
         base64::engine::general_purpose::STANDARD
             .decode(&value)
-            .map_or(Self::Utf8(value), Value::Binary)
+            .map_or(
+                Self::Utf8(value),
+                |decoded_bytes| match std::str::from_utf8(&decoded_bytes) {
+                    Ok(utf8) => Self::Utf8(utf8.to_string()),
+                    Err(_) => Self::Binary(decoded_bytes),
+                },
+            )
     }
 
     /// Read data from given filepath.
@@ -54,7 +66,7 @@ impl Value {
     /// Supports both UTF-8 and non-UTF-8 contents.
     pub fn from_path(path: String) -> Result<Self, VaultError> {
         if let Ok(content) = std::fs::read_to_string(&path) {
-            Ok(Self::from_possibly_base64_encoded(content))
+            Ok(Self::Utf8(content))
         } else {
             let binary_data =
                 std::fs::read(&path).map_err(|e| VaultError::FileReadError(path, e))?;
@@ -79,7 +91,7 @@ impl Value {
         #[allow(clippy::option_if_let_else)]
         // ^using `map_or` would require cloning buffer
         match std::str::from_utf8(&bytes) {
-            Ok(valid_utf8) => Ok(Self::from_possibly_base64_encoded(valid_utf8.to_string())),
+            Ok(valid_utf8) => Ok(Self::Utf8(valid_utf8.to_string())),
             Err(_) => Ok(Self::Binary(bytes)),
         }
     }
@@ -112,24 +124,6 @@ impl Value {
         }
     }
 
-    /// Outputs the data as Base64 to stdout.
-    ///
-    /// String data is printed as-is.
-    /// Binary data is printed as Base64-encoded.
-    pub fn output_base64_to_stdout(&self) -> io::Result<()> {
-        match self {
-            Self::Utf8(ref string) => {
-                print!("{string}");
-                Ok(())
-            }
-            Self::Binary(ref bytes) => {
-                let base64_encoded = base64::engine::general_purpose::STANDARD.encode(bytes);
-                print!("{base64_encoded}");
-                Ok(())
-            }
-        }
-    }
-
     /// Outputs the data to the specified file path.
     pub fn output_to_file(&self, path: &Path) -> io::Result<()> {
         let file = std::fs::File::create(path)?;
@@ -138,27 +132,26 @@ impl Value {
         writer.flush()
     }
 
-    /// Outputs the data as Base64 to the specified file path.
-    ///
-    /// String data is written as-is.
-    /// Binary data is written as Base64-encoded.
-    pub fn output_base64_to_file(&self, path: &Path) -> io::Result<()> {
-        let file = std::fs::File::create(path)?;
-        let mut writer = BufWriter::new(file);
-        match self {
-            Self::Utf8(string) => {
-                writer.write_all(string.as_bytes())?;
-            }
-            Self::Binary(bytes) => {
-                writer.write_all(
-                    base64::engine::general_purpose::STANDARD
-                        .encode(bytes)
-                        .as_bytes(),
-                )?;
-            }
+    #[must_use]
+    /// Try to decode UTF-8 string from base64.
+    pub fn decode_base64(self) -> Self {
+        if let Self::Utf8(string) = self {
+            Self::from_possibly_base64_encoded(string)
+        } else {
+            self
         }
+    }
 
-        writer.flush()
+    #[must_use]
+    /// Encode binary data to base64.
+    ///
+    /// Valid UTF-8 won't be encoded.
+    pub fn encode_base64(self) -> Self {
+        if let Self::Binary(bytes) = self {
+            Self::Utf8(base64::engine::general_purpose::STANDARD.encode(bytes))
+        } else {
+            self
+        }
     }
 }
 
