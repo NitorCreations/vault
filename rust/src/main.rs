@@ -1,7 +1,8 @@
 mod cli;
 
 use anyhow::{Context, Result};
-use clap::{Parser, Subcommand};
+use clap::{CommandFactory, Parser, Subcommand};
+use clap_complete::Shell;
 use colored::Colorize;
 
 use nitor_vault::Vault;
@@ -36,6 +37,10 @@ struct Args {
     #[arg(long, name = "NAME", env = "VAULT_STACK")]
     vault_stack: Option<String>,
 
+    /// Suppress additional output and error messages
+    #[arg(short, long)]
+    quiet: bool,
+
     /// Available subcommands
     #[command(subcommand)]
     command: Option<Command>,
@@ -47,6 +52,16 @@ enum Command {
     /// List available secrets
     #[command(short_flag('a'), long_flag("all"), alias("a"))]
     All {},
+
+    /// Generate shell completion
+    #[command(long_flag("completion"))]
+    Completion {
+        shell: Shell,
+
+        /// Output completion directly to the default directory instead of stdout
+        #[arg(short, long, default_value_t = false)]
+        install: bool,
+    },
 
     /// Delete an existing key from the store
     #[command(short_flag('d'), long_flag("delete"), alias("d"))]
@@ -116,8 +131,17 @@ enum Command {
     },
 
     /// Check if a key exists
-    #[command(long_flag("exists"))]
-    Exists { key: String },
+    #[command(
+        long_flag("exists"),
+        long_about = "Check if the given key exists.\n\n\
+                      It will exit with code 0 if the key exists,\n\
+                      code 5 if it does *not* exist,\n\
+                      and with code 1 for other errors."
+    )]
+    Exists {
+        /// Key name to lookup
+        key: String,
+    },
 
     /// Print vault information
     #[command(long_flag("info"))]
@@ -194,7 +218,7 @@ enum Command {
                       - Store from stdin: `cat file.zip | vault store mykey --file -`"
     )]
     Store {
-        /// Key name
+        /// Key name to use for stored value
         key: Option<String>,
 
         /// Value to store, use '-' for stdin
@@ -225,16 +249,19 @@ enum Command {
 }
 
 #[allow(clippy::match_same_arms)]
-#[tokio::main]
-async fn main() -> Result<()> {
-    let args = Args::parse();
-
+#[allow(clippy::too_many_lines)]
+async fn run(args: Args) -> Result<()> {
     if let Some(command) = args.command {
         match command {
             Command::Init { name } => {
-                cli::init_vault_stack(args.vault_stack.or(name), args.region, args.bucket)
-                    .await
-                    .with_context(|| "Failed to init vault stack".red())?;
+                cli::init_vault_stack(
+                    args.vault_stack.or(name),
+                    args.region,
+                    args.bucket,
+                    args.quiet,
+                )
+                .await
+                .with_context(|| "Vault stack initialization failed".red())?;
             }
             Command::Update { name } => {
                 let vault = Vault::new(
@@ -245,11 +272,14 @@ async fn main() -> Result<()> {
                     args.prefix,
                 )
                 .await
-                .with_context(|| "Failed to create vault from given params".red())?;
+                .with_context(|| "Failed to create vault with given parameters".red())?;
 
-                cli::update_vault_stack(&vault)
+                cli::update_vault_stack(&vault, args.quiet)
                     .await
                     .with_context(|| "Failed to update vault stack".red())?;
+            }
+            Command::Completion { shell, install } => {
+                cli::generate_shell_completion(shell, Args::command(), install, args.quiet)?;
             }
             Command::Id {} => {
                 cli::print_aws_account(args.region).await?;
@@ -273,7 +303,7 @@ async fn main() -> Result<()> {
                     args.prefix,
                 )
                 .await
-                .with_context(|| "Failed to create vault from given params".red())?;
+                .with_context(|| "Failed to create vault with given parameters".red())?;
 
                 match command {
                     Command::All {} => cli::list_all_keys(&vault).await?,
@@ -291,10 +321,18 @@ async fn main() -> Result<()> {
                         value_argument,
                         outfile,
                     } => cli::encrypt(&vault, value, file, value_argument, outfile).await?,
-                    Command::Exists { key } => cli::exists(&vault, &key).await?,
+                    Command::Exists { key } => {
+                        if !cli::exists(&vault, &key, args.quiet).await? {
+                            drop(vault);
+                            std::process::exit(5);
+                        }
+                    }
                     Command::Info {} => println!("{vault}"),
                     Command::Status {} => {
-                        println!("{}", vault.stack_status().await?);
+                        let status = vault.stack_status().await?;
+                        if !args.quiet {
+                            println!("{status}");
+                        }
                     }
                     Command::Lookup { key, outfile } => cli::lookup(&vault, &key, outfile).await?,
                     Command::Store {
@@ -303,15 +341,44 @@ async fn main() -> Result<()> {
                         overwrite,
                         file,
                         value_argument,
-                    } => cli::store(&vault, key, value, file, value_argument, overwrite).await?,
+                    } => {
+                        cli::store(
+                            &vault,
+                            key,
+                            value,
+                            file,
+                            value_argument,
+                            overwrite,
+                            args.quiet,
+                        )
+                        .await?;
+                    }
                     // These are here again instead of a `_` so that if new commands are added,
                     // there is an error about missing handling for that.
                     Command::Init { .. } => unreachable!(),
                     Command::Update { .. } => unreachable!(),
                     Command::Id { .. } => unreachable!(),
+                    Command::Completion { .. } => unreachable!(),
                 }
             }
         };
     }
+    Ok(())
+}
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    let args = Args::parse();
+    let quiet = args.quiet;
+
+    // Suppress error output if flag given
+    if let Err(error) = run(args).await {
+        if quiet {
+            std::process::exit(1);
+        } else {
+            return Err(error);
+        }
+    }
+
     Ok(())
 }

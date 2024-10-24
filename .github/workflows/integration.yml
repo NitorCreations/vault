@@ -151,10 +151,10 @@ jobs:
 
       - name: Verify that keys have been deleted
         run: |
-          bin/rust/vault --exists secret-python | grep doesn\'t
-          bin/rust/vault --exists secret-go | grep doesn\'t
-          bin/rust/vault --exists secret-rust | grep doesn\'t
-          bin/rust/vault --exists secret-nodejs | grep doesn\'t
+          bin/rust/vault --exists secret-python | grep -q "key 'secret-python' does not exist"
+          bin/rust/vault --exists secret-go | grep -q "key 'secret-go' does not exist"
+          bin/rust/vault --exists secret-rust | grep -q "key 'secret-rust' does not exist"
+          bin/rust/vault --exists secret-nodejs | grep -q "key 'secret-nodejs' does not exist"
 
       - name: Create dummy text file
         run: echo "Vault test ${{ github.sha }} ${{ github.ref_name }}" > test.txt
@@ -194,4 +194,4 @@ jobs:
 
       - name: Verify that keys have been deleted
         run: |
-          bin/rust/vault --exists secret-${{github.sha}}.zip | grep doesn\'t
+          bin/rust/vault --exists secret-${{github.sha}}.zip | grep -q "does not exist"

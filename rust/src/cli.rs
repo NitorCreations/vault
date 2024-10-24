@@ -1,14 +1,17 @@
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 use aws_sdk_cloudformation::types::StackStatus;
+use clap::Command;
+use clap_complete::Shell;
 use colored::Colorize;
 use tokio::time::Duration;
 
 use nitor_vault::{cloudformation, CreateStackResult, UpdateStackResult, Value, Vault};
 
 static WAIT_ANIMATION_DURATION: Duration = Duration::from_millis(500);
+static QUIET_WAIT_DURATION: Duration = Duration::from_secs(1);
 static CLEAR_LINE: &str = "\x1b[2K";
 static WAIT_DOTS: [&str; 4] = [".", "..", "...", ""];
 
@@ -17,11 +20,14 @@ pub async fn init_vault_stack(
     stack_name: Option<String>,
     region: Option<String>,
     bucket: Option<String>,
+    quiet: bool,
 ) -> Result<()> {
     match Vault::init(stack_name, region, bucket).await? {
         CreateStackResult::Exists { data } => {
-            println!("Vault stack already initialized");
-            println!("{data}");
+            if !quiet {
+                println!("{}", "Vault stack already initialized:".bold());
+                println!("{data}");
+            }
         }
         CreateStackResult::ExistsWithFailedState { data } => {
             anyhow::bail!(
@@ -34,24 +40,28 @@ pub async fn init_vault_stack(
             stack_id,
             region,
         } => {
-            println!("Stack created with ID: {stack_id}");
+            if !quiet {
+                println!("Stack created with ID: {stack_id}");
+            }
             let config = aws_config::from_env().region(region).load().await;
-            wait_for_stack_creation_to_finish(&config, &stack_name).await?;
+            wait_for_stack_creation_to_finish(&config, &stack_name, quiet).await?;
         }
     }
     Ok(())
 }
 
 /// Update existing Cloudformation vault stack and wait for update to finish.
-pub async fn update_vault_stack(vault: &Vault) -> Result<()> {
+pub async fn update_vault_stack(vault: &Vault, quiet: bool) -> Result<()> {
     match vault
         .update_stack()
         .await
         .with_context(|| "Failed to update vault stack".red())?
     {
         UpdateStackResult::UpToDate { data } => {
-            println!("{}", "Vault stack is up to date:".bold());
-            println!("{data}");
+            if !quiet {
+                println!("{}", "Vault stack is up to date:".bold());
+                println!("{data}");
+            }
             Ok(())
         }
         UpdateStackResult::Updated {
@@ -59,13 +69,15 @@ pub async fn update_vault_stack(vault: &Vault) -> Result<()> {
             previous_version: current_version,
             new_version,
         } => {
-            println!(
-                "{}",
-                format!("Updating vault stack from version {current_version} to {new_version}")
-                    .bold()
-            );
-            println!("{stack_id}");
-            wait_for_stack_update_to_finish(vault).await
+            if !quiet {
+                println!(
+                    "{}",
+                    format!("Updating vault stack from version {current_version} to {new_version}")
+                        .bold()
+                );
+                println!("{stack_id}");
+            }
+            wait_for_stack_update_to_finish(vault, quiet).await
         }
     }
 }
@@ -78,6 +90,7 @@ pub async fn store(
     file: Option<String>,
     value_argument: Option<String>,
     overwrite: bool,
+    quiet: bool,
 ) -> Result<()> {
     let key = {
         if let Some(key) = key {
@@ -87,7 +100,9 @@ pub async fn store(
                 anyhow::bail!("Key cannot be empty when reading from stdin".red())
             }
             let key = get_filename_from_path(file_name)?;
-            println!("Using filename as key: '{key}'");
+            if !quiet {
+                println!("Using filename as key: '{key}'");
+            }
             key
         } else {
             anyhow::bail!(
@@ -159,21 +174,25 @@ pub async fn list_all_keys(vault: &Vault) -> Result<()> {
 }
 
 /// Check if key exists.
-pub async fn exists(vault: &Vault, key: &str) -> Result<()> {
+pub async fn exists(vault: &Vault, key: &str, quiet: bool) -> Result<bool> {
     if key.trim().is_empty() {
         anyhow::bail!(format!("Empty key: '{key}'").red())
     }
-    vault
+
+    let exists = vault
         .exists(key)
         .await
-        .with_context(|| format!("Failed to check if key '{key}' exists").red())
-        .map(|result| {
-            if result {
-                println!("key '{key}' exists");
-            } else {
-                println!("{}", format!("key '{key}' doesn't exist").red());
-            }
-        })
+        .with_context(|| format!("Failed to check if key '{key}' exists").red())?;
+
+    if !quiet {
+        if exists {
+            println!("key '{key}' exists");
+        } else {
+            println!("{}", format!("key '{key}' does not exist").red());
+        }
+    }
+
+    Ok(exists)
 }
 
 /// Directly encrypt given value with KMS.
@@ -238,6 +257,7 @@ pub async fn print_aws_account(region: Option<String>) -> Result<()> {
 async fn wait_for_stack_creation_to_finish(
     config: &aws_config::SdkConfig,
     stack_name: &str,
+    quiet: bool,
 ) -> Result<()> {
     let client = aws_sdk_cloudformation::Client::new(config);
     let mut last_status: Option<StackStatus> = None;
@@ -246,24 +266,32 @@ async fn wait_for_stack_creation_to_finish(
         if let Some(ref status) = stack_data.status {
             match status {
                 StackStatus::CreateComplete => {
-                    println!("{CLEAR_LINE}{stack_data}");
-                    println!("{}", "Stack creation completed successfully".green());
+                    if !quiet {
+                        println!("{CLEAR_LINE}{stack_data}");
+                        println!("{}", "Stack creation completed successfully".green());
+                    }
                     break;
                 }
                 StackStatus::CreateFailed
                 | StackStatus::RollbackFailed
                 | StackStatus::RollbackComplete => {
-                    println!("{CLEAR_LINE}{stack_data}");
+                    if !quiet {
+                        println!("{CLEAR_LINE}{stack_data}");
+                    }
                     anyhow::bail!("Stack creation failed");
                 }
                 _ => {
-                    // Print status if it has changed
-                    if last_status.as_ref() != Some(status) {
-                        last_status = Some(status.clone());
-                        println!("status: {status}");
+                    if quiet {
+                        tokio::time::sleep(QUIET_WAIT_DURATION).await;
+                    } else {
+                        // Print status if it has changed
+                        if last_status.as_ref() != Some(status) {
+                            last_status = Some(status.clone());
+                            println!("status: {status}");
+                        }
+                        // Continue waiting for stack creation to complete
+                        print_wait_animation().await?;
                     }
-                    // Continue waiting for stack creation to complete
-                    print_wait_animation().await?;
                 }
             }
         } else {
@@ -274,29 +302,37 @@ async fn wait_for_stack_creation_to_finish(
 }
 
 /// Poll Cloudformation for stack status until it has been updated or update failed.
-async fn wait_for_stack_update_to_finish(vault: &Vault) -> Result<()> {
+async fn wait_for_stack_update_to_finish(vault: &Vault, quiet: bool) -> Result<()> {
     let mut last_status: Option<StackStatus> = None;
     loop {
         let stack_data = vault.stack_status().await?;
         if let Some(ref status) = stack_data.status {
             match status {
                 StackStatus::UpdateComplete => {
-                    println!("{CLEAR_LINE}{stack_data}");
-                    println!("{}", "Stack update completed successfully".green());
+                    if !quiet {
+                        println!("{CLEAR_LINE}{stack_data}");
+                        println!("{}", "Stack update completed successfully".green());
+                    }
                     break;
                 }
                 StackStatus::UpdateFailed | StackStatus::RollbackFailed => {
-                    println!("{CLEAR_LINE}{stack_data}");
+                    if !quiet {
+                        println!("{CLEAR_LINE}{stack_data}");
+                    }
                     anyhow::bail!("Stack update failed".red());
                 }
                 _ => {
-                    // Print status if it has changed
-                    if last_status.as_ref() != Some(status) {
-                        last_status = Some(status.clone());
-                        println!("status: {status}");
+                    if quiet {
+                        tokio::time::sleep(QUIET_WAIT_DURATION).await;
+                    } else {
+                        // Print status if it has changed
+                        if last_status.as_ref() != Some(status) {
+                            last_status = Some(status.clone());
+                            println!("status: {status}");
+                        }
+                        // Continue waiting for stack update to complete
+                        print_wait_animation().await?;
                     }
-                    // Continue waiting for stack update to complete
-                    print_wait_animation().await?;
                 }
             }
         } else {
@@ -306,6 +342,26 @@ async fn wait_for_stack_update_to_finish(vault: &Vault) -> Result<()> {
             );
         }
     }
+    Ok(())
+}
+
+/// Generate a shell completion script for the given shell.
+pub fn generate_shell_completion(
+    shell: Shell,
+    mut command: Command,
+    install: bool,
+    quiet: bool,
+) -> Result<()> {
+    if install {
+        let out_dir = get_shell_completion_dir(shell)?;
+        let path = clap_complete::generate_to(shell, &mut command, "vault", out_dir)?;
+        if !quiet {
+            println!("Completion file generated to: {}", path.display());
+        }
+    } else {
+        clap_complete::generate(shell, &mut command, "vault", &mut std::io::stdout());
+    }
+
     Ok(())
 }
 
@@ -378,4 +434,64 @@ async fn print_wait_animation() -> Result<()> {
         tokio::time::sleep(WAIT_ANIMATION_DURATION).await;
     }
     Ok(())
+}
+
+/// Determine the appropriate directory for storing shell completions.
+///
+/// First checks if the user-specific directory exists,
+/// then checks for the global directory.
+/// If neither exist, creates and uses the user-specific dir.
+fn get_shell_completion_dir(shell: Shell) -> Result<PathBuf> {
+    let home = dirs::home_dir().ok_or_else(|| anyhow!("Failed to get home directory"))?;
+
+    // Special handling for oh-my-zsh: https://ohmyz.sh/
+    // Create custom "plugin", which will then have to be loaded in .zshrc
+    if shell == Shell::Zsh {
+        let omz_plugins = home.join(".oh-my-zsh/custom/plugins");
+        if omz_plugins.exists() {
+            let plugin_dir = omz_plugins.join("vault");
+            std::fs::create_dir_all(&plugin_dir)?;
+            return Ok(plugin_dir);
+        }
+    }
+
+    let user_dir = match shell {
+        Shell::PowerShell => {
+            if cfg!(windows) {
+                home.join(r"Documents\PowerShell\completions")
+            } else {
+                home.join(".config/powershell/completions")
+            }
+        }
+        Shell::Bash => home.join(".bash_completion.d"),
+        Shell::Elvish => home.join(".elvish"),
+        Shell::Fish => home.join(".config/fish/completions"),
+        Shell::Zsh => home.join(".zsh/completions"),
+        _ => anyhow::bail!("Unsupported shell"),
+    };
+
+    if user_dir.exists() {
+        return Ok(user_dir);
+    }
+
+    let global_dir = match shell {
+        Shell::PowerShell => {
+            if cfg!(windows) {
+                home.join(r"Documents\PowerShell\completions")
+            } else {
+                home.join(".config/powershell/completions")
+            }
+        }
+        Shell::Bash => PathBuf::from("/etc/bash_completion.d"),
+        Shell::Fish => PathBuf::from("/usr/share/fish/completions"),
+        Shell::Zsh => PathBuf::from("/usr/share/zsh/site-functions"),
+        _ => anyhow::bail!("Unsupported shell"),
+    };
+
+    if global_dir.exists() {
+        return Ok(global_dir);
+    }
+
+    std::fs::create_dir_all(&user_dir)?;
+    Ok(user_dir)
 }
