@@ -133,8 +133,9 @@ enum Command {
     /// Check if a key exists
     #[command(
         long_flag("exists"),
-        long_about = "Check if the given key exists.\n\
-                      It will exit with code 5 if the key does not exists,\n\
+        long_about = "Check if the given key exists.\n\n\
+                      It will exit with code 0 if the key exists,\
+                      code 5 if it does *not* exist,\n\
                       and with code 1 for other errors."
     )]
     Exists {
