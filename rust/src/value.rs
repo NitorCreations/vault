@@ -91,7 +91,7 @@ impl Value {
         #[allow(clippy::option_if_let_else)]
         // ^using `map_or` would require cloning buffer
         match std::str::from_utf8(&bytes) {
-            Ok(valid_utf8) => Ok(Self::Utf8(valid_utf8.to_string())),
+            Ok(valid_utf8) => Ok(Self::Utf8(valid_utf8.trim().to_string())),
             Err(_) => Ok(Self::Binary(bytes)),
         }
     }
