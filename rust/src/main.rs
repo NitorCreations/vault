@@ -131,8 +131,16 @@ enum Command {
     },
 
     /// Check if a key exists
-    #[command(long_flag("exists"))]
-    Exists { key: String },
+    #[command(
+        long_flag("exists"),
+        long_about = "Check if the given key exists.\n\
+                      It will exit with code 5 if the key does not exists,\n\
+                      and with code 1 for other errors."
+    )]
+    Exists {
+        /// Key name to lookup
+        key: String,
+    },
 
     /// Print vault information
     #[command(long_flag("info"))]
@@ -209,7 +217,7 @@ enum Command {
                       - Store from stdin: `cat file.zip | vault store mykey --file -`"
     )]
     Store {
-        /// Key name
+        /// Key name to use for stored value
         key: Option<String>,
 
         /// Value to store, use '-' for stdin
@@ -315,7 +323,7 @@ async fn run(args: Args) -> Result<()> {
                     Command::Exists { key } => {
                         if !cli::exists(&vault, &key, args.quiet).await? {
                             drop(vault);
-                            std::process::exit(1);
+                            std::process::exit(5);
                         }
                     }
                     Command::Info {} => println!("{vault}"),
