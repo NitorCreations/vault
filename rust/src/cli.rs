@@ -356,7 +356,7 @@ pub fn generate_shell_completion(
         let out_dir = get_shell_completion_dir(shell)?;
         let path = clap_complete::generate_to(shell, &mut command, "vault", out_dir)?;
         if !quiet {
-            println!("Completion file generated to: {:?}", path.display());
+            println!("Completion file generated to: {}", path.display());
         }
     } else {
         clap_complete::generate(shell, &mut command, "vault", &mut std::io::stdout());
