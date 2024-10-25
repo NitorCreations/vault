@@ -185,13 +185,14 @@ enum Command {
         alias("u"),
         long_about = "Update the CloudFormation stack which declares all resources needed by the vault.\n\n\
                       Usage examples:\n\
+                      - `vault update`\n\
                       - `vault update \"vault-name\"`\n\
                       - `vault -u \"vault-name\"`\n\
                       - `vault --vault-stack \"vault-name\" --update`\n\
                       - `VAULT_STACK=\"vault-name\" vault u`"
     )]
     Update {
-        /// Vault stack name
+        /// Optional vault stack name
         name: Option<String>,
     },
 

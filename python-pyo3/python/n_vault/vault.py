@@ -131,12 +131,18 @@ def describe(ctx: typer.Context):
 @app.command(name="decrypt | y")
 def decrypt(
     ctx: typer.Context,
-    value: str = typer.Option(None, help="Value to decrypt, use '-' for stdin"),
+    value: str = typer.Argument(
+        None,
+        help="Value to decrypt, use '-' for stdin",
+        allow_dash=True,
+        show_default=False,
+    ),
     value_argument: str = typer.Option(
         None,
         "-v",
         "--value",
         help="Value to decrypt, use '-' for stdin",
+        allow_dash=True,
         show_default=False,
     ),
     file: Path = typer.Option(
@@ -144,6 +150,7 @@ def decrypt(
         "-f",
         "--file",
         help="File to decrypt, use '-' for stdin",
+        allow_dash=True,
         show_default=False,
     ),
     outfile: Path = typer.Option(
@@ -172,12 +179,18 @@ def decrypt(
 @app.command(name="encrypt | e")
 def encrypt(
     ctx: typer.Context,
-    value: str = typer.Option(None, help="Value to encrypt, use '-' for stdin"),
+    value: str = typer.Argument(
+        None,
+        help="Value to encrypt, use '-' for stdin",
+        allow_dash=True,
+        show_default=False,
+    ),
     value_argument: str = typer.Option(
         None,
         "-v",
         "--value",
         help="Value to encrypt, use '-' for stdin",
+        allow_dash=True,
         show_default=False,
     ),
     file: Path = typer.Option(
@@ -185,6 +198,7 @@ def encrypt(
         "-f",
         "--file",
         help="File to encrypt, use '-' for stdin",
+        allow_dash=True,
         show_default=False,
     ),
     outfile: Path = typer.Option(
@@ -251,7 +265,7 @@ def init(ctx: typer.Context, name: str | None = None):
 @app.command(name="lookup | l")
 def lookup(
     ctx: typer.Context,
-    key: str = typer.Argument(..., help="Key name to lookup"),
+    key: str = typer.Argument(..., help="Key name to lookup", show_default=False),
     outfile: Path = typer.Option(None, "-o", "--outfile", help="Optional output file", show_default=False),
 ):
     """Output secret value for given key"""
@@ -279,13 +293,14 @@ def status(ctx: typer.Context):
 @app.command(name="store | s")
 def store(
     ctx: typer.Context,
-    key: str = typer.Option(None, help="Key name to use for stored value"),
-    value: str = typer.Option(None, help="Value to store, use '-' for stdin"),
+    key: str = typer.Argument(None, help="Key name to use for stored value", show_default=False),
+    value: str = typer.Argument(None, help="Value to store, use '-' for stdin", show_default=False),
     value_argument: str = typer.Option(
         None,
         "-v",
         "--value",
         help="Value to store, use '-' for stdin",
+        allow_dash=True,
         show_default=False,
     ),
     file: Path = typer.Option(
@@ -293,6 +308,7 @@ def store(
         "-f",
         "--file",
         help="File to store, use '-' for stdin",
+        allow_dash=True,
         show_default=False,
     ),
     overwrite: bool = typer.Option(
@@ -324,7 +340,7 @@ def store(
 
 
 @app.command(name="update | u")
-def update(ctx: typer.Context, name: str | None = None):
+def update(ctx: typer.Context, name: str = typer.Option(None, help="Optional vault stack name", show_default=False)):
     """Update the vault CloudFormation stack"""
     config: Config = ctx.obj
     nitor_vault.update(
