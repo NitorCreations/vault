@@ -3,10 +3,11 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-import nvault
 import typer
 
 from typer.core import TyperGroup
+
+from n_vault import nitor_vault
 
 
 # Hack to nicely support command aliases
@@ -83,7 +84,7 @@ def main(
 def all_keys(ctx: typer.Context):
     """List available secrets"""
     config: Config = ctx.obj
-    nvault.all(config.vault_stack, config.region, config.bucket, config.key_arn, config.prefix)
+    nitor_vault.all(config.vault_stack, config.region, config.bucket, config.key_arn, config.prefix)
 
 
 @app.command()
@@ -171,14 +172,14 @@ def info(ctx: typer.Context):
 def id(ctx: typer.Context):
     """Print AWS user account information"""
     config: Config = ctx.obj
-    nvault.id(config.region, config.quiet)
+    nitor_vault.id(config.region, config.quiet)
 
 
 @app.command()
 def init(ctx: typer.Context, name: str | None = None):
     """Initialize a new KMS key and S3 bucket"""
     config: Config = ctx.obj
-    nvault.init(name, config.vault_stack, config.region, config.bucket, config.quiet)
+    n_vault.init(name, config.vault_stack, config.region, config.bucket, config.quiet)
 
 
 @app.command()
@@ -199,7 +200,7 @@ def lookup(
 ):
     """Output secret value for given key"""
     config: Config = ctx.obj
-    nvault.lookup(
+    nitor_vault.lookup(
         key,
         config.vault_stack,
         config.region,
@@ -215,7 +216,7 @@ def lookup(
 def status(ctx: typer.Context):
     """Print vault stack information"""
     config: Config = ctx.obj
-    nvault.status(config.vault_stack, config.region, config.bucket, config.key_arn, config.prefix, config.quiet)
+    nitor_vault.status(config.vault_stack, config.region, config.bucket, config.key_arn, config.prefix, config.quiet)
 
 
 @app.command()

@@ -110,7 +110,8 @@ fn status(
 }
 
 #[pymodule]
-fn nvault(m: &Bound<'_, PyModule>) -> PyResult<()> {
+#[pyo3(name = "nitor_vault")]
+fn vault(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(all, m)?)?;
     m.add_function(wrap_pyfunction!(init, m)?)?;
     m.add_function(wrap_pyfunction!(lookup, m)?)?;

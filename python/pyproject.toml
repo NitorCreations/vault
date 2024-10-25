@@ -18,7 +18,10 @@ version = "0.55"
 description = "Vault for storing locally encrypted data in S3 using KMS keys"
 readme = "README.md"
 requires-python = ">=3.8"
-authors = [{ name = "Pasi Niemi", email = "pasi@nitor.com" }]
+authors = [
+    { name = "Pasi Niemi", email = "pasi@nitor.com" },
+    { name = "Akseli Lukkarila", email = "akseli.lukkarila@nitor.com" },
+]
 license = { text = "Apache 2.0" }
 dependencies = [
     "argcomplete",
@@ -40,7 +43,7 @@ requires = ["setuptools", "wheel", "build"]
 build-backend = "setuptools.build_meta"
 
 [project.urls]
-Repository = "http://github.com/NitorCreations/vault"
+Repository = "https://github.com/NitorCreations/vault"
 Download = "https://github.com/NitorCreations/vault/tarball/0.55"
 
 [project.scripts]
