@@ -100,7 +100,7 @@ def all_keys(ctx: typer.Context):
     nitor_vault.all(config.vault_stack, config.region, config.bucket, config.key_arn, config.prefix)
 
 
-@app.command()
+@app.command(name="delete | d")
 def delete(ctx: typer.Context, key: str):
     """Delete an existing key from the store"""
     config: Config = ctx.obj
@@ -128,21 +128,39 @@ def describe(ctx: typer.Context):
     )
 
 
-@app.command()
+@app.command(name="decrypt | y")
 def decrypt(
     ctx: typer.Context,
-    value: str | None = None,
-    value_argument: str | None = typer.Option(None),
-    file: str | None = typer.Option(None),
-    outfile: str | None = None,
+    value: str = typer.Option(None, help="Value to decrypt, use '-' for stdin"),
+    value_argument: str = typer.Option(
+        None,
+        "-v",
+        "--value",
+        help="Value to decrypt, use '-' for stdin",
+        show_default=False,
+    ),
+    file: Path = typer.Option(
+        None,
+        "-f",
+        "--file",
+        help="File to decrypt, use '-' for stdin",
+        show_default=False,
+    ),
+    outfile: Path = typer.Option(
+        None,
+        "-o",
+        "--outfile",
+        help="Optional output file",
+        show_default=False,
+    ),
 ):
     """Directly decrypt given value"""
     config: Config = ctx.obj
     nitor_vault.decrypt(
         value,
         value_argument,
-        file,
-        outfile,
+        str(file) if file else None,
+        str(outfile) if outfile else None,
         config.vault_stack,
         config.region,
         config.bucket,
@@ -151,21 +169,39 @@ def decrypt(
     )
 
 
-@app.command()
+@app.command(name="encrypt | e")
 def encrypt(
     ctx: typer.Context,
-    value: str | None = None,
-    value_argument: str | None = typer.Option(None),
-    file: str | None = typer.Option(None),
-    outfile: str | None = None,
+    value: str = typer.Option(None, help="Value to encrypt, use '-' for stdin"),
+    value_argument: str = typer.Option(
+        None,
+        "-v",
+        "--value",
+        help="Value to encrypt, use '-' for stdin",
+        show_default=False,
+    ),
+    file: Path = typer.Option(
+        None,
+        "-f",
+        "--file",
+        help="File to encrypt, use '-' for stdin",
+        show_default=False,
+    ),
+    outfile: Path = typer.Option(
+        None,
+        "-o",
+        "--outfile",
+        help="Optional output file",
+        show_default=False,
+    ),
 ):
     """Directly encrypt given value"""
     config: Config = ctx.obj
     nitor_vault.encrypt(
         value,
         value_argument,
-        file,
-        outfile,
+        str(file) if file else None,
+        str(outfile) if outfile else None,
         config.vault_stack,
         config.region,
         config.bucket,
@@ -205,16 +241,18 @@ def caller_id(ctx: typer.Context):
     nitor_vault.id(config.region, config.quiet)
 
 
-@app.command()
+@app.command(name="init | i")
 def init(ctx: typer.Context, name: str | None = None):
     """Initialize a new KMS key and S3 bucket"""
     config: Config = ctx.obj
     nitor_vault.init(name, config.vault_stack, config.region, config.bucket, config.quiet)
 
 
-@app.command()
+@app.command(name="lookup | l")
 def lookup(
-    ctx: typer.Context, key: str, outfile: Path = typer.Option(None, "-o", "--outfile", help="Optional output file")
+    ctx: typer.Context,
+    key: str = typer.Argument(..., help="Key name to lookup"),
+    outfile: Path = typer.Option(None, "-o", "--outfile", help="Optional output file", show_default=False),
 ):
     """Output secret value for given key"""
     config: Config = ctx.obj
@@ -238,22 +276,43 @@ def status(ctx: typer.Context):
     nitor_vault.status(config.vault_stack, config.region, config.bucket, config.key_arn, config.prefix, config.quiet)
 
 
-@app.command()
+@app.command(name="store | s")
 def store(
     ctx: typer.Context,
-    key: str | None = None,
-    value: str | None = None,
-    value_argument: str | None = typer.Option(None),
-    file: str | None = typer.Option(None),
-    overwrite: bool = False,
+    key: str = typer.Option(None, help="Key name to use for stored value"),
+    value: str = typer.Option(None, help="Value to store, use '-' for stdin"),
+    value_argument: str = typer.Option(
+        None,
+        "-v",
+        "--value",
+        help="Value to store, use '-' for stdin",
+        show_default=False,
+    ),
+    file: Path = typer.Option(
+        None,
+        "-f",
+        "--file",
+        help="File to store, use '-' for stdin",
+        show_default=False,
+    ),
+    overwrite: bool = typer.Option(
+        False,
+        "-o",
+        "--overwrite",
+        help="Overwrite existing key",
+        show_default=False,
+    ),
 ):
     """Store a new key-value pair"""
+    if (value and value_argument) or (value_argument and file) or (value and file):
+        raise typer.BadParameter("Specify only one of positional value, '--value' or '--file'")
+
     config: Config = ctx.obj
     nitor_vault.store(
         key,
         value,
         value_argument,
-        file,
+        str(file) if file else None,
         overwrite,
         config.vault_stack,
         config.region,
@@ -264,7 +323,7 @@ def store(
     )
 
 
-@app.command()
+@app.command(name="update | u")
 def update(ctx: typer.Context, name: str | None = None):
     """Update the vault CloudFormation stack"""
     config: Config = ctx.obj
