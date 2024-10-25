@@ -1,7 +1,7 @@
 import nvault
 import typer
 
-from nvault import sum_as_string
+from pathlib import Path
 
 app = typer.Typer(help="Nitor Vault CLI, see https://github.com/nitorcreations/vault for usage examples")
 
@@ -9,7 +9,7 @@ app = typer.Typer(help="Nitor Vault CLI, see https://github.com/nitorcreations/v
 @app.command()
 def all():
     """List available secrets"""
-    typer.echo("Listing all secrets...")
+    nvault.all()
 
 
 @app.command()
@@ -22,8 +22,6 @@ def delete(key: str):
 def describe():
     """Describe CloudFormation stack parameters for current configuration"""
     typer.echo("Describing CloudFormation stack...")
-    result = sum_as_string(1,3)
-    print(f"sum_as_string(1,3) = {result}")
 
 
 @app.command()
@@ -83,13 +81,12 @@ def info():
 @app.command()
 def id():
     """Print AWS user account information"""
-    typer.echo("AWS account ID information")
+    nvault.id()
 
 
 @app.command()
 def status():
     """Print vault stack information"""
-    typer.echo("Vault stack status")
     nvault.status()
 
 
@@ -112,11 +109,9 @@ def update(name: str | None = None):
 
 
 @app.command()
-def lookup(key: str, outfile: str | None = None):
+def lookup(key: str, outfile: Path = typer.Option(None, "-o", "--outfile", help="Optional output file")):
     """Output secret value for given key"""
-    typer.echo(f"Looking up key: {key}")
-    if outfile:
-        typer.echo(f"Saving output to: {outfile}")
+    nvault.lookup(key, str(outfile) if outfile else None)
 
 
 @app.command()

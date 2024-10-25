@@ -241,8 +241,8 @@ pub async fn decrypt(
 
 /// Print the information from AWS STS "get caller identity" call.
 pub async fn print_aws_account(region: Option<String>) -> Result<()> {
-    let config = Vault::get_aws_config(region).await;
-    let client = aws_sdk_sts::Client::new(&config);
+    let config = nitor_vault::get_aws_config(region).await;
+    let client = nitor_vault::aws_sts_client(&config);
     let result = client.get_caller_identity().send().await?;
     println!(
         "user: {}\naccount: {}\narn: {}",

@@ -3,8 +3,7 @@ use std::{env, fmt};
 use aes_gcm::aead::{Aead, Payload};
 use aes_gcm::aes::{cipher, Aes256};
 use aes_gcm::{AesGcm, KeyInit, Nonce};
-use aws_config::meta::region::RegionProviderChain;
-use aws_config::{Region, SdkConfig};
+use aws_config::Region;
 use aws_sdk_cloudformation::types::{Capability, Parameter, StackStatus};
 use aws_sdk_cloudformation::Client as CloudFormationClient;
 use aws_sdk_kms::primitives::Blob;
@@ -58,7 +57,7 @@ impl Vault {
         key: Option<String>,
         prefix: Option<String>,
     ) -> Result<Self, VaultError> {
-        let config = Self::get_aws_config(region).await;
+        let config = crate::get_aws_config(region).await;
         let region = config
             .region()
             .map(ToOwned::to_owned)
@@ -107,7 +106,7 @@ impl Vault {
         region: Option<String>,
         bucket: Option<String>,
     ) -> Result<CreateStackResult, VaultError> {
-        let config = Self::get_aws_config(region).await;
+        let config = crate::get_aws_config(region).await;
         let region = config
             .region()
             .map(ToOwned::to_owned)
@@ -384,15 +383,6 @@ impl Vault {
         Ok(ciphertext)
     }
 
-    #[inline]
-    /// Return AWS SDK config with optional region name to use.
-    pub async fn get_aws_config(region: Option<String>) -> SdkConfig {
-        aws_config::from_env()
-            .region(get_region_provider(region))
-            .load()
-            .await
-    }
-
     /// Get S3 Object data for given key as a vec of bytes.
     async fn get_s3_object(&self, key: String) -> Result<Vec<u8>, VaultError> {
         self.s3
@@ -495,12 +485,6 @@ fn create_random_nonce() -> [u8; 12] {
     let mut rng = rand::thread_rng();
     rng.fill(nonce.as_mut_slice());
     nonce
-}
-
-#[inline]
-/// Get AWS region from optional argument or fallback to default.
-fn get_region_provider(region: Option<String>) -> RegionProviderChain {
-    RegionProviderChain::first_try(region.map(Region::new)).or_default_provider()
 }
 
 #[inline]

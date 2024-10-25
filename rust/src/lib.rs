@@ -9,6 +9,8 @@ mod vault;
 pub use crate::value::Value;
 pub use crate::vault::Vault;
 
+use aws_config::meta::region::RegionProviderChain;
+use aws_config::{Region, SdkConfig};
 use aws_sdk_s3::types::ObjectIdentifier;
 use base64::Engine;
 use serde::{Deserialize, Serialize};
@@ -112,4 +114,27 @@ impl S3DataKeys {
             })
             .collect()
     }
+}
+
+#[inline]
+#[must_use]
+/// Return AWS SDK config with optional region name to use.
+pub async fn get_aws_config(region: Option<String>) -> SdkConfig {
+    aws_config::from_env()
+        .region(get_region_provider(region))
+        .load()
+        .await
+}
+
+#[inline]
+#[must_use]
+/// Return new AWS STS client.
+pub fn aws_sts_client(config: &SdkConfig) -> aws_sdk_sts::Client {
+    aws_sdk_sts::Client::new(config)
+}
+
+#[inline]
+/// Get AWS region from optional argument or fallback to default.
+fn get_region_provider(region: Option<String>) -> RegionProviderChain {
+    RegionProviderChain::first_try(region.map(Region::new)).or_default_provider()
 }
