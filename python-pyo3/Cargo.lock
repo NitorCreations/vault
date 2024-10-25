@@ -1370,6 +1370,7 @@ dependencies = [
 name = "nitor-vault-pyo3"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "nitor-vault",
  "pyo3",
  "tokio",

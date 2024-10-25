@@ -1,29 +1,31 @@
-use std::path::{Path};
+use std::path::Path;
 
-use nitor_vault::Vault;
+use nitor_vault::errors::VaultError;
+use nitor_vault::{cli, Vault};
+use pyo3::exceptions::PyRuntimeError;
 use pyo3::prelude::*;
 use tokio::runtime::Runtime;
 
+/// Convert `anyhow::Error` to `PyErr` for PyO3
+fn anyhow_to_py_err(err: anyhow::Error) -> PyErr {
+    PyRuntimeError::new_err(format!("Error: {}", err))
+}
+
+/// Convert `VaultError` to `PyErr` for PyO3
+fn vault_error_to_py_err(err: VaultError) -> PyErr {
+    PyRuntimeError::new_err(format!("Error: {}", err))
+}
+
 #[pyfunction]
 fn all() -> PyResult<()> {
-    let rt = Runtime::new().map_err(|e| {
-        PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Runtime creation failed: {e}"))
-    })?;
+    Runtime::new()?.block_on(async {
+        let vault = Vault::default()
+            .await
+            .map_err(|e| vault_error_to_py_err(e))?;
+        cli::list_all_keys(&vault)
+            .await
+            .map_err(|e| anyhow_to_py_err(e))?;
 
-    rt.block_on(async {
-        let vault = Vault::default().await.map_err(|e| {
-            PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!(
-                "Vault initialization failed: {e}",
-            ))
-        })?;
-        let list = vault.all().await.map_err(|e| {
-            PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!(
-                "Fetching stack status failed: {e}",
-            ))
-        })?;
-        if !list.is_empty() {
-            println!("{}", list.join("\n"));
-        }
         Ok(())
     })
 }
