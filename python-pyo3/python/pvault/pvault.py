@@ -1,9 +1,14 @@
+from pathlib import Path
+
 import nvault
 import typer
 
-from pathlib import Path
-
-app = typer.Typer(help="Nitor Vault CLI, see https://github.com/nitorcreations/vault for usage examples")
+app = typer.Typer(
+    short_help="Encrypted AWS key-value storage utility"
+    help="Nitor Vault CLI, see https://github.com/nitorcreations/vault for usage examples",
+    context_settings={"help_option_names": ["-h", "--help"]},
+    no_args_is_help=True,
+)
 
 
 @app.command()

@@ -1,6 +1,7 @@
+use std::path::{Path};
+
 use nitor_vault::Vault;
 use pyo3::prelude::*;
-use std::path::{Path, PathBuf};
 use tokio::runtime::Runtime;
 
 #[pyfunction]
