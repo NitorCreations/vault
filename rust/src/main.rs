@@ -48,7 +48,13 @@ struct Args {
 #[derive(Subcommand)]
 enum Command {
     /// List available secrets
-    #[command(short_flag('a'), long_flag("all"), alias("a"))]
+    #[command(
+        short_flag('a'),
+        long_flag("all"),
+        visible_alias("a"),
+        visible_alias("list"),
+        visible_alias("ls")
+    )]
     All {},
 
     /// Generate shell completion

@@ -1,26 +1,51 @@
+import re
+
 from dataclasses import dataclass
 from pathlib import Path
 
 import nvault
 import typer
 
-app = typer.Typer(
-    short_help="Encrypted AWS key-value storage utility",
-    help="Nitor Vault CLI, see https://github.com/nitorcreations/vault for usage examples",
-    context_settings={"help_option_names": ["-h", "--help"]},
-    no_args_is_help=True,
-)
+from typer.core import TyperGroup
 
 
-# Define a Config dataclass for the global options
+# Hack to nicely support command aliases
+# https://github.com/fastapi/typer/issues/132
+class AliasGroup(TyperGroup):
+    _CMD_SPLIT_P = re.compile(r" ?[,|] ?")
+
+    def get_command(self, ctx, cmd_name):
+        cmd_name = self._group_cmd_name(cmd_name)
+        return super().get_command(ctx, cmd_name)
+
+    def _group_cmd_name(self, default_name):
+        for cmd in self.commands.values():
+            name = cmd.name
+            if name and default_name in self._CMD_SPLIT_P.split(name):
+                return name
+
+        return default_name
+
+
 @dataclass
 class Config:
+    """Global options."""
+
     bucket: str | None
     key_arn: str | None
     prefix: str | None
     region: str | None
     vault_stack: str | None
     quiet: bool
+
+
+app = typer.Typer(
+    cls=AliasGroup,
+    short_help="Encrypted AWS key-value storage utility",
+    help="Nitor Vault CLI, see https://github.com/nitorcreations/vault for usage examples",
+    context_settings={"help_option_names": ["-h", "--help"]},
+    no_args_is_help=True,
+)
 
 
 @app.callback()
@@ -40,7 +65,7 @@ def main(
     quiet: bool = typer.Option(False, "--quiet", "-q", help="Suppress additional output and error messages"),
 ):
     """
-    CLI with global options available in all subcommands.
+    Global options available in all subcommands.
     """
     # Initialize Config dataclass and store it in Typer context
     config = Config(
@@ -54,8 +79,8 @@ def main(
     ctx.obj = config
 
 
-@app.command()
-def all(ctx: typer.Context):
+@app.command(name="all | a | list | ls")
+def all_keys(ctx: typer.Context):
     """List available secrets"""
     config: Config = ctx.obj
     nvault.all(config.vault_stack, config.region, config.bucket, config.key_arn, config.prefix)
