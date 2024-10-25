@@ -40,8 +40,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
-          args: --release --out dist --find-interpreter --zig --manifest-path python-pyo3/Cargo.toml
-          sccache: "true"
+          args: --release --out dist --find-interpreter --manifest-path python-pyo3/Cargo.toml
           manylinux: auto
       - name: Upload wheels
         uses: actions/upload-artifact@v4
