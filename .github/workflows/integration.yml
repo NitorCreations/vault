@@ -101,12 +101,13 @@ jobs:
         working-directory: python
 
       - name: Install Python PyO3 vault
-        run: python -m pip install --upgrade --target pyo3 .
+        run: python -m pip install --target ../pyo3 .
         working-directory: python-pyo3
 
       - name: Add execute rights and run --version for all versions
         run: |
           chmod +x bin/go/vault bin/rust/vault nodejs/dist/cli/vault.js
+          which -a vault
           vault --version
           pyo3/bin/vault --version
           bin/go/vault --version
