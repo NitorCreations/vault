@@ -201,8 +201,8 @@ pub async fn exists(vault: &Vault, key: &str, quiet: bool) -> Result<bool> {
 pub async fn encrypt(
     vault: &Vault,
     value_positional: Option<String>,
-    file: Option<String>,
     value_argument: Option<String>,
+    file: Option<String>,
     outfile: Option<String>,
 ) -> Result<()> {
     let data = read_value(value_positional, value_argument, file)?;
@@ -223,8 +223,8 @@ pub async fn encrypt(
 pub async fn decrypt(
     vault: &Vault,
     value_positional: Option<String>,
-    file: Option<String>,
     value_argument: Option<String>,
+    file: Option<String>,
     outfile: Option<String>,
 ) -> Result<()> {
     let data = read_value(value_positional, value_argument, file)?.decode_base64();

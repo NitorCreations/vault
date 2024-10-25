@@ -32,11 +32,11 @@ class AliasGroup(TyperGroup):
 class Config:
     """Global options."""
 
+    vault_stack: str | None
+    region: str | None
     bucket: str | None
     key_arn: str | None
     prefix: str | None
-    region: str | None
-    vault_stack: str | None
     quiet: bool
 
 
@@ -70,11 +70,11 @@ def main(
     """
     # Initialize Config dataclass and store it in Typer context
     config = Config(
+        vault_stack=vault_stack,
+        region=region,
         bucket=bucket,
         key_arn=key_arn,
         prefix=prefix,
-        region=region,
-        vault_stack=vault_stack,
         quiet=quiet,
     )
     ctx.obj = config
@@ -91,16 +91,28 @@ def all_keys(ctx: typer.Context):
 def delete(ctx: typer.Context, key: str):
     """Delete an existing key from the store"""
     config: Config = ctx.obj
-    typer.echo(f"Deleting key: {key}")
-    typer.echo(f"{config}")
+    nitor_vault.delete(
+        key,
+        config.vault_stack,
+        config.region,
+        config.bucket,
+        config.key_arn,
+        config.prefix,
+        config.quiet,
+    )
 
 
 @app.command()
 def describe(ctx: typer.Context):
     """Describe CloudFormation stack parameters for current configuration"""
     config: Config = ctx.obj
-    typer.echo("Describing CloudFormation stack...")
-    typer.echo(f"{config}")
+    nitor_vault.describe(
+        config.vault_stack,
+        config.region,
+        config.bucket,
+        config.key_arn,
+        config.prefix,
+    )
 
 
 @app.command()
@@ -113,19 +125,17 @@ def decrypt(
 ):
     """Directly decrypt given value"""
     config: Config = ctx.obj
-    if value:
-        typer.echo(f"Decrypting value: {value}")
-    elif value_argument:
-        typer.echo(f"Decrypting value argument: {value_argument}")
-    elif file:
-        typer.echo(f"Decrypting from file: {file}")
-    else:
-        typer.echo("No value provided for decryption")
-
-    if outfile:
-        typer.echo(f"Saving decrypted output to: {outfile}")
-
-    typer.echo(f"{config}")
+    nitor_vault.decrypt(
+        value,
+        value_argument,
+        file,
+        outfile,
+        config.vault_stack,
+        config.region,
+        config.bucket,
+        config.key_arn,
+        config.prefix,
+    )
 
 
 @app.command()
@@ -138,26 +148,33 @@ def encrypt(
 ):
     """Directly encrypt given value"""
     config: Config = ctx.obj
-    if value:
-        typer.echo(f"Encrypting value: {value}")
-    elif value_argument:
-        typer.echo(f"Encrypting value argument: {value_argument}")
-    elif file:
-        typer.echo(f"Encrypting from file: {file}")
-    else:
-        typer.echo("No value provided for encryption")
-
-    if outfile:
-        typer.echo(f"Saving encrypted output to: {outfile}")
-
-    typer.echo(f"{config}")
+    nitor_vault.encrypt(
+        value,
+        value_argument,
+        file,
+        outfile,
+        config.vault_stack,
+        config.region,
+        config.bucket,
+        config.key_arn,
+        config.prefix,
+    )
 
 
 @app.command()
 def exists(ctx: typer.Context, key: str):
     """Check if a key exists"""
-    typer.echo(f"Checking if key exists: {key}")
-    typer.echo(f"{ctx.obj}")
+    config: Config = ctx.obj
+    result = nitor_vault.encrypt(
+        key,
+        config.vault_stack,
+        config.region,
+        config.bucket,
+        config.key_arn,
+        config.prefix,
+    )
+    if not result:
+        raise typer.Exit(code=5)
 
 
 @app.command()
@@ -168,8 +185,8 @@ def info(ctx: typer.Context):
     typer.echo(f"{config}")
 
 
-@app.command()
-def id(ctx: typer.Context):
+@app.command("id")
+def caller_id(ctx: typer.Context):
     """Print AWS user account information"""
     config: Config = ctx.obj
     nitor_vault.id(config.region, config.quiet)
@@ -179,19 +196,7 @@ def id(ctx: typer.Context):
 def init(ctx: typer.Context, name: str | None = None):
     """Initialize a new KMS key and S3 bucket"""
     config: Config = ctx.obj
-    n_vault.init(name, config.vault_stack, config.region, config.bucket, config.quiet)
-
-
-@app.command()
-def update(ctx: typer.Context, name: str | None = None):
-    """Update the vault CloudFormation stack"""
-    config: Config = ctx.obj
-    if name:
-        typer.echo(f"Updating vault stack with name: {name}")
-    else:
-        typer.echo("Updating vault with default stack name")
-
-    typer.echo(f"{config}")
+    nitor_vault.init(name, config.vault_stack, config.region, config.bucket, config.quiet)
 
 
 @app.command()
@@ -208,6 +213,7 @@ def lookup(
         config.key_arn,
         config.prefix,
         config.quiet,
+        # Convert Path to string since this seems to be the simplest way to pass it
         str(outfile) if outfile else None,
     )
 
@@ -241,6 +247,18 @@ def store(
 
     if overwrite:
         typer.echo("Overwrite enabled")
+
+    typer.echo(f"{config}")
+
+
+@app.command()
+def update(ctx: typer.Context, name: str | None = None):
+    """Update the vault CloudFormation stack"""
+    config: Config = ctx.obj
+    if name:
+        typer.echo(f"Updating vault stack with name: {name}")
+    else:
+        typer.echo("Updating vault with default stack name")
 
     typer.echo(f"{config}")
 

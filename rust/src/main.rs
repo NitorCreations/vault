@@ -318,13 +318,13 @@ async fn run(args: Args) -> Result<()> {
                         file,
                         value_argument,
                         outfile,
-                    } => cli::decrypt(&vault, value, file, value_argument, outfile).await?,
+                    } => cli::decrypt(&vault, value, value_argument, file, outfile).await?,
                     Command::Encrypt {
                         value,
                         file,
                         value_argument,
                         outfile,
-                    } => cli::encrypt(&vault, value, file, value_argument, outfile).await?,
+                    } => cli::encrypt(&vault, value, value_argument, file, outfile).await?,
                     Command::Exists { key } => {
                         if !cli::exists(&vault, &key, args.quiet).await? {
                             drop(vault);
