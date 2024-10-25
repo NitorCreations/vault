@@ -23,8 +23,9 @@ class Config:
     quiet: bool
 
 
-# Define global options in the main function
+@app.callback()
 def main(
+    ctx: typer.Context,
     bucket: str | None = typer.Option(None, "--bucket", "-b", envvar="VAULT_BUCKET", help="Override the bucket name"),
     key_arn: str | None = typer.Option(None, "--key-arn", "-k", envvar="VAULT_KEY", help="Override the KMS key ARN"),
     prefix: str | None = typer.Option(
@@ -50,35 +51,42 @@ def main(
         vault_stack=vault_stack,
         quiet=quiet,
     )
-    typer.Context.obj = config
+    ctx.obj = config
 
 
 @app.command()
-def all():
+def all(ctx: typer.Context):
     """List available secrets"""
-    nvault.all()
+    config: Config = ctx.obj
+    nvault.all(config.vault_stack, config.region, config.bucket, config.key_arn, config.prefix)
 
 
 @app.command()
-def delete(key: str):
+def delete(ctx: typer.Context, key: str):
     """Delete an existing key from the store"""
+    config: Config = ctx.obj
     typer.echo(f"Deleting key: {key}")
+    typer.echo(f"{config}")
 
 
 @app.command()
-def describe():
+def describe(ctx: typer.Context):
     """Describe CloudFormation stack parameters for current configuration"""
+    config: Config = ctx.obj
     typer.echo("Describing CloudFormation stack...")
+    typer.echo(f"{config}")
 
 
 @app.command()
 def decrypt(
+    ctx: typer.Context,
     value: str | None = None,
     value_argument: str | None = typer.Option(None),
     file: str | None = typer.Option(None),
     outfile: str | None = None,
 ):
     """Directly decrypt given value"""
+    config: Config = ctx.obj
     if value:
         typer.echo(f"Decrypting value: {value}")
     elif value_argument:
@@ -91,15 +99,19 @@ def decrypt(
     if outfile:
         typer.echo(f"Saving decrypted output to: {outfile}")
 
+    typer.echo(f"{config}")
+
 
 @app.command()
 def encrypt(
+    ctx: typer.Context,
     value: str | None = None,
     value_argument: str | None = typer.Option(None),
     file: str | None = typer.Option(None),
     outfile: str | None = None,
 ):
     """Directly encrypt given value"""
+    config: Config = ctx.obj
     if value:
         typer.echo(f"Encrypting value: {value}")
     elif value_argument:
@@ -112,57 +124,78 @@ def encrypt(
     if outfile:
         typer.echo(f"Saving encrypted output to: {outfile}")
 
+    typer.echo(f"{config}")
+
 
 @app.command()
-def exists(key: str):
+def exists(ctx: typer.Context, key: str):
     """Check if a key exists"""
     typer.echo(f"Checking if key exists: {key}")
+    typer.echo(f"{ctx.obj}")
 
 
 @app.command()
-def info():
+def info(ctx: typer.Context):
     """Print vault information"""
+    config: Config = ctx.obj
     typer.echo("Vault information")
+    typer.echo(f"{config}")
 
 
 @app.command()
-def id():
+def id(ctx: typer.Context):
     """Print AWS user account information"""
-    nvault.id()
+    config: Config = ctx.obj
+    nvault.id(config.region, config.quiet)
 
 
 @app.command()
-def status():
-    """Print vault stack information"""
-    nvault.status()
-
-
-@app.command()
-def init(name: str | None = None):
+def init(ctx: typer.Context, name: str | None = None):
     """Initialize a new KMS key and S3 bucket"""
-    if name:
-        typer.echo(f"Initializing vault with stack name: {name}")
-    else:
-        typer.echo("Initializing vault with default stack name")
+    config: Config = ctx.obj
+    nvault.init(name, config.vault_stack, config.region, config.bucket, config.quiet)
 
 
 @app.command()
-def update(name: str | None = None):
+def update(ctx: typer.Context, name: str | None = None):
     """Update the vault CloudFormation stack"""
+    config: Config = ctx.obj
     if name:
         typer.echo(f"Updating vault stack with name: {name}")
     else:
         typer.echo("Updating vault with default stack name")
 
+    typer.echo(f"{config}")
+
 
 @app.command()
-def lookup(key: str, outfile: Path = typer.Option(None, "-o", "--outfile", help="Optional output file")):
+def lookup(
+    ctx: typer.Context, key: str, outfile: Path = typer.Option(None, "-o", "--outfile", help="Optional output file")
+):
     """Output secret value for given key"""
-    nvault.lookup(key, str(outfile) if outfile else None)
+    config: Config = ctx.obj
+    nvault.lookup(
+        key,
+        config.vault_stack,
+        config.region,
+        config.bucket,
+        config.key_arn,
+        config.prefix,
+        config.quiet,
+        str(outfile) if outfile else None,
+    )
+
+
+@app.command()
+def status(ctx: typer.Context):
+    """Print vault stack information"""
+    config: Config = ctx.obj
+    nvault.status(config.vault_stack, config.region, config.bucket, config.key_arn, config.prefix, config.quiet)
 
 
 @app.command()
 def store(
+    ctx: typer.Context,
     key: str | None = None,
     value: str | None = None,
     value_argument: str | None = typer.Option(None),
@@ -170,6 +203,7 @@ def store(
     overwrite: bool = False,
 ):
     """Store a new key-value pair"""
+    config: Config = ctx.obj
     if value:
         typer.echo(f"Storing value for key: {key} with value: {value}")
     elif value_argument:
@@ -182,9 +216,8 @@ def store(
     if overwrite:
         typer.echo("Overwrite enabled")
 
+    typer.echo(f"{config}")
 
-# Register main function as callback to apply global options
-app.callback()(main)
 
 if __name__ == "__main__":
     app()

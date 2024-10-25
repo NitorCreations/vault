@@ -240,16 +240,18 @@ pub async fn decrypt(
 }
 
 /// Print the information from AWS STS "get caller identity" call.
-pub async fn print_aws_account(region: Option<String>) -> Result<()> {
+pub async fn get_aws_account_id(region: Option<String>, quiet: bool) -> Result<()> {
     let config = crate::get_aws_config(region).await;
     let client = crate::aws_sts_client(&config);
     let result = client.get_caller_identity().send().await?;
-    println!(
-        "user: {}\naccount: {}\narn: {}",
-        result.user_id.unwrap_or_else(|| "None".to_string()),
-        result.account.unwrap_or_else(|| "None".to_string()),
-        result.arn.unwrap_or_else(|| "None".to_string())
-    );
+    if !quiet {
+        println!(
+            "user: {}\naccount: {}\narn: {}",
+            result.user_id.unwrap_or_else(|| "None".to_string()),
+            result.account.unwrap_or_else(|| "None".to_string()),
+            result.arn.unwrap_or_else(|| "None".to_string())
+        );
+    }
     Ok(())
 }
 
