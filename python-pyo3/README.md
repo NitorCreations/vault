@@ -2,4 +2,93 @@
 
 Python vault implementation using the Rust vault library.
 
-See the [root readme](../README.md) for more information.
+See the [root readme](../README.md) for more general information.
+
+## Usage
+
+```console
+Usage: vault [OPTIONS] COMMAND [ARGS]...
+
+ Nitor Vault CLI, see https://github.com/nitorcreations/vault for usage examples
+
+╭─ Options ──────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ --bucket              -b      TEXT  Override the bucket name [env var: VAULT_BUCKET] [default: None]               │
+│ --key-arn             -k      TEXT  Override the KMS key ARN [env var: VAULT_KEY] [default: None]                  │
+│ --prefix              -p      TEXT  Optional prefix for key name [env var: VAULT_PREFIX] [default: None]           │
+│ --region              -r      TEXT  Specify AWS region for the bucket [env var: AWS_REGION] [default: None]        │
+│ --vault-stack                 TEXT  Specify CloudFormation stack name to use [env var: VAULT_STACK]                │
+│                                     [default: None]                                                                │
+│ --quiet               -q            Suppress additional output and error messages                                  │
+│ --version             -v            Print version and exit                                                         │
+│ --install-completion                Install completion for the current shell.                                      │
+│ --show-completion                   Show completion for the current shell, to copy it or customize the             │
+│                                     installation.                                                                  │
+│ --help                -h            Show this message and exit.                                                    │
+╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Commands ─────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ all | a | list | ls   List available secrets                                                                       │
+│ decrypt               Directly decrypt given value                                                                 │
+│ delete                Delete an existing key from the store                                                        │
+│ describe              Describe CloudFormation stack parameters for current configuration                           │
+│ encrypt               Directly encrypt given value                                                                 │
+│ exists                Check if a key exists                                                                        │
+│ id                    Print AWS user account information                                                           │
+│ info                  Print vault information                                                                      │
+│ init                  Initialize a new KMS key and S3 bucket                                                       │
+│ lookup                Output secret value for given key                                                            │
+│ status                Print vault stack information                                                                │
+│ store                 Store a new key-value pair                                                                   │
+│ update                Update the vault CloudFormation stack                                                        │
+╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+```
+
+## Development
+
+Uses:
+
+- [PyO3](https://pyo3.rs/) for creating a native Python module from Rust code.
+- [Maturin](https://www.maturin.rs) for building and packaging the Python module from Rust.
+
+### Workflow
+
+You can use [uv](https://github.com/astral-sh/uv) or the traditional Python and pip combo.
+
+First, create a virtual env:
+
+```shell
+# uv
+uv sync --all-extras
+# pip
+python3 -m venv .venv
+source .venv/bin/activate
+pip install '.[dev]'
+```
+
+After making changes to Rust code, build and install module:
+
+```shell
+# uv
+uv run maturin develop
+# venv
+maturin develop
+```
+
+Run Python CLI:
+
+```shell
+# uv
+uv run python/n_vault/vault.py -h
+# venv
+python3 python/n_vault/vault.py -h
+```
+
+Install and run vault inside virtual env:
+
+```shell
+# uv
+uv pip install .
+uv run vault -h
+# venv
+pip install .
+vault -h
+```

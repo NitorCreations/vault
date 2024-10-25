@@ -13,7 +13,7 @@ classifiers = [
 ]
 authors = [
     { name = "Pasi Niemi", email = "pasi@nitor.com" },
-    { name = "Akseli Lukkarila", email = "akseli.lukkarila@nitor.com" },
+    { name = "Akseli Lukkarila", email = "akseli.lukkarila@nitor.com" }
 ]
 dynamic = ["version"]
 dependencies = ["typer"]
