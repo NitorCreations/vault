@@ -8,7 +8,7 @@ use clap_complete::Shell;
 use colored::Colorize;
 use tokio::time::Duration;
 
-use nitor_vault::{cloudformation, CreateStackResult, UpdateStackResult, Value, Vault};
+use crate::{cloudformation, CreateStackResult, UpdateStackResult, Value, Vault};
 
 static WAIT_ANIMATION_DURATION: Duration = Duration::from_millis(500);
 static QUIET_WAIT_DURATION: Duration = Duration::from_secs(1);
@@ -241,8 +241,8 @@ pub async fn decrypt(
 
 /// Print the information from AWS STS "get caller identity" call.
 pub async fn print_aws_account(region: Option<String>) -> Result<()> {
-    let config = nitor_vault::get_aws_config(region).await;
-    let client = nitor_vault::aws_sts_client(&config);
+    let config = crate::get_aws_config(region).await;
+    let client = crate::aws_sts_client(&config);
     let result = client.get_caller_identity().send().await?;
     println!(
         "user: {}\naccount: {}\narn: {}",

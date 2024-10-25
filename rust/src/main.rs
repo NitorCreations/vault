@@ -1,11 +1,9 @@
-mod cli;
-
 use anyhow::{Context, Result};
 use clap::{CommandFactory, Parser, Subcommand};
 use clap_complete::Shell;
 use colored::Colorize;
 
-use nitor_vault::Vault;
+use nitor_vault::{cli, Vault};
 
 #[allow(clippy::doc_markdown)]
 #[derive(Parser)]

@@ -1,8 +1,8 @@
 [package]
 name = "nitor-vault"
-version = "1.5.0"
+version = "2.0.0"
 edition = "2021"
-description = "Encrypted AWS key-value storage utility."
+description = "Encrypted AWS key-value storage utility"
 license = "Apache-2.0"
 repository = "https://github.com/nitorcreations/vault"
 keywords = ["secrets", "s3", "cli"]
