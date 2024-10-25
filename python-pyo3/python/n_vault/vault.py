@@ -341,7 +341,7 @@ def store(
     ),
     overwrite: bool = typer.Option(
         False,
-        "-o",
+        "-w",
         "--overwrite",
         help="Overwrite existing key",
         show_default=False,
