@@ -10,3 +10,4 @@ crate-type = ["cdylib"]
 [dependencies]
 pyo3 = "0.22.0"
 nitor-vault = { path = "../rust" }
+tokio = "1.41.0"

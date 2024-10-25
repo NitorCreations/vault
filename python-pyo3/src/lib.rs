@@ -1,15 +1,21 @@
-use nitor_vault::{Value, Vault};
+use nitor_vault::{Vault};
 use pyo3::prelude::*;
+use tokio::runtime::Runtime;
 
-/// Formats the sum of two numbers as string.
 #[pyfunction]
-fn sum_as_string(a: usize, b: usize) -> PyResult<String> {
-    Ok((a + b).to_string())
+fn status() -> PyResult<()> {
+    let rt = Runtime::new()?;
+
+    rt.block_on(async {
+        let vault = Vault::default().await.unwrap();
+        let status = vault.stack_status().await.unwrap();
+        println!("{status}");
+        Ok(())
+    })
 }
 
-/// A Python module implemented in Rust.
 #[pymodule]
 fn nvault(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    m.add_function(wrap_pyfunction!(sum_as_string, m)?)?;
+    m.add_function(wrap_pyfunction!(status, m)?)?;
     Ok(())
 }

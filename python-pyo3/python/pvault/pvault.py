@@ -1,4 +1,7 @@
+import nvault
 import typer
+
+from nvault import sum_as_string
 
 app = typer.Typer(help="Nitor Vault CLI, see https://github.com/nitorcreations/vault for usage examples")
 
@@ -19,6 +22,8 @@ def delete(key: str):
 def describe():
     """Describe CloudFormation stack parameters for current configuration"""
     typer.echo("Describing CloudFormation stack...")
+    result = sum_as_string(1,3)
+    print(f"sum_as_string(1,3) = {result}")
 
 
 @app.command()
@@ -85,6 +90,7 @@ def id():
 def status():
     """Print vault stack information"""
     typer.echo("Vault stack status")
+    nvault.status()
 
 
 @app.command()
