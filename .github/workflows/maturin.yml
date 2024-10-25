@@ -28,8 +28,9 @@ jobs:
             target: x86_64
           - runner: ubuntu-latest
             target: x86
-          - runner: ubuntu-latest
-            target: aarch64
+          # TODO: fix cross-compilation
+          #- runner: ubuntu-latest
+          #  target: aarch64
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -39,7 +40,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
-          args: --release --out dist --find-interpreter --manifest-path python-pyo3/Cargo.toml
+          args: --release --out dist --find-interpreter --zig --manifest-path python-pyo3/Cargo.toml
           sccache: "true"
           manylinux: auto
       - name: Upload wheels
