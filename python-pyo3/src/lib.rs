@@ -25,7 +25,6 @@ fn all() -> PyResult<()> {
         cli::list_all_keys(&vault)
             .await
             .map_err(|e| anyhow_to_py_err(e))?;
-
         Ok(())
     })
 }

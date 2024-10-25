@@ -1,14 +1,56 @@
+from dataclasses import dataclass
 from pathlib import Path
 
 import nvault
 import typer
 
 app = typer.Typer(
-    short_help="Encrypted AWS key-value storage utility"
+    short_help="Encrypted AWS key-value storage utility",
     help="Nitor Vault CLI, see https://github.com/nitorcreations/vault for usage examples",
     context_settings={"help_option_names": ["-h", "--help"]},
     no_args_is_help=True,
 )
+
+
+# Define a Config dataclass for the global options
+@dataclass
+class Config:
+    bucket: str | None
+    key_arn: str | None
+    prefix: str | None
+    region: str | None
+    vault_stack: str | None
+    quiet: bool
+
+
+# Define global options in the main function
+def main(
+    bucket: str | None = typer.Option(None, "--bucket", "-b", envvar="VAULT_BUCKET", help="Override the bucket name"),
+    key_arn: str | None = typer.Option(None, "--key-arn", "-k", envvar="VAULT_KEY", help="Override the KMS key ARN"),
+    prefix: str | None = typer.Option(
+        None, "--prefix", "-p", envvar="VAULT_PREFIX", help="Optional prefix for key name"
+    ),
+    region: str | None = typer.Option(
+        None, "--region", "-r", envvar="AWS_REGION", help="Specify AWS region for the bucket"
+    ),
+    vault_stack: str | None = typer.Option(
+        None, "--vault-stack", envvar="VAULT_STACK", help="Specify CloudFormation stack name to use"
+    ),
+    quiet: bool = typer.Option(False, "--quiet", "-q", help="Suppress additional output and error messages"),
+):
+    """
+    CLI with global options available in all subcommands.
+    """
+    # Initialize Config dataclass and store it in Typer context
+    config = Config(
+        bucket=bucket,
+        key_arn=key_arn,
+        prefix=prefix,
+        region=region,
+        vault_stack=vault_stack,
+        quiet=quiet,
+    )
+    typer.Context.obj = config
 
 
 @app.command()
@@ -140,6 +182,9 @@ def store(
     if overwrite:
         typer.echo("Overwrite enabled")
 
+
+# Register main function as callback to apply global options
+app.callback()(main)
 
 if __name__ == "__main__":
     app()
