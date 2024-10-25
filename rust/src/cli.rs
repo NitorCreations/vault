@@ -87,8 +87,8 @@ pub async fn store(
     vault: &Vault,
     key: Option<String>,
     value_positional: Option<String>,
-    file: Option<String>,
     value_argument: Option<String>,
+    file: Option<String>,
     overwrite: bool,
     quiet: bool,
 ) -> Result<()> {

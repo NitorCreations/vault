@@ -5,6 +5,14 @@ use tokio::runtime::Runtime;
 use nitor_vault::errors::VaultError;
 use nitor_vault::{cli, Vault};
 
+// Retrieve version from Cargo.toml at compile time
+const VERSION: &str = env!("CARGO_PKG_VERSION");
+
+#[pyfunction]
+fn version_number() -> &'static str {
+    VERSION
+}
+
 /// Convert `anyhow::Error` to `PyErr` for PyO3
 fn anyhow_to_py_err(err: anyhow::Error) -> PyErr {
     PyRuntimeError::new_err(format!("{err:?}"))
@@ -235,6 +243,62 @@ fn status(
     })
 }
 
+#[pyfunction(signature = (key=None, value_positional=None, value_argument=None, file=None, overwrite=false, vault_stack=None, region=None, bucket=None, vault_key=None, prefix=None, quiet=false))]
+fn store(
+    key: Option<String>,
+    value_positional: Option<String>,
+    value_argument: Option<String>,
+    file: Option<String>,
+    overwrite: bool,
+    vault_stack: Option<String>,
+    region: Option<String>,
+    bucket: Option<String>,
+    vault_key: Option<String>,
+    prefix: Option<String>,
+    quiet: bool,
+) -> PyResult<()> {
+    Runtime::new()?.block_on(async {
+        let vault = Vault::new(vault_stack, region, bucket, vault_key, prefix)
+            .await
+            .map_err(vault_error_to_py_err)?;
+
+        cli::store(
+            &vault,
+            key,
+            value_positional,
+            value_argument,
+            file,
+            overwrite,
+            quiet,
+        )
+        .await
+        .map_err(anyhow_to_py_err)?;
+        Ok(())
+    })
+}
+
+#[pyfunction(signature = (name=None, vault_stack=None, region=None, bucket=None, vault_key=None, prefix=None, quiet=false))]
+fn update(
+    name: Option<String>,
+    vault_stack: Option<String>,
+    region: Option<String>,
+    bucket: Option<String>,
+    vault_key: Option<String>,
+    prefix: Option<String>,
+    quiet: bool,
+) -> PyResult<()> {
+    Runtime::new()?.block_on(async {
+        let vault = Vault::new(vault_stack.or(name), region, bucket, vault_key, prefix)
+            .await
+            .map_err(vault_error_to_py_err)?;
+
+        cli::update_vault_stack(&vault, quiet)
+            .await
+            .map_err(anyhow_to_py_err)?;
+        Ok(())
+    })
+}
+
 #[pymodule]
 #[pyo3(name = "nitor_vault")]
 fn vault(m: &Bound<'_, PyModule>) -> PyResult<()> {
@@ -249,5 +313,8 @@ fn vault(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(init, m)?)?;
     m.add_function(wrap_pyfunction!(lookup, m)?)?;
     m.add_function(wrap_pyfunction!(status, m)?)?;
+    m.add_function(wrap_pyfunction!(store, m)?)?;
+    m.add_function(wrap_pyfunction!(update, m)?)?;
+    m.add_function(wrap_pyfunction!(version_number, m)?)?;
     Ok(())
 }

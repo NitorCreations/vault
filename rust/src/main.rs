@@ -342,16 +342,16 @@ async fn run(args: Args) -> Result<()> {
                     Command::Store {
                         key,
                         value,
-                        overwrite,
-                        file,
                         value_argument,
+                        file,
+                        overwrite,
                     } => {
                         cli::store(
                             &vault,
                             key,
                             value,
-                            file,
                             value_argument,
+                            file,
                             overwrite,
                             args.quiet,
                         )

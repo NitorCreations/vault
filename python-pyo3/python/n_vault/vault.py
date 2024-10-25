@@ -49,7 +49,7 @@ app = typer.Typer(
 )
 
 
-@app.callback()
+@app.callback(invoke_without_command=True)
 def main(
     ctx: typer.Context,
     bucket: str | None = typer.Option(None, "--bucket", "-b", envvar="VAULT_BUCKET", help="Override the bucket name"),
@@ -64,10 +64,23 @@ def main(
         None, "--vault-stack", envvar="VAULT_STACK", help="Specify CloudFormation stack name to use"
     ),
     quiet: bool = typer.Option(False, "--quiet", "-q", help="Suppress additional output and error messages"),
+    version: bool = typer.Option(
+        None,
+        "--version",
+        "-v",
+        is_eager=True,
+        help="Print version and exit",
+    ),
 ):
     """
     Global options available in all subcommands.
     """
+    if version:
+        # This gets version number from Rust project definition,
+        # which is also what pip uses.
+        print(f"Nitor Vault {nitor_vault.version_number()}")
+        raise typer.Exit()
+
     # Initialize Config dataclass and store it in Typer context
     config = Config(
         vault_stack=vault_stack,
@@ -236,31 +249,28 @@ def store(
 ):
     """Store a new key-value pair"""
     config: Config = ctx.obj
-    if value:
-        typer.echo(f"Storing value for key: {key} with value: {value}")
-    elif value_argument:
-        typer.echo(f"Storing value argument for key: {key} with value: {value_argument}")
-    elif file:
-        typer.echo(f"Storing value from file for key: {key}")
-    else:
-        typer.echo("No value provided for storing")
-
-    if overwrite:
-        typer.echo("Overwrite enabled")
-
-    typer.echo(f"{config}")
+    nitor_vault.store(
+        key,
+        value,
+        value_argument,
+        file,
+        overwrite,
+        config.vault_stack,
+        config.region,
+        config.bucket,
+        config.key_arn,
+        config.prefix,
+        config.quiet,
+    )
 
 
 @app.command()
 def update(ctx: typer.Context, name: str | None = None):
     """Update the vault CloudFormation stack"""
     config: Config = ctx.obj
-    if name:
-        typer.echo(f"Updating vault stack with name: {name}")
-    else:
-        typer.echo("Updating vault with default stack name")
-
-    typer.echo(f"{config}")
+    nitor_vault.update(
+        name, config.vault_stack, config.region, config.bucket, config.key_arn, config.prefix, config.quiet
+    )
 
 
 if __name__ == "__main__":

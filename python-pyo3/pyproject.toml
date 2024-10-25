@@ -10,7 +10,6 @@ readme = "README.md"
 classifiers = [
     "Programming Language :: Rust",
     "Programming Language :: Python :: Implementation :: CPython",
-    "Programming Language :: Python :: Implementation :: PyPy",
 ]
 authors = [
     { name = "Pasi Niemi", email = "pasi@nitor.com" },
