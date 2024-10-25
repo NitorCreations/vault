@@ -3,7 +3,7 @@
 #
 #    maturin generate-ci github --zig --output ../.github/workflows/maturin.yml
 #
-name: CI
+name: Maturin
 
 on:
   push:
@@ -11,7 +11,7 @@ on:
       - main
       - master
     tags:
-      - '*'
+      - "*"
   pull_request:
   workflow_dispatch:
 
@@ -45,8 +45,8 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
-          args: --release --out dist --find-interpreter --zig
-          sccache: 'true'
+          args: --release --out dist --find-interpreter --zig --manifest-path python-pyo3/Cargo.toml
+          sccache: "true"
           manylinux: auto
       - name: Upload wheels
         uses: actions/upload-artifact@v4
@@ -76,8 +76,8 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
-          args: --release --out dist --find-interpreter
-          sccache: 'true'
+          args: --release --out dist --find-interpreter --manifest-path python-pyo3/Cargo.toml
+          sccache: "true"
           manylinux: musllinux_1_2
       - name: Upload wheels
         uses: actions/upload-artifact@v4
@@ -104,8 +104,8 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
-          args: --release --out dist --find-interpreter
-          sccache: 'true'
+          args: --release --out dist --find-interpreter --manifest-path python-pyo3/Cargo.toml
+          sccache: "true"
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
@@ -130,8 +130,8 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
-          args: --release --out dist --find-interpreter
-          sccache: 'true'
+          args: --release --out dist --find-interpreter --manifest-path python-pyo3/Cargo.toml
+          sccache: "true"
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
@@ -146,7 +146,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           command: sdist
-          args: --out dist
+          args: --out dist --manifest-path python-pyo3/Cargo.toml
       - name: Upload sdist
         uses: actions/upload-artifact@v4
         with:
@@ -170,7 +170,7 @@ jobs:
       - name: Generate artifact attestation
         uses: actions/attest-build-provenance@v1
         with:
-          subject-path: 'wheels-*/*'
+          subject-path: "wheels-*/*"
       - name: Publish to PyPI
         if: "startsWith(github.ref, 'refs/tags/')"
         uses: PyO3/maturin-action@v1
@@ -178,4 +178,4 @@ jobs:
           MATURIN_PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
         with:
           command: upload
-          args: --non-interactive --skip-existing wheels-*/*
+          args: --non-interactive --skip-existing wheels-*/* --manifest-path python-pyo3/Cargo.toml
