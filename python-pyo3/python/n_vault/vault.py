@@ -52,18 +52,46 @@ app = typer.Typer(
 @app.callback(invoke_without_command=True)
 def main(
     ctx: typer.Context,
-    bucket: str | None = typer.Option(None, "--bucket", "-b", envvar="VAULT_BUCKET", help="Override the bucket name"),
-    key_arn: str | None = typer.Option(None, "--key-arn", "-k", envvar="VAULT_KEY", help="Override the KMS key ARN"),
+    bucket: str | None = typer.Option(
+        None,
+        "--bucket",
+        "-b",
+        envvar="VAULT_BUCKET",
+        help="Override the bucket name",
+    ),
+    key_arn: str | None = typer.Option(
+        None,
+        "--key-arn",
+        "-k",
+        envvar="VAULT_KEY",
+        help="Override the KMS key ARN",
+    ),
     prefix: str | None = typer.Option(
-        None, "--prefix", "-p", envvar="VAULT_PREFIX", help="Optional prefix for key name"
+        None,
+        "--prefix",
+        "-p",
+        envvar="VAULT_PREFIX",
+        help="Optional prefix for key name",
     ),
     region: str | None = typer.Option(
-        None, "--region", "-r", envvar="AWS_REGION", help="Specify AWS region for the bucket"
+        None,
+        "--region",
+        "-r",
+        envvar="AWS_REGION",
+        help="Specify AWS region for the bucket",
     ),
     vault_stack: str | None = typer.Option(
-        None, "--vault-stack", envvar="VAULT_STACK", help="Specify CloudFormation stack name to use"
+        None,
+        "--vault-stack",
+        envvar="VAULT_STACK",
+        help="Specify CloudFormation stack name to use",
     ),
-    quiet: bool = typer.Option(False, "--quiet", "-q", help="Suppress additional output and error messages"),
+    quiet: bool = typer.Option(
+        False,
+        "--quiet",
+        "-q",
+        help="Suppress additional output and error messages",
+    ),
     version: bool = typer.Option(
         None,
         "--version",
