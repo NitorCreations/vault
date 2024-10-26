@@ -139,7 +139,6 @@ def delete(ctx: typer.Context, key: str):
         config.bucket,
         config.key_arn,
         config.prefix,
-        config.quiet,
     )
 
 
