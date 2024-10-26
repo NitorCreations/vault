@@ -17,6 +17,8 @@ fn vault_error_to_anyhow(err: VaultError) -> anyhow::Error {
     err.into()
 }
 
+// These signatures can be removed in a future version since these are all required arguments
+// https://github.com/PyO3/pyo3/blob/main/guide/src/function/signature.md#trailing-optional-arguments
 #[pyfunction(signature = (vault_stack=None, region=None, bucket=None, key=None, prefix=None))]
 fn all(
     vault_stack: Option<String>,

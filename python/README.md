@@ -54,7 +54,7 @@ Or install inside venv with:
 # With uv
 uv pip install .
 # Normal venv
-python -m pip install -e .
+python -m pip install .
 ```
 
 After installing, you will have `vault` available in path.
