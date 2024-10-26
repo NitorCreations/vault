@@ -9,16 +9,16 @@ use nitor_vault::{cli, Vault};
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[pyfunction]
-fn version_number() -> &'static str {
+const fn version() -> &'static str {
     VERSION
 }
 
-/// Convert `anyhow::Error` to `PyErr` for PyO3
+/// Convert `anyhow::Error` to `PyErr`
 fn anyhow_to_py_err(err: anyhow::Error) -> PyErr {
     PyRuntimeError::new_err(format!("{err:?}"))
 }
 
-/// Convert `VaultError` to `PyErr` for PyO3
+/// Convert `VaultError` to `PyErr`
 fn vault_error_to_py_err(err: VaultError) -> PyErr {
     let anyhow_error: anyhow::Error = err.into();
     PyRuntimeError::new_err(format!("{anyhow_error:?}"))
@@ -315,6 +315,6 @@ fn vault(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(status, m)?)?;
     m.add_function(wrap_pyfunction!(store, m)?)?;
     m.add_function(wrap_pyfunction!(update, m)?)?;
-    m.add_function(wrap_pyfunction!(version_number, m)?)?;
+    m.add_function(wrap_pyfunction!(version, m)?)?;
     Ok(())
 }

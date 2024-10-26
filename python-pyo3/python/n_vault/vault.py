@@ -105,8 +105,8 @@ def main(
     """
     if version:
         # This gets version number from Rust project definition,
-        # which is also what pip uses.
-        print(f"Nitor Vault {nitor_vault.version_number()}")
+        # which is also what pip / pypi uses.
+        print(f"Nitor Vault {nitor_vault.version()}")
         raise typer.Exit()
 
     # Initialize Config dataclass and store it in Typer context
