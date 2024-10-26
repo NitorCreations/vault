@@ -9,37 +9,35 @@ See the [root readme](../README.md) for more general information.
 ```console
 Usage: vault [OPTIONS] COMMAND [ARGS]...
 
- Nitor Vault CLI, see https://github.com/nitorcreations/vault for usage examples
+Nitor Vault CLI, see https://github.com/nitorcreations/vault for usage examples
 
-╭─ Options ──────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-│ --bucket              -b      TEXT  Override the bucket name [env var: VAULT_BUCKET] [default: None]               │
-│ --key-arn             -k      TEXT  Override the KMS key ARN [env var: VAULT_KEY] [default: None]                  │
-│ --prefix              -p      TEXT  Optional prefix for key name [env var: VAULT_PREFIX] [default: None]           │
-│ --region              -r      TEXT  Specify AWS region for the bucket [env var: AWS_REGION] [default: None]        │
-│ --vault-stack                 TEXT  Specify CloudFormation stack name to use [env var: VAULT_STACK]                │
-│                                     [default: None]                                                                │
-│ --quiet               -q            Suppress additional output and error messages                                  │
-│ --version             -v            Print version and exit                                                         │
-│ --install-completion                Install completion for the current shell.                                      │
-│ --show-completion                   Show completion for the current shell, to copy it or customize the             │
-│                                     installation.                                                                  │
-│ --help                -h            Show this message and exit.                                                    │
-╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
-╭─ Commands ─────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-│ all | a | list | ls   List available secrets                                                                       │
-│ decrypt               Directly decrypt given value                                                                 │
-│ delete                Delete an existing key from the store                                                        │
-│ describe              Describe CloudFormation stack parameters for current configuration                           │
-│ encrypt               Directly encrypt given value                                                                 │
-│ exists                Check if a key exists                                                                        │
-│ id                    Print AWS user account information                                                           │
-│ info                  Print vault information                                                                      │
-│ init                  Initialize a new KMS key and S3 bucket                                                       │
-│ lookup                Output secret value for given key                                                            │
-│ status                Print vault stack information                                                                │
-│ store                 Store a new key-value pair                                                                   │
-│ update                Update the vault CloudFormation stack                                                        │
-╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Options ────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ --bucket              -b      TEXT  Override the bucket name [env var: VAULT_BUCKET]                                 │
+│ --key-arn             -k      TEXT  Override the KMS key ARN [env var: VAULT_KEY]                                    │
+│ --prefix              -p      TEXT  Optional prefix for key name [env var: VAULT_PREFIX]                             │
+│ --region              -r      TEXT  Specify AWS region for the bucket [env var: AWS_REGION]                          │
+│ --vault-stack                 TEXT  Specify CloudFormation stack name to use [env var: VAULT_STACK]                  │
+│ --quiet               -q            Suppress additional output and error messages                                    │
+│ --version             -v            Print version and exit                                                           │
+│ --install-completion                Install completion for the current shell.                                        │
+│ --show-completion                   Show completion for the current shell, to copy it or customize the installation. │
+│ --help                -h            Show this message and exit.                                                      │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Commands ───────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ all | a | list | ls   List available secrets                                                                         │
+│ decrypt | y           Directly decrypt given value                                                                   │
+│ delete | d            Delete an existing key from the store                                                          │
+│ describe              Print CloudFormation stack parameters for current configuration                                │
+│ encrypt | e           Directly encrypt given value                                                                   │
+│ exists                Check if a key exists                                                                          │
+│ id                    Print AWS user account information                                                             │
+│ info                  Print vault information                                                                        │
+│ init | i              Initialize a new KMS key and S3 bucket                                                         │
+│ lookup | l            Output secret value for given key                                                              │
+│ status                Print vault stack information                                                                  │
+│ store | s             Store a new key-value pair                                                                     │
+│ update | u            Update the vault CloudFormation stack                                                          │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 ```
 
 ## Development

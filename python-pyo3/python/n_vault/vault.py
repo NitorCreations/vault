@@ -58,6 +58,7 @@ def main(
         "-b",
         envvar="VAULT_BUCKET",
         help="Override the bucket name",
+        show_default=False,
     ),
     key_arn: str | None = typer.Option(
         None,
@@ -65,6 +66,7 @@ def main(
         "-k",
         envvar="VAULT_KEY",
         help="Override the KMS key ARN",
+        show_default=False,
     ),
     prefix: str | None = typer.Option(
         None,
@@ -72,6 +74,7 @@ def main(
         "-p",
         envvar="VAULT_PREFIX",
         help="Optional prefix for key name",
+        show_default=False,
     ),
     region: str | None = typer.Option(
         None,
@@ -79,12 +82,14 @@ def main(
         "-r",
         envvar="AWS_REGION",
         help="Specify AWS region for the bucket",
+        show_default=False,
     ),
     vault_stack: str | None = typer.Option(
         None,
         "--vault-stack",
         envvar="VAULT_STACK",
         help="Specify CloudFormation stack name to use",
+        show_default=False,
     ),
     quiet: bool = typer.Option(
         False,
