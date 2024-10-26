@@ -31,7 +31,6 @@ fn all(
             .map_err(vault_error_to_anyhow)?;
 
         cli::list_all_keys(&vault).await?;
-
         Ok(())
     })
 }
@@ -51,7 +50,6 @@ fn delete(
             .map_err(vault_error_to_anyhow)?;
 
         cli::delete(&vault, key).await?;
-
         Ok(())
     })
 }
@@ -159,8 +157,7 @@ fn info(
 #[pyfunction(signature = (region=None, quiet=false))]
 fn id(region: Option<String>, quiet: bool) -> PyResult<()> {
     Runtime::new()?.block_on(async {
-        cli::get_aws_account_id(region, quiet).await?;
-
+        cli::print_aws_account_id(region, quiet).await?;
         Ok(())
     })
 }
@@ -175,7 +172,6 @@ fn init(
 ) -> PyResult<()> {
     Runtime::new()?.block_on(async {
         cli::init_vault_stack(vault_stack.or(name), region, bucket, quiet).await?;
-
         Ok(())
     })
 }

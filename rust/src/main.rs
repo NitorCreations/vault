@@ -290,7 +290,7 @@ async fn run(args: Args) -> Result<()> {
                 cli::generate_shell_completion(shell, Args::command(), install, args.quiet)?;
             }
             Command::Id {} => {
-                cli::get_aws_account_id(args.region, args.quiet).await?;
+                cli::print_aws_account_id(args.region, args.quiet).await?;
             }
             // All other commands can use the same single Vault
             Command::All {}
