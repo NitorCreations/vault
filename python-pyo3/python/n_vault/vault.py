@@ -93,7 +93,7 @@ def main(
         help="Suppress additional output and error messages",
     ),
     version: bool = typer.Option(
-        None,
+        False,
         "--version",
         "-v",
         is_eager=True,
@@ -104,12 +104,12 @@ def main(
     Global options available in all subcommands.
     """
     if version:
-        # This gets version number from Rust project definition,
+        # Get the version number from the Rust project definition,
         # which is also what pip / pypi uses.
         print(f"Nitor Vault {nitor_vault.version()}")
         raise typer.Exit()
 
-    # Initialize Config dataclass and store it in Typer context
+    # Store global config in Typer context
     config = Config(
         vault_stack=vault_stack,
         region=region,
@@ -129,7 +129,7 @@ def all_keys(ctx: typer.Context):
 
 
 @app.command(name="delete | d")
-def delete(ctx: typer.Context, key: str):
+def delete(ctx: typer.Context, key: str = typer.Argument(..., help="Key name to delete", show_default=False)):
     """Delete an existing key from the store"""
     config: Config = ctx.obj
     nitor_vault.delete(
@@ -144,7 +144,7 @@ def delete(ctx: typer.Context, key: str):
 
 @app.command()
 def describe(ctx: typer.Context):
-    """Describe CloudFormation stack parameters for current configuration"""
+    """Print CloudFormation stack parameters for current configuration"""
     config: Config = ctx.obj
     nitor_vault.describe(
         config.vault_stack,
@@ -158,13 +158,13 @@ def describe(ctx: typer.Context):
 @app.command(name="decrypt | y")
 def decrypt(
     ctx: typer.Context,
-    value: str = typer.Argument(
+    value: str | None = typer.Argument(
         None,
         help="Value to decrypt, use '-' for stdin",
         allow_dash=True,
         show_default=False,
     ),
-    value_argument: str = typer.Option(
+    value_argument: str | None = typer.Option(
         None,
         "-v",
         "--value",
@@ -172,7 +172,7 @@ def decrypt(
         allow_dash=True,
         show_default=False,
     ),
-    file: Path = typer.Option(
+    file: Path | None = typer.Option(
         None,
         "-f",
         "--file",
@@ -180,7 +180,7 @@ def decrypt(
         allow_dash=True,
         show_default=False,
     ),
-    outfile: Path = typer.Option(
+    outfile: Path | None = typer.Option(
         None,
         "-o",
         "--outfile",
@@ -206,13 +206,13 @@ def decrypt(
 @app.command(name="encrypt | e")
 def encrypt(
     ctx: typer.Context,
-    value: str = typer.Argument(
+    value: str | None = typer.Argument(
         None,
         help="Value to encrypt, use '-' for stdin",
         allow_dash=True,
         show_default=False,
     ),
-    value_argument: str = typer.Option(
+    value_argument: str | None = typer.Option(
         None,
         "-v",
         "--value",
@@ -220,7 +220,7 @@ def encrypt(
         allow_dash=True,
         show_default=False,
     ),
-    file: Path = typer.Option(
+    file: Path | None = typer.Option(
         None,
         "-f",
         "--file",
@@ -228,7 +228,7 @@ def encrypt(
         allow_dash=True,
         show_default=False,
     ),
-    outfile: Path = typer.Option(
+    outfile: Path | None = typer.Option(
         None,
         "-o",
         "--outfile",
@@ -252,8 +252,12 @@ def encrypt(
 
 
 @app.command()
-def exists(ctx: typer.Context, key: str):
-    """Check if a key exists"""
+def exists(ctx: typer.Context, key: str = typer.Argument(..., help="Key name to check", show_default=False)):
+    """
+    Check if a key exists
+
+    Exits with code 0 if the key exists, code 5 if it does *not* exist, and with code 1 for other errors.
+    """
     config: Config = ctx.obj
     result = nitor_vault.exists(
         key,
@@ -272,8 +276,13 @@ def exists(ctx: typer.Context, key: str):
 def info(ctx: typer.Context):
     """Print vault information"""
     config: Config = ctx.obj
-    typer.echo("Vault information")
-    typer.echo(f"{config}")
+    nitor_vault.info(
+        config.vault_stack,
+        config.region,
+        config.bucket,
+        config.key_arn,
+        config.prefix,
+    )
 
 
 @app.command("id")
@@ -284,8 +293,19 @@ def caller_id(ctx: typer.Context):
 
 
 @app.command(name="init | i")
-def init(ctx: typer.Context, name: str | None = None):
-    """Initialize a new KMS key and S3 bucket"""
+def init(ctx: typer.Context, name: str | None = typer.Argument(None, help="Vault stack name", show_default=False)):
+    """
+    Initialize a new KMS key and S3 bucket
+
+    Initialize a KMS key and an S3 bucket with roles for reading and writing on a fresh account via CloudFormation.
+    The account used must have rights to create the resources.
+
+    Usage examples:
+    - `vault init`
+    - `vault init "vault-name"`
+    - `vault --vault-stack "vault-name" init`
+    - `VAULT_STACK="vault-name" vault i`
+    """
     config: Config = ctx.obj
     nitor_vault.init(name, config.vault_stack, config.region, config.bucket, config.quiet)
 
@@ -294,7 +314,7 @@ def init(ctx: typer.Context, name: str | None = None):
 def lookup(
     ctx: typer.Context,
     key: str = typer.Argument(..., help="Key name to lookup", show_default=False),
-    outfile: Path = typer.Option(None, "-o", "--outfile", help="Optional output file", show_default=False),
+    outfile: Path | None = typer.Option(None, "-o", "--outfile", help="Optional output file", show_default=False),
 ):
     """Output secret value for given key"""
     config: Config = ctx.obj
@@ -320,9 +340,9 @@ def status(ctx: typer.Context):
 @app.command(name="store | s")
 def store(
     ctx: typer.Context,
-    key: str = typer.Argument(None, help="Key name to use for stored value", show_default=False),
-    value: str = typer.Argument(None, help="Value to store, use '-' for stdin", show_default=False),
-    value_argument: str = typer.Option(
+    key: str | None = typer.Argument(None, help="Key name to use for stored value", show_default=False),
+    value: str | None = typer.Argument(None, help="Value to store, use '-' for stdin", show_default=False),
+    value_argument: str | None = typer.Option(
         None,
         "-v",
         "--value",
@@ -330,7 +350,7 @@ def store(
         allow_dash=True,
         show_default=False,
     ),
-    file: Path = typer.Option(
+    file: Path | None = typer.Option(
         None,
         "-f",
         "--file",
@@ -346,7 +366,20 @@ def store(
         show_default=False,
     ),
 ):
-    """Store a new key-value pair"""
+    """
+    Store a new key-value pair
+
+    Store a new key-value pair in the vault.
+    You can provide the key and value directly, or specify a file to store.
+
+    Usage examples:
+    - Store a value: `vault store "my-key" "some value"`
+    - Store a value from args: `vault store mykey --value "some value"`
+    - Store from a file: `vault store mykey --file path/to/file.txt`
+    - Store from a file with filename as key: `vault store --file path/to/file.txt`
+    - Store from stdin: `echo "some data" | vault store mykey -`
+    - Store from stdin: `cat file.zip | vault store mykey --file -`
+    """
     if (value and value_argument) or (value_argument and file) or (value and file):
         raise typer.BadParameter("Specify only one of positional value, '--value' or '--file'")
 
@@ -368,7 +401,18 @@ def store(
 
 @app.command(name="update | u")
 def update(ctx: typer.Context, name: str = typer.Option(None, help="Optional vault stack name", show_default=False)):
-    """Update the vault CloudFormation stack"""
+    """
+    Update the vault CloudFormation stack
+
+    Update the CloudFormation stack which declares all resources needed by the vault.
+
+    Usage examples:
+    - `vault update`
+    - `vault update "vault-name"`
+    - `vault u "vault-name"`
+    - `vault --vault-stack "vault-name" update`
+    - `VAULT_STACK="vault-name" vault u`
+    """
     config: Config = ctx.obj
     nitor_vault.update(
         name, config.vault_stack, config.region, config.bucket, config.key_arn, config.prefix, config.quiet

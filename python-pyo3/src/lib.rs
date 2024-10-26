@@ -13,6 +13,7 @@ const fn version() -> &'static str {
     VERSION
 }
 
+#[allow(clippy::needless_pass_by_value)]
 /// Convert `anyhow::Error` to `PyErr`
 fn anyhow_to_py_err(err: anyhow::Error) -> PyErr {
     PyRuntimeError::new_err(format!("{err:?}"))

@@ -69,9 +69,12 @@ enum Command {
 
     /// Delete an existing key from the store
     #[command(short_flag('d'), long_flag("delete"), alias("d"))]
-    Delete { key: String },
+    Delete {
+        /// Key name to delete
+        key: String,
+    },
 
-    /// Describe CloudFormation stack parameters for current configuration.
+    /// Print CloudFormation stack parameters for current configuration.
     // This value is useful for Lambdas as you can load the CloudFormation parameters from env.
     #[command(long_flag("describe"))]
     Describe {},
@@ -138,12 +141,12 @@ enum Command {
     #[command(
         long_flag("exists"),
         long_about = "Check if the given key exists.\n\n\
-                      It will exit with code 0 if the key exists,\n\
+                      Exits with code 0 if the key exists,\n\
                       code 5 if it does *not* exist,\n\
                       and with code 1 for other errors."
     )]
     Exists {
-        /// Key name to lookup
+        /// Key name to check
         key: String,
     },
 
