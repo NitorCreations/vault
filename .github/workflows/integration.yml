@@ -238,7 +238,7 @@ jobs:
           bin/rust/vault exists secret-go | grep -q "key 'secret-go' does not exist"
           bin/rust/vault exists secret-nodejs | grep -q "key 'secret-nodejs' does not exist"
           bin/rust/vault exists secret-python | grep -q "key 'secret-python' does not exist"
-          bin/rust/vault exists secret-python-pyo3 | grep -q "key 'secret-nodejs' does not exist"
+          bin/rust/vault exists secret-python-pyo3 | grep -q "key 'secret-python-pyo3' does not exist"
           bin/rust/vault exists secret-rust | grep -q "key 'secret-rust' does not exist"
 
       - name: Verify that keys have been deleted using Python-pyo3
@@ -246,7 +246,7 @@ jobs:
           vault exists secret-go | grep -q "key 'secret-go' does not exist"
           vault exists secret-nodejs | grep -q "key 'secret-nodejs' does not exist"
           vault exists secret-python | grep -q "key 'secret-python' does not exist"
-          vault exists secret-python-pyo3 | grep -q "key 'secret-nodejs' does not exist"
+          vault exists secret-python-pyo3 | grep -q "key 'secret-python-pyo3' does not exist"
           vault exists secret-rust | grep -q "key 'secret-rust' does not exist"
 
       - name: Store zip file using Python-pyo3
