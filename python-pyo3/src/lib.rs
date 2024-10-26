@@ -13,7 +13,7 @@ const fn version() -> &'static str {
 }
 
 /// Convert `VaultError` to `anyhow::Error`
-fn vault_error_to_py_err(err: VaultError) -> anyhow::Error {
+fn vault_error_to_anyhow(err: VaultError) -> anyhow::Error {
     err.into()
 }
 
@@ -28,7 +28,7 @@ fn all(
     Runtime::new()?.block_on(async {
         let vault = Vault::new(vault_stack, region, bucket, key, prefix)
             .await
-            .map_err(vault_error_to_py_err)?;
+            .map_err(vault_error_to_anyhow)?;
 
         cli::list_all_keys(&vault).await?;
 
@@ -48,7 +48,7 @@ fn delete(
     Runtime::new()?.block_on(async {
         let vault = Vault::new(vault_stack, region, bucket, vault_key, prefix)
             .await
-            .map_err(vault_error_to_py_err)?;
+            .map_err(vault_error_to_anyhow)?;
 
         cli::delete(&vault, key).await?;
 
@@ -67,7 +67,7 @@ fn describe(
     Runtime::new()?.block_on(async {
         let vault = Vault::new(vault_stack, region, bucket, vault_key, prefix)
             .await
-            .map_err(vault_error_to_py_err)?;
+            .map_err(vault_error_to_anyhow)?;
 
         println!("{}", vault.stack_info());
         Ok(())
@@ -89,7 +89,7 @@ fn decrypt(
     Runtime::new()?.block_on(async {
         let vault = Vault::new(vault_stack, region, bucket, vault_key, prefix)
             .await
-            .map_err(vault_error_to_py_err)?;
+            .map_err(vault_error_to_anyhow)?;
 
         cli::decrypt(&vault, value_positional, value_argument, file, outfile).await?;
         Ok(())
@@ -111,7 +111,7 @@ fn encrypt(
     Runtime::new()?.block_on(async {
         let vault = Vault::new(vault_stack, region, bucket, vault_key, prefix)
             .await
-            .map_err(vault_error_to_py_err)?;
+            .map_err(vault_error_to_anyhow)?;
 
         cli::encrypt(&vault, value_positional, value_argument, file, outfile).await?;
         Ok(())
@@ -131,7 +131,7 @@ fn exists(
     Runtime::new()?.block_on(async {
         let vault = Vault::new(vault_stack, region, bucket, vault_key, prefix)
             .await
-            .map_err(vault_error_to_py_err)?;
+            .map_err(vault_error_to_anyhow)?;
 
         let exists = cli::exists(&vault, key, quiet).await?;
         Ok(exists)
@@ -149,7 +149,7 @@ fn info(
     Runtime::new()?.block_on(async {
         let vault = Vault::new(vault_stack, region, bucket, vault_key, prefix)
             .await
-            .map_err(vault_error_to_py_err)?;
+            .map_err(vault_error_to_anyhow)?;
 
         println!("{vault}");
         Ok(())
@@ -193,7 +193,7 @@ fn lookup(
     Runtime::new()?.block_on(async {
         let vault = Vault::new(vault_stack, region, bucket, vault_key, prefix)
             .await
-            .map_err(vault_error_to_py_err)?;
+            .map_err(vault_error_to_anyhow)?;
 
         cli::lookup(&vault, key, outfile).await?;
 
@@ -213,9 +213,9 @@ fn status(
     Runtime::new()?.block_on(async {
         let vault = Vault::new(vault_stack, region, bucket, vault_key, prefix)
             .await
-            .map_err(vault_error_to_py_err)?;
+            .map_err(vault_error_to_anyhow)?;
 
-        let status = vault.stack_status().await.map_err(vault_error_to_py_err)?;
+        let status = vault.stack_status().await.map_err(vault_error_to_anyhow)?;
         if !quiet {
             println!("{status}");
         }
@@ -241,7 +241,7 @@ fn store(
     Runtime::new()?.block_on(async {
         let vault = Vault::new(vault_stack, region, bucket, vault_key, prefix)
             .await
-            .map_err(vault_error_to_py_err)?;
+            .map_err(vault_error_to_anyhow)?;
 
         cli::store(
             &vault,
@@ -270,7 +270,7 @@ fn update(
     Runtime::new()?.block_on(async {
         let vault = Vault::new(vault_stack.or(name), region, bucket, vault_key, prefix)
             .await
-            .map_err(vault_error_to_py_err)?;
+            .map_err(vault_error_to_anyhow)?;
 
         cli::update_vault_stack(&vault, quiet).await?;
         Ok(())
