@@ -197,15 +197,15 @@ fn init(
     })
 }
 
-#[pyfunction(signature = (key, vault_stack=None, region=None, bucket=None, vault_key=None, prefix=None, outfile=None))]
+#[pyfunction(signature = (key, outfile=None, vault_stack=None, region=None, bucket=None, vault_key=None, prefix=None))]
 fn lookup(
     key: &str,
+    outfile: Option<String>,
     vault_stack: Option<String>,
     region: Option<String>,
     bucket: Option<String>,
     vault_key: Option<String>,
     prefix: Option<String>,
-    outfile: Option<String>,
 ) -> PyResult<()> {
     Runtime::new()?.block_on(async {
         let vault = Vault::new(vault_stack, region, bucket, vault_key, prefix)

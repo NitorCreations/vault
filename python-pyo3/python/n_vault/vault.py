@@ -300,14 +300,13 @@ def lookup(
     config: Config = ctx.obj
     nitor_vault.lookup(
         key,
+        # Convert Path to string since this seems to be the simplest way to pass it
+        str(outfile) if outfile else None,
         config.vault_stack,
         config.region,
         config.bucket,
         config.key_arn,
         config.prefix,
-        config.quiet,
-        # Convert Path to string since this seems to be the simplest way to pass it
-        str(outfile) if outfile else None,
     )
 
 
