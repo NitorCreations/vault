@@ -1,4 +1,3 @@
-use pyo3::exceptions::PyRuntimeError;
 use pyo3::prelude::*;
 use tokio::runtime::Runtime;
 
@@ -13,16 +12,9 @@ const fn version() -> &'static str {
     VERSION
 }
 
-#[allow(clippy::needless_pass_by_value)]
-/// Convert `anyhow::Error` to `PyErr`
-fn anyhow_to_py_err(err: anyhow::Error) -> PyErr {
-    PyRuntimeError::new_err(format!("{err:?}"))
-}
-
-/// Convert `VaultError` to `PyErr`
-fn vault_error_to_py_err(err: VaultError) -> PyErr {
-    let anyhow_error: anyhow::Error = err.into();
-    PyRuntimeError::new_err(format!("{anyhow_error:?}"))
+/// Convert `VaultError` to `anyhow::Error`
+fn vault_error_to_py_err(err: VaultError) -> anyhow::Error {
+    err.into()
 }
 
 #[pyfunction(signature = (vault_stack=None, region=None, bucket=None, key=None, prefix=None))]
@@ -38,7 +30,7 @@ fn all(
             .await
             .map_err(vault_error_to_py_err)?;
 
-        cli::list_all_keys(&vault).await.map_err(anyhow_to_py_err)?;
+        cli::list_all_keys(&vault).await?;
 
         Ok(())
     })
@@ -58,7 +50,7 @@ fn delete(
             .await
             .map_err(vault_error_to_py_err)?;
 
-        cli::delete(&vault, key).await.map_err(anyhow_to_py_err)?;
+        cli::delete(&vault, key).await?;
 
         Ok(())
     })
@@ -99,9 +91,7 @@ fn decrypt(
             .await
             .map_err(vault_error_to_py_err)?;
 
-        cli::decrypt(&vault, value_positional, value_argument, file, outfile)
-            .await
-            .map_err(anyhow_to_py_err)?;
+        cli::decrypt(&vault, value_positional, value_argument, file, outfile).await?;
         Ok(())
     })
 }
@@ -123,9 +113,7 @@ fn encrypt(
             .await
             .map_err(vault_error_to_py_err)?;
 
-        cli::encrypt(&vault, value_positional, value_argument, file, outfile)
-            .await
-            .map_err(anyhow_to_py_err)?;
+        cli::encrypt(&vault, value_positional, value_argument, file, outfile).await?;
         Ok(())
     })
 }
@@ -145,9 +133,7 @@ fn exists(
             .await
             .map_err(vault_error_to_py_err)?;
 
-        let exists = cli::exists(&vault, key, quiet)
-            .await
-            .map_err(anyhow_to_py_err)?;
+        let exists = cli::exists(&vault, key, quiet).await?;
         Ok(exists)
     })
 }
@@ -173,9 +159,7 @@ fn info(
 #[pyfunction(signature = (region=None, quiet=false))]
 fn id(region: Option<String>, quiet: bool) -> PyResult<()> {
     Runtime::new()?.block_on(async {
-        cli::get_aws_account_id(region, quiet)
-            .await
-            .map_err(anyhow_to_py_err)?;
+        cli::get_aws_account_id(region, quiet).await?;
 
         Ok(())
     })
@@ -190,9 +174,7 @@ fn init(
     quiet: bool,
 ) -> PyResult<()> {
     Runtime::new()?.block_on(async {
-        cli::init_vault_stack(vault_stack.or(name), region, bucket, quiet)
-            .await
-            .map_err(anyhow_to_py_err)?;
+        cli::init_vault_stack(vault_stack.or(name), region, bucket, quiet).await?;
 
         Ok(())
     })
@@ -213,9 +195,7 @@ fn lookup(
             .await
             .map_err(vault_error_to_py_err)?;
 
-        cli::lookup(&vault, key, outfile)
-            .await
-            .map_err(anyhow_to_py_err)?;
+        cli::lookup(&vault, key, outfile).await?;
 
         Ok(())
     })
@@ -272,8 +252,7 @@ fn store(
             overwrite,
             quiet,
         )
-        .await
-        .map_err(anyhow_to_py_err)?;
+        .await?;
         Ok(())
     })
 }
@@ -293,9 +272,7 @@ fn update(
             .await
             .map_err(vault_error_to_py_err)?;
 
-        cli::update_vault_stack(&vault, quiet)
-            .await
-            .map_err(anyhow_to_py_err)?;
+        cli::update_vault_stack(&vault, quiet).await?;
         Ok(())
     })
 }
