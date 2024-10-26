@@ -255,13 +255,14 @@ def encrypt(
 def exists(ctx: typer.Context, key: str):
     """Check if a key exists"""
     config: Config = ctx.obj
-    result = nitor_vault.encrypt(
+    result = nitor_vault.exists(
         key,
         config.vault_stack,
         config.region,
         config.bucket,
         config.key_arn,
         config.prefix,
+        config.quiet,
     )
     if not result:
         raise typer.Exit(code=5)
