@@ -115,11 +115,25 @@ jobs:
 
       - name: Check help output
         run: |
+          echo "========== Python Vault CLI =========="
           vault --help
+          echo "--------------------------------------"
+
+          echo "======= Python-pyo3 Vault CLI ========"
           pvault --help
+          echo "--------------------------------------"
+
+          echo "=========== Go Vault CLI ============="
           bin/go/vault --help
-          bin/rust/vault --help
+          echo "--------------------------------------"
+
+          echo "========== Rust Vault CLI ============"
+          bin/rust/vault -h
+          echo "--------------------------------------"
+
+          echo "========= Node.js Vault CLI =========="
           nodejs/dist/cli/vault.js --help
+          echo "--------------------------------------"
 
       - name: Store secret with Python
         run: vault -s 'secret-python' -v 'sha-${{github.sha}}' -w
@@ -155,7 +169,7 @@ jobs:
         run: diff <(bin/rust/vault -l secret-python-pyo3) <(bin/go/vault -l secret-python-pyo3)
 
       - name: Validate Rust and Python secret equality with Go and Nodejs
-        run: diff <(bin/go/vault -l secret-rust) <(nodejs/dist/cli/vault.js l secret-python)
+        run: diff <(bin/go/vault -l secret-rust) <(nodejs/dist/cli/vault.js lookup secret-python)
 
       - name: Validate Go and Python secret equality with Rust and Go
         run: diff <(bin/rust/vault -l secret-go) <(bin/go/vault -l secret-python)
@@ -164,10 +178,10 @@ jobs:
         run: diff <(bin/rust/vault -l secret-python) <(bin/rust/vault -l secret-nodejs)
 
       - name: Validate Rust and Go secret equality with Nodejs and Go
-        run: diff <(bin/rust/vault -l secret-rust) <(nodejs/dist/cli/vault.js l secret-nodejs)
+        run: diff <(bin/rust/vault -l secret-rust) <(nodejs/dist/cli/vault.js lookup secret-nodejs)
 
       - name: Validate Python and Python-pyo3 secret equality with Nodejs
-        run: diff <(nodejs/dist/cli/vault.js -l secret-python) <(bin/go/vault -l secret-python-pyo3)
+        run: diff <(nodejs/dist/cli/vault.js lookup secret-python) <(bin/go/vault -l secret-python-pyo3)
 
       - name: Delete secret with Python
         run: vault -d 'secret-python'
