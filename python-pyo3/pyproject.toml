@@ -3,7 +3,7 @@ requires = ["maturin>=1.7,<2.0"]
 build-backend = "maturin"
 
 [project]
-name = "nitor-vault"
+name = "nitor-vault-pyo3"
 requires-python = ">=3.11"
 description = "Vault for storing locally encrypted data in S3 using KMS keys"
 readme = "README.md"
@@ -30,7 +30,7 @@ pvault = "p_vault.vault:app"
 [tool.maturin]
 features = ["pyo3/extension-module"]
 python-source = "python"
-module-name = "p_vault.nitor_vault"
+module-name = "p_vault.nitor_vault_rs"
 
 [tool.ruff]
 # https://docs.astral.sh/ruff/configuration/

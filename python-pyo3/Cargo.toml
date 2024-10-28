@@ -4,7 +4,7 @@ version = "1.0.0"
 edition = "2021"
 
 [lib]
-name = "nitor_vault"
+name = "nitor_vault_rs"
 crate-type = ["cdylib"]
 
 [dependencies]

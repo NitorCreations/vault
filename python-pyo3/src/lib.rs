@@ -276,7 +276,7 @@ fn update(
 }
 
 #[pymodule]
-#[pyo3(name = "nitor_vault")]
+#[pyo3(name = "nitor_vault_rs")]
 fn vault(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(all, m)?)?;
     m.add_function(wrap_pyfunction!(decrypt, m)?)?;

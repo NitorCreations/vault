@@ -7,7 +7,7 @@ import typer
 
 from typer.core import TyperGroup
 
-from p_vault import nitor_vault
+from p_vault import nitor_vault_rs
 
 
 # Hack to nicely support command aliases
@@ -111,7 +111,7 @@ def main(
     if version:
         # Get the version number from the Rust project definition,
         # which is also what pip / pypi uses.
-        print(f"Nitor Vault {nitor_vault.version()}")
+        print(f"Nitor Vault {nitor_vault_rs.version()}")
         raise typer.Exit()
 
     # Store global config in Typer context
@@ -130,14 +130,14 @@ def main(
 def all_keys(ctx: typer.Context):
     """List available secrets"""
     config: Config = ctx.obj
-    nitor_vault.all(config.vault_stack, config.region, config.bucket, config.key_arn, config.prefix)
+    nitor_vault_rs.all(config.vault_stack, config.region, config.bucket, config.key_arn, config.prefix)
 
 
 @app.command(name="delete | d")
 def delete(ctx: typer.Context, key: str = typer.Argument(..., help="Key name to delete", show_default=False)):
     """Delete an existing key from the store"""
     config: Config = ctx.obj
-    nitor_vault.delete(
+    nitor_vault_rs.delete(
         key,
         config.vault_stack,
         config.region,
@@ -151,7 +151,7 @@ def delete(ctx: typer.Context, key: str = typer.Argument(..., help="Key name to 
 def describe(ctx: typer.Context):
     """Print CloudFormation stack parameters for current configuration"""
     config: Config = ctx.obj
-    nitor_vault.describe(
+    nitor_vault_rs.describe(
         config.vault_stack,
         config.region,
         config.bucket,
@@ -195,7 +195,7 @@ def decrypt(
 ):
     """Directly decrypt given value"""
     config: Config = ctx.obj
-    nitor_vault.decrypt(
+    nitor_vault_rs.decrypt(
         value,
         value_argument,
         str(file) if file else None,
@@ -243,7 +243,7 @@ def encrypt(
 ):
     """Directly encrypt given value"""
     config: Config = ctx.obj
-    nitor_vault.encrypt(
+    nitor_vault_rs.encrypt(
         value,
         value_argument,
         str(file) if file else None,
@@ -264,7 +264,7 @@ def exists(ctx: typer.Context, key: str = typer.Argument(..., help="Key name to 
     Exits with code 0 if the key exists, code 5 if it does *not* exist, and with code 1 for other errors.
     """
     config: Config = ctx.obj
-    result = nitor_vault.exists(
+    result = nitor_vault_rs.exists(
         key,
         config.vault_stack,
         config.region,
@@ -281,7 +281,7 @@ def exists(ctx: typer.Context, key: str = typer.Argument(..., help="Key name to 
 def info(ctx: typer.Context):
     """Print vault information"""
     config: Config = ctx.obj
-    nitor_vault.info(
+    nitor_vault_rs.info(
         config.vault_stack,
         config.region,
         config.bucket,
@@ -294,7 +294,7 @@ def info(ctx: typer.Context):
 def caller_id(ctx: typer.Context):
     """Print AWS user account information"""
     config: Config = ctx.obj
-    nitor_vault.id(config.region, config.quiet)
+    nitor_vault_rs.id(config.region, config.quiet)
 
 
 @app.command(name="init | i")
@@ -312,7 +312,7 @@ def init(ctx: typer.Context, name: str | None = typer.Argument(None, help="Vault
     - `VAULT_STACK="vault-name" vault i`
     """
     config: Config = ctx.obj
-    nitor_vault.init(name, config.vault_stack, config.region, config.bucket, config.quiet)
+    nitor_vault_rs.init(name, config.vault_stack, config.region, config.bucket, config.quiet)
 
 
 @app.command(name="lookup | l")
@@ -323,7 +323,7 @@ def lookup(
 ):
     """Output secret value for given key"""
     config: Config = ctx.obj
-    nitor_vault.lookup(
+    nitor_vault_rs.lookup(
         key,
         # Convert Path to string since this seems to be the simplest way to pass it
         str(outfile) if outfile else None,
@@ -339,7 +339,7 @@ def lookup(
 def status(ctx: typer.Context):
     """Print vault stack information"""
     config: Config = ctx.obj
-    nitor_vault.status(config.vault_stack, config.region, config.bucket, config.key_arn, config.prefix, config.quiet)
+    nitor_vault_rs.status(config.vault_stack, config.region, config.bucket, config.key_arn, config.prefix, config.quiet)
 
 
 @app.command(name="store | s")
@@ -389,7 +389,7 @@ def store(
         raise typer.BadParameter("Specify only one of positional value, '--value' or '--file'")
 
     config: Config = ctx.obj
-    nitor_vault.store(
+    nitor_vault_rs.store(
         key,
         value,
         value_argument,
@@ -419,7 +419,7 @@ def update(ctx: typer.Context, name: str = typer.Option(None, help="Optional vau
     - `VAULT_STACK="vault-name" vault u`
     """
     config: Config = ctx.obj
-    nitor_vault.update(
+    nitor_vault_rs.update(
         name, config.vault_stack, config.region, config.bucket, config.key_arn, config.prefix, config.quiet
     )
 
