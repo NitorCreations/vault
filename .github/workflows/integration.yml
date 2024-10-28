@@ -163,8 +163,11 @@ jobs:
       - name: Validate Python and Nodejs secret equality with Rust
         run: diff <(bin/rust/vault -l secret-python) <(bin/rust/vault -l secret-nodejs)
 
-      - name: Validate Rust and Go secret equality with Nodejs
+      - name: Validate Rust and Go secret equality with Nodejs and Go
         run: diff <(bin/rust/vault -l secret-rust) <(nodejs/dist/cli/vault.js l secret-nodejs)
+
+      - name: Validate Python and Python-pyo3 secret equality with Nodejs
+        run: diff <(nodejs/dist/cli/vault.js -l secret-python) <(bin/go/vault -l secret-python-pyo3)
 
       - name: Delete secret with Python
         run: vault -d 'secret-python'
