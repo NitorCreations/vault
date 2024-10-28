@@ -25,7 +25,7 @@ dev = ["ruff", "maturin"]
 Repository = "https://github.com/NitorCreations/vault"
 
 [project.scripts]
-vault = "p_vault.vault:app"
+pvault = "p_vault.vault:app"
 
 [tool.maturin]
 features = ["pyo3/extension-module"]
