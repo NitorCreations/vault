@@ -6,10 +6,12 @@ See the [root readme](../README.md) for more general information.
 
 ## Usage
 
-```console
-Usage: vault [OPTIONS] COMMAND [ARGS]...
+Uses `pvault` command name to avoid conflict with the previous Python version and the Rust version.
 
-Nitor Vault CLI, see https://github.com/nitorcreations/vault for usage examples
+```console
+ Usage: pvault [OPTIONS] COMMAND [ARGS]...
+
+ Nitor Vault CLI, see https://github.com/nitorcreations/vault for usage examples
 
 ╭─ Options ────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
 │ --bucket              -b      TEXT  Override the bucket name [env var: VAULT_BUCKET]                                 │
@@ -38,6 +40,23 @@ Nitor Vault CLI, see https://github.com/nitorcreations/vault for usage examples
 │ store | s             Store a new key-value pair                                                                     │
 │ update | u            Update the vault CloudFormation stack                                                          │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+```
+
+## Install
+
+Install command globally using pip. From repo root:
+
+```shell
+cd python-pyo3
+pip install .
+```
+
+Check the command is found in path.
+If you ran the install command inside a virtual env,
+it will only be installed to the venv.
+
+```shell
+which -a pvault
 ```
 
 ## Development
