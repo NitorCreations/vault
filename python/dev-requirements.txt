@@ -44,7 +44,7 @@ jmespath==1.0.1
     # via
     #   boto3
     #   botocore
-keyring==25.4.1
+keyring==25.5.0
     # via twine
 markdown-it-py==3.0.0
     # via rich
@@ -83,7 +83,7 @@ requests-toolbelt==1.0.0
     # via twine
 rfc3986==2.0.0
     # via twine
-rich==13.9.2
+rich==13.9.3
     # via twine
 s3transfer==0.10.3
     # via boto3
