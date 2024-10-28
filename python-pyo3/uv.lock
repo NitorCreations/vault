@@ -64,8 +64,8 @@ wheels = [
 ]
 
 [[package]]
-name = "nitor-vault"
-version = "0.1.0"
+name = "nitor-vault-pyo3"
+version = "1.0.0"
 source = { editable = "." }
 dependencies = [
     { name = "typer" },
