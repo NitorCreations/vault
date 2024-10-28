@@ -75,9 +75,9 @@ Run Python CLI:
 
 ```shell
 # uv
-uv run python/n_vault/vault.py -h
+uv run python/p_vault/vault.py -h
 # venv
-python3 python/n_vault/vault.py -h
+python3 python/p_vault/vault.py -h
 ```
 
 Install and run vault inside virtual env:

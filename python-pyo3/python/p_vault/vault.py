@@ -7,7 +7,7 @@ import typer
 
 from typer.core import TyperGroup
 
-from n_vault import nitor_vault
+from p_vault import nitor_vault
 
 
 # Hack to nicely support command aliases

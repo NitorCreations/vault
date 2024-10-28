@@ -25,12 +25,12 @@ dev = ["ruff", "maturin"]
 Repository = "https://github.com/NitorCreations/vault"
 
 [project.scripts]
-vault = "n_vault.vault:app"
+vault = "p_vault.vault:app"
 
 [tool.maturin]
 features = ["pyo3/extension-module"]
 python-source = "python"
-module-name = "n_vault.nitor_vault"
+module-name = "p_vault.nitor_vault"
 
 [tool.ruff]
 # https://docs.astral.sh/ruff/configuration/
