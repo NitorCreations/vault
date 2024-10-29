@@ -1,4 +1,5 @@
 use std::io::Write;
+use std::io::{stdout, IsTerminal};
 use std::path::{Path, PathBuf};
 
 use anyhow::{anyhow, Context, Result};
@@ -283,7 +284,7 @@ async fn wait_for_stack_creation_to_finish(
                     anyhow::bail!("Stack creation failed");
                 }
                 _ => {
-                    if quiet {
+                    if quiet || !stdout().is_terminal() {
                         tokio::time::sleep(QUIET_WAIT_DURATION).await;
                     } else {
                         // Print status if it has changed
@@ -324,7 +325,7 @@ async fn wait_for_stack_update_to_finish(vault: &Vault, quiet: bool) -> Result<(
                     anyhow::bail!("Stack update failed".red());
                 }
                 _ => {
-                    if quiet {
+                    if quiet || !stdout().is_terminal() {
                         tokio::time::sleep(QUIET_WAIT_DURATION).await;
                     } else {
                         // Print status if it has changed
@@ -432,7 +433,7 @@ fn read_value(
 async fn print_wait_animation() -> Result<()> {
     for dot in WAIT_DOTS {
         print!("\r{CLEAR_LINE}{dot}");
-        std::io::stdout().flush()?;
+        stdout().flush()?;
         tokio::time::sleep(WAIT_ANIMATION_DURATION).await;
     }
     Ok(())
