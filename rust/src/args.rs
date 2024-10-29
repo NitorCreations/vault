@@ -256,6 +256,7 @@ enum Command {
     },
 }
 
+/// Run Vault CLI with the given arguments
 pub async fn run_cli_with_args(args: Vec<String>) -> Result<()> {
     let args = Args::parse_from(args);
     let quiet = args.quiet;
@@ -272,6 +273,7 @@ pub async fn run_cli_with_args(args: Vec<String>) -> Result<()> {
     Ok(())
 }
 
+/// Run Vault CLI
 pub async fn run_cli() -> Result<()> {
     let args = Args::parse();
     let quiet = args.quiet;
