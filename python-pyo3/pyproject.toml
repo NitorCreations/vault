@@ -13,10 +13,10 @@ classifiers = [
 ]
 authors = [
     { name = "Pasi Niemi", email = "pasi@nitor.com" },
-    { name = "Akseli Lukkarila", email = "akseli.lukkarila@nitor.com" }
+    { name = "Akseli Lukkarila", email = "akseli.lukkarila@nitor.com" },
 ]
 dynamic = ["version"]
-dependencies = ["typer"]
+dependencies = []
 
 [project.optional-dependencies]
 dev = ["ruff", "maturin"]
@@ -25,12 +25,16 @@ dev = ["ruff", "maturin"]
 Repository = "https://github.com/NitorCreations/vault"
 
 [project.scripts]
-pvault = "p_vault.vault:app"
+pvault = "p_vault.vault:main"
 
 [tool.maturin]
 features = ["pyo3/extension-module"]
 python-source = "python"
 module-name = "p_vault.nitor_vault_rs"
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
 
 [tool.ruff]
 # https://docs.astral.sh/ruff/configuration/

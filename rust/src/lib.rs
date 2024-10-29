@@ -1,3 +1,4 @@
+pub mod args;
 pub mod cli;
 pub mod cloudformation;
 pub mod errors;
@@ -7,6 +8,8 @@ mod value;
 mod vault;
 
 // Expose `Vault` and `Value` so they can be used as if they were defined here
+pub use crate::args::run_cli;
+pub use crate::args::run_cli_with_args;
 pub use crate::value::Value;
 pub use crate::vault::Vault;
 
@@ -30,7 +33,7 @@ pub enum CreateStackResult {
     Created {
         stack_name: String,
         stack_id: String,
-        region: aws_config::Region,
+        region: Region,
     },
 }
 
