@@ -272,13 +272,13 @@ jobs:
         run: vault -d 'secret-python-pyo3'
 
       - name: Delete secret with Python-pyo3
-        run: vault -d 'secret-python-rust'
+        run: vault -d 'secret-rust'
 
       - name: Delete secret with Python-pyo3
-        run: vault -d 'secret-python-go'
+        run: vault -d 'secret-go'
 
       - name: Delete secret with Python-pyo3
-        run: vault -d 'secret-python-nodejs'
+        run: vault -d 'secret-nodejs'
 
       - name: Verify that keys have been deleted using Python-pyo3
         run: |
