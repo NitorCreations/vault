@@ -10,8 +10,13 @@ on:
     branches:
       - main
       - master
+    paths:
+      - ".github/workflows/maturin.yml"
+      - "python-pyo3/src/lib.rs"
+      - "python-pyo3/Cargo.lock"
+      - "python-pyo3/Cargo.toml"
     tags:
-      - "*"
+      - "python-*"
   pull_request:
     paths:
       - ".github/workflows/maturin.yml"
@@ -157,7 +162,7 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
-    if: ${{ startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch' }}
+    if: ${{ startsWith(github.ref, 'refs/tags/python') || github.event_name == 'workflow_dispatch' }}
     needs: [linux, musllinux, windows, macos, sdist]
     permissions:
       # Used to sign the release artifacts
@@ -174,7 +179,7 @@ jobs:
           subject-path: "wheels-*/*"
 
       - name: Publish to PyPI
-        if: "startsWith(github.ref, 'refs/tags/')"
+        if: "startsWith(github.ref, 'refs/tags/python')"
         uses: PyO3/maturin-action@v1
         env:
           MATURIN_PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
