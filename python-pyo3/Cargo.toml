@@ -13,11 +13,6 @@ nitor-vault = { path = "../rust" }
 pyo3 = { version = "0.22.0", features = ["anyhow"] }
 tokio = "1.41.0"
 
-[profile.dev]
-opt-level = 3
-lto = "thin"
-codegen-units = 16
-
 [profile.release]
 lto = "thin"
 
