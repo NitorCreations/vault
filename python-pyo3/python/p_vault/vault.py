@@ -6,7 +6,7 @@ from p_vault import nitor_vault_rs
 def main():
     try:
         # Override the script name in the arguments list so the Rust CLI works correctly
-        args = ["pvault"] + sys.argv[1:]
+        args = ["vault"] + sys.argv[1:]
         nitor_vault_rs.run(args)
     except KeyboardInterrupt:
         print("\naborted")
