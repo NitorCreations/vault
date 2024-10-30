@@ -47,6 +47,7 @@ jobs:
           args: |
             --release
             --out dist
+            --zig
             --find-interpreter
             --manifest-path python-pyo3/Cargo.toml
           manylinux: auto
