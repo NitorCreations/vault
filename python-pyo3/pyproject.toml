@@ -37,7 +37,7 @@ dev = ["ruff"]
 Repository = "https://github.com/NitorCreations/vault"
 
 [project.scripts]
-pvault = "p_vault.vault:main"
+vault = "p_vault.vault:main"
 
 [build-system]
 requires = ["maturin>=1.7,<2.0"]
