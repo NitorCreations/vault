@@ -84,28 +84,46 @@ jobs:
           cache: "pnpm"
           cache-dependency-path: nodejs/pnpm-lock.yaml
 
-      - name: Install zip
-        run: |
-          sudo apt-get install zip unzip
-
-      - name: build node vault
-        run: pnpm install --frozen-lockfile && pnpm build
-        working-directory: nodejs
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: pip
 
-      - name: install python vault
+      - name: Install zip
+        run: sudo apt-get install zip unzip
+
+      - name: Build node vault
+        run: pnpm install --frozen-lockfile && pnpm build
+        working-directory: nodejs
+
+      - name: Install Python vault
         run: python -m pip install .
         working-directory: python
-      - name: add execute rights & run --version for all versions
+
+      - name: Add execute rights and run --version for all versions
         run: |
           chmod +x bin/go/vault bin/rust/vault nodejs/dist/cli/vault.js
           vault --version
           bin/go/vault --version
           bin/rust/vault --version
           nodejs/dist/cli/vault.js --version
+
+      - name: Check help output
+        run: |
+          echo "============================== Python Vault CLI =============================="
+          vault --help
+          echo "------------------------------------------------------------------------------"
+
+          echo "================================= Go Vault CLI ==============================="
+          bin/go/vault --help
+          echo "------------------------------------------------------------------------------"
+
+          echo "================================ Rust Vault CLI =============================="
+          bin/rust/vault -h
+          echo "------------------------------------------------------------------------------"
+
+          echo "=============================== Node.js Vault CLI ============================"
+          nodejs/dist/cli/vault.js --help
 
       - name: Store secret with Python
         run: vault -s 'secret-python' -v 'sha-${{github.sha}}' -w
@@ -125,8 +143,11 @@ jobs:
       - name: Validate Go and Rust secret equality with Python
         run: diff <(vault -l secret-go) <(vault -l secret-rust)
 
-      - name: Validate Python and Rust secret equality with Go and Nodejs
-        run: diff <(bin/go/vault -l secret-rust) <(nodejs/dist/cli/vault.js l secret-python)
+      - name: Validate Python secret equality with Rust and Go
+        run: diff <(bin/rust/vault -l secret-python) <(bin/go/vault -l secret-python)
+
+      - name: Validate Rust and Python secret equality with Go and Nodejs
+        run: diff <(bin/go/vault -l secret-rust) <(nodejs/dist/cli/vault.js lookup secret-python)
 
       - name: Validate Go and Python secret equality with Rust and Go
         run: diff <(bin/rust/vault -l secret-go) <(bin/go/vault -l secret-python)
@@ -134,8 +155,8 @@ jobs:
       - name: Validate Python and Nodejs secret equality with Rust
         run: diff <(bin/rust/vault -l secret-python) <(bin/rust/vault -l secret-nodejs)
 
-      - name: Validate Rust and Go secret equality with Nodejs
-        run: diff <(bin/rust/vault -l secret-rust) <(nodejs/dist/cli/vault.js l secret-nodejs)
+      - name: Validate Rust and Go secret equality with Nodejs and Go
+        run: diff <(bin/rust/vault -l secret-rust) <(nodejs/dist/cli/vault.js lookup secret-nodejs)
 
       - name: Delete secret with Python
         run: vault -d 'secret-python'
@@ -149,12 +170,12 @@ jobs:
       - name: Delete secret with Nodejs
         run: nodejs/dist/cli/vault.js d 'secret-nodejs'
 
-      - name: Verify that keys have been deleted
+      - name: Verify that keys have been deleted using Rust
         run: |
-          bin/rust/vault --exists secret-python | grep -q "key 'secret-python' does not exist"
-          bin/rust/vault --exists secret-go | grep -q "key 'secret-go' does not exist"
-          bin/rust/vault --exists secret-rust | grep -q "key 'secret-rust' does not exist"
-          bin/rust/vault --exists secret-nodejs | grep -q "key 'secret-nodejs' does not exist"
+          bin/rust/vault exists secret-python | grep -q "key 'secret-python' does not exist"
+          bin/rust/vault exists secret-go | grep -q "key 'secret-go' does not exist"
+          bin/rust/vault exists secret-rust | grep -q "key 'secret-rust' does not exist"
+          bin/rust/vault exists secret-nodejs | grep -q "key 'secret-nodejs' does not exist"
 
       - name: Create dummy text file
         run: echo "Vault test ${{ github.sha }} ${{ github.ref_name }}" > test.txt
@@ -162,7 +183,7 @@ jobs:
       - name: Zip the text file
         run: zip "secret-${{github.sha}}.zip" test.txt
 
-      - name: Store zip file using Python vault
+      - name: Store zip file using Python
         run: vault --store --file "secret-${{github.sha}}.zip"
 
       - name: Lookup the stored zip file and write to output
@@ -176,6 +197,9 @@ jobs:
 
       - name: Delete secret with Python
         run: vault -d "secret-${{github.sha}}.zip"
+
+      - name: Verify that key has been deleted with Rust
+        run: bin/rust/vault exists secret-${{github.sha}}.zip | grep -q "does not exist"
 
       - name: Store zip file using Rust vault
         run: bin/rust/vault --store --file "secret-${{github.sha}}.zip"
@@ -192,6 +216,95 @@ jobs:
       - name: Delete secret with Rust
         run: bin/rust/vault -d "secret-${{github.sha}}.zip"
 
-      - name: Verify that keys have been deleted
+      - name: Verify that key has been deleted with Rust
+        run: bin/rust/vault exists secret-${{github.sha}}.zip | grep -q "does not exist"
+
+      - name: Verify that keys have been deleted using Rust
         run: |
-          bin/rust/vault --exists secret-${{github.sha}}.zip | grep -q "does not exist"
+          bin/rust/vault exists secret-python | grep -q "key 'secret-python' does not exist"
+          bin/rust/vault exists secret-python-pyo3 | grep -q "key 'secret-python-pyo3' does not exist"
+          bin/rust/vault exists secret-go | grep -q "key 'secret-go' does not exist"
+          bin/rust/vault exists secret-rust | grep -q "key 'secret-rust' does not exist"
+          bin/rust/vault exists secret-nodejs | grep -q "key 'secret-nodejs' does not exist"
+
+      - name: Install Python PyO3 vault
+        run: python -m pip install --force-reinstall .
+        working-directory: python-pyo3
+
+      - name: Check version
+        run: vault --version
+
+      - name: Check help output
+        run: |
+          echo "============================ Python-pyo3 Vault CLI ==========================="
+          vault --help
+          echo "------------------------------------------------------------------------------"
+
+          echo "================================ Rust Vault CLI =============================="
+          bin/rust/vault -h
+          echo "------------------------------------------------------------------------------"
+
+      - name: Store secret with Python-pyo3
+        run: vault -s 'secret-python-pyo3' -v 'sha-${{github.sha}}' -w
+
+      - name: Validate storing worked Python-pyo3
+        run: diff <(vault -l secret-python-pyo3) <(echo -n sha-${{github.sha}})
+
+      - name: Store secret with Go
+        run: bin/go/vault -s 'secret-go' -v 'sha-${{github.sha}}' -w
+
+      - name: Store secret with Rust
+        run: bin/rust/vault -s 'secret-rust' -v 'sha-${{github.sha}}' -w
+
+      - name: Store secret with Nodejs
+        run: nodejs/dist/cli/vault.js s 'secret-nodejs' 'sha-${{github.sha}}' -w
+
+      - name: Validate Go and Rust secret equality with Python-pyo3
+        run: diff <(vault -l secret-go) <(vault -l secret-rust)
+
+      - name: Validate Python-pyo3 secret equality with Rust and Go
+        run: diff <(bin/rust/vault -l secret-python-pyo3) <(bin/go/vault -l secret-python-pyo3)
+
+      - name: Validate Nodejs and Python-pyo3 secret equality with Nodejs
+        run: diff <(nodejs/dist/cli/vault.js l secret-nodejs) <(vault -l secret-python-pyo3)
+
+      - name: Delete secret with Python-pyo3
+        run: vault -d 'secret-python-pyo3'
+
+      - name: Delete secret with Python-pyo3
+        run: vault -d 'secret-rust'
+
+      - name: Delete secret with Python-pyo3
+        run: vault -d 'secret-go'
+
+      - name: Delete secret with Python-pyo3
+        run: vault -d 'secret-nodejs'
+
+      - name: Verify that keys have been deleted using Python-pyo3
+        run: |
+          vault exists secret-python | grep -q "key 'secret-python' does not exist"
+          vault exists secret-python-pyo3 | grep -q "key 'secret-python-pyo3' does not exist"
+          vault exists secret-go | grep -q "key 'secret-go' does not exist"
+          vault exists secret-rust | grep -q "key 'secret-rust' does not exist"
+          vault exists secret-nodejs | grep -q "key 'secret-nodejs' does not exist"
+
+      - name: Store zip file using Python-pyo3
+        run: vault store --file "secret-${{github.sha}}.zip"
+
+      - name: Lookup the stored zip file and write to output
+        run: vault lookup "secret-${{github.sha}}.zip" > output-python-pyo3.zip
+
+      - name: Extract the retrieved zip file
+        run: unzip output-python-pyo3.zip -d extracted-python-pyo3
+
+      - name: Verify the extracted file content
+        run: diff extracted-python-pyo3/test.txt test.txt
+
+      - name: Delete secret with Python-pyo3
+        run: vault delete "secret-${{github.sha}}.zip"
+
+      - name: Verify that key has been deleted with Rust
+        run: bin/rust/vault exists secret-${{github.sha}}.zip | grep -q "does not exist"
+
+      - name: Verify that key has been deleted with Python-pyo3
+        run: vault exists secret-${{github.sha}}.zip | grep -q "does not exist"

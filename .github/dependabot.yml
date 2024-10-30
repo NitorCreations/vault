@@ -35,6 +35,16 @@ updates:
         patterns:
           - "*"
 
+  # Rust (PyO3)
+  - package-ecosystem: "cargo"
+    directory: "/python-pyo3"
+    schedule:
+      interval: "weekly"
+    groups:
+      pyo3:
+        patterns:
+          - "*"
+
   # Go
   - package-ecosystem: gomod
     directory: /go

@@ -1,3 +1,5 @@
+pub mod args;
+pub mod cli;
 pub mod cloudformation;
 pub mod errors;
 
@@ -6,9 +8,13 @@ mod value;
 mod vault;
 
 // Expose `Vault` and `Value` so they can be used as if they were defined here
+pub use crate::args::run_cli;
+pub use crate::args::run_cli_with_args;
 pub use crate::value::Value;
 pub use crate::vault::Vault;
 
+use aws_config::meta::region::RegionProviderChain;
+use aws_config::{Region, SdkConfig};
 use aws_sdk_s3::types::ObjectIdentifier;
 use base64::Engine;
 use serde::{Deserialize, Serialize};
@@ -27,7 +33,7 @@ pub enum CreateStackResult {
     Created {
         stack_name: String,
         stack_id: String,
-        region: aws_config::Region,
+        region: Region,
     },
 }
 
@@ -112,4 +118,20 @@ impl S3DataKeys {
             })
             .collect()
     }
+}
+
+#[inline]
+#[must_use]
+/// Return AWS SDK config with optional region name to use.
+pub async fn get_aws_config(region: Option<String>) -> SdkConfig {
+    aws_config::from_env()
+        .region(get_region_provider(region))
+        .load()
+        .await
+}
+
+#[inline]
+/// Get AWS region from optional argument or fallback to default.
+fn get_region_provider(region: Option<String>) -> RegionProviderChain {
+    RegionProviderChain::first_try(region.map(Region::new)).or_default_provider()
 }

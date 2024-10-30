@@ -113,6 +113,7 @@ impl Value {
         match self {
             Self::Utf8(ref string) => {
                 print!("{string}");
+                std::io::stdout().flush()?;
                 Ok(())
             }
             Self::Binary(ref bytes) => {

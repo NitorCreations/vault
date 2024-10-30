@@ -34,12 +34,12 @@ def main():
     action.add_argument(
         "--version",
         action="store_true",
-        help="Print vault version",
+        help="Print vault version and exit",
     )
     action.add_argument(
         "-s",
         "--store",
-        help="Name of element to store. Optionally read from file name",
+        help="Key name to use for stored value. Optionally read from file name",
         nargs="?",
         default="",
     )
@@ -157,6 +157,7 @@ def main():
     if args.version:
         print(VERSION)
         exit(0)
+
     try:
         if args.store and not (args.value or args.file):
             parser.error("--store requires --value or --file")

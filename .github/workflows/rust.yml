@@ -10,12 +10,16 @@ on:
       - "**.rs"
       - "rust/Cargo.lock"
       - "rust/Cargo.toml"
+      - "python-pyo3/Cargo.lock"
+      - "python-pyo3/Cargo.toml"
   pull_request:
     paths:
       - ".github/workflows/rust.yml"
       - "**.rs"
       - "rust/Cargo.lock"
       - "rust/Cargo.toml"
+      - "python-pyo3/Cargo.lock"
+      - "python-pyo3/Cargo.toml"
 
 # Cancel previous runs for PRs but not pushes to main
 concurrency:
@@ -40,6 +44,7 @@ jobs:
         uses: dtolnay/rust-toolchain@v1
         with:
           toolchain: stable
+          components: clippy
 
       - uses: Swatinem/rust-cache@v2.7.5
         with:
@@ -64,7 +69,10 @@ jobs:
       - name: Run tests
         run: cargo test --no-fail-fast
 
-  lint:
+      - name: Lint
+        run: cargo clippy -- -Dwarnings
+
+  format:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -78,23 +86,7 @@ jobs:
         uses: dtolnay/rust-toolchain@v1
         with:
           toolchain: stable
-          components: rustfmt, clippy
-
-      - name: Cache dependencies
-        uses: actions/cache@v4
-        continue-on-error: false
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-cargo-
+          components: rustfmt
 
       - name: Check formatting
         run: cargo fmt --check --verbose
-
-      - name: Lint
-        run: cargo clippy -- -Dwarnings

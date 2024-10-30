@@ -1,4 +1,5 @@
 use std::io::Write;
+use std::io::{stdout, IsTerminal};
 use std::path::{Path, PathBuf};
 
 use anyhow::{anyhow, Context, Result};
@@ -8,7 +9,7 @@ use clap_complete::Shell;
 use colored::Colorize;
 use tokio::time::Duration;
 
-use nitor_vault::{cloudformation, CreateStackResult, UpdateStackResult, Value, Vault};
+use crate::{cloudformation, CreateStackResult, UpdateStackResult, Value, Vault};
 
 static WAIT_ANIMATION_DURATION: Duration = Duration::from_millis(500);
 static QUIET_WAIT_DURATION: Duration = Duration::from_secs(1);
@@ -87,8 +88,8 @@ pub async fn store(
     vault: &Vault,
     key: Option<String>,
     value_positional: Option<String>,
-    file: Option<String>,
     value_argument: Option<String>,
+    file: Option<String>,
     overwrite: bool,
     quiet: bool,
 ) -> Result<()> {
@@ -201,8 +202,8 @@ pub async fn exists(vault: &Vault, key: &str, quiet: bool) -> Result<bool> {
 pub async fn encrypt(
     vault: &Vault,
     value_positional: Option<String>,
-    file: Option<String>,
     value_argument: Option<String>,
+    file: Option<String>,
     outfile: Option<String>,
 ) -> Result<()> {
     let data = read_value(value_positional, value_argument, file)?;
@@ -223,8 +224,8 @@ pub async fn encrypt(
 pub async fn decrypt(
     vault: &Vault,
     value_positional: Option<String>,
-    file: Option<String>,
     value_argument: Option<String>,
+    file: Option<String>,
     outfile: Option<String>,
 ) -> Result<()> {
     let data = read_value(value_positional, value_argument, file)?.decode_base64();
@@ -240,16 +241,18 @@ pub async fn decrypt(
 }
 
 /// Print the information from AWS STS "get caller identity" call.
-pub async fn print_aws_account(region: Option<String>) -> Result<()> {
-    let config = Vault::get_aws_config(region).await;
+pub async fn print_aws_account_id(region: Option<String>, quiet: bool) -> Result<()> {
+    let config = crate::get_aws_config(region).await;
     let client = aws_sdk_sts::Client::new(&config);
     let result = client.get_caller_identity().send().await?;
-    println!(
-        "user: {}\naccount: {}\narn: {}",
-        result.user_id.unwrap_or_else(|| "None".to_string()),
-        result.account.unwrap_or_else(|| "None".to_string()),
-        result.arn.unwrap_or_else(|| "None".to_string())
-    );
+    if !quiet {
+        println!(
+            "user: {}\naccount: {}\narn: {}",
+            result.user_id.unwrap_or_else(|| "None".to_string()),
+            result.account.unwrap_or_else(|| "None".to_string()),
+            result.arn.unwrap_or_else(|| "None".to_string())
+        );
+    }
     Ok(())
 }
 
@@ -281,7 +284,7 @@ async fn wait_for_stack_creation_to_finish(
                     anyhow::bail!("Stack creation failed");
                 }
                 _ => {
-                    if quiet {
+                    if quiet || !stdout().is_terminal() {
                         tokio::time::sleep(QUIET_WAIT_DURATION).await;
                     } else {
                         // Print status if it has changed
@@ -322,7 +325,7 @@ async fn wait_for_stack_update_to_finish(vault: &Vault, quiet: bool) -> Result<(
                     anyhow::bail!("Stack update failed".red());
                 }
                 _ => {
-                    if quiet {
+                    if quiet || !stdout().is_terminal() {
                         tokio::time::sleep(QUIET_WAIT_DURATION).await;
                     } else {
                         // Print status if it has changed
@@ -430,7 +433,7 @@ fn read_value(
 async fn print_wait_animation() -> Result<()> {
     for dot in WAIT_DOTS {
         print!("\r{CLEAR_LINE}{dot}");
-        std::io::stdout().flush()?;
+        stdout().flush()?;
         tokio::time::sleep(WAIT_ANIMATION_DURATION).await;
     }
     Ok(())

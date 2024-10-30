@@ -103,5 +103,5 @@ check_and_set_python
 $PYTHON -m build --sdist --wheel
 
 print_magenta "Uploading package..."
-twine check dist/*
+$PYTHON -m twine check dist/*
 run_command twine upload dist/*
