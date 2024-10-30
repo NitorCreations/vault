@@ -131,13 +131,6 @@ pub async fn get_aws_config(region: Option<String>) -> SdkConfig {
 }
 
 #[inline]
-#[must_use]
-/// Return new AWS STS client.
-pub fn aws_sts_client(config: &SdkConfig) -> aws_sdk_sts::Client {
-    aws_sdk_sts::Client::new(config)
-}
-
-#[inline]
 /// Get AWS region from optional argument or fallback to default.
 fn get_region_provider(region: Option<String>) -> RegionProviderChain {
     RegionProviderChain::first_try(region.map(Region::new)).or_default_provider()
