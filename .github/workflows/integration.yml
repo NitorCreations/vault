@@ -228,7 +228,7 @@ jobs:
           bin/rust/vault exists secret-nodejs | grep -q "key 'secret-nodejs' does not exist"
 
       - name: Install Python PyO3 vault
-        run: python -m pip install .
+        run: python -m pip install --force-reinstall .
         working-directory: python-pyo3
 
       - name: Check version
