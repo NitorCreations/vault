@@ -35,12 +35,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-test = ["coverage", "coveralls"]
 build = ["build", "setuptools", "twine", "wheel"]
-
-[build-system]
-requires = ["setuptools", "wheel", "build"]
-build-backend = "setuptools.build_meta"
+dev = ["ruff"]
+test = ["coverage", "coveralls"]
 
 [project.urls]
 Repository = "https://github.com/NitorCreations/vault"
@@ -48,6 +45,10 @@ Download = "https://github.com/NitorCreations/vault/tarball/0.55"
 
 [project.scripts]
 vault = "n_vault.cli:main"
+
+[build-system]
+requires = ["setuptools", "wheel", "build"]
+build-backend = "setuptools.build_meta"
 
 [tool.black]
 # https://black.readthedocs.io/en/stable/usage_and_configuration/the_basics.html#configuration-via-a-file
@@ -71,52 +72,7 @@ per-file-ignores = {}
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
 # Allow autofix for all enabled rules (when `--fix`) is provided.
-fixable = [
-    "A",
-    "B",
-    "C",
-    "D",
-    "E",
-    "F",
-    "G",
-    "I",
-    "N",
-    "Q",
-    "S",
-    "T",
-    "W",
-    "ANN",
-    "ARG",
-    "BLE",
-    "COM",
-    "DJ",
-    "DTZ",
-    "EM",
-    "ERA",
-    "EXE",
-    "FBT",
-    "ICN",
-    "INP",
-    "ISC",
-    "NPY",
-    "PD",
-    "PGH",
-    "PIE",
-    "PL",
-    "PT",
-    "PTH",
-    "PYI",
-    "RET",
-    "RSE",
-    "RUF",
-    "SIM",
-    "SLF",
-    "TCH",
-    "TID",
-    "TRY",
-    "UP",
-    "YTT",
-]
+fixable = ["ALL"]
 unfixable = []
 
 # Exclude a variety of commonly ignored directories.
