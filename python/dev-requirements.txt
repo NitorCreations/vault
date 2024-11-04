@@ -83,11 +83,11 @@ requests-toolbelt==1.0.0
     # via twine
 rfc3986==2.0.0
     # via twine
-rich==13.9.3
+rich==13.9.4
     # via twine
 s3transfer==0.10.3
     # via boto3
-setuptools==75.2.0
+setuptools==75.3.0
     # via nitor-vault (pyproject.toml)
 six==1.16.0
     # via python-dateutil
