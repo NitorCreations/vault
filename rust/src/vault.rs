@@ -1,5 +1,6 @@
 use std::fmt;
 
+use aes_gcm::aead::consts::U12;
 use aes_gcm::aead::{Aead, Payload};
 use aes_gcm::aes::{cipher, Aes256};
 use aes_gcm::{AesGcm, KeyInit, Nonce};
@@ -422,14 +423,12 @@ impl Vault {
             .plaintext()
             .ok_or(VaultError::KmsDataKeyPlainTextMissingError)?;
 
-        let aesgcm_cipher: AesGcm<Aes256, cipher::typenum::U12> =
-            AesGcm::new_from_slice(plaintext.as_ref())?;
+        let aesgcm_cipher: AesGcm<Aes256, U12> = AesGcm::new_from_slice(plaintext.as_ref())?;
         let nonce = Self::create_random_nonce();
-        let nonce = Nonce::from_slice(nonce.as_slice());
-        let meta = Meta::aesgcm(nonce).to_json()?;
+        let meta = Meta::aesgcm(&nonce).to_json()?;
         let aes_gcm_ciphertext = aesgcm_cipher
             .encrypt(
-                nonce,
+                &nonce,
                 Payload {
                     msg: data,
                     aad: meta.as_bytes(),
@@ -477,11 +476,11 @@ impl Vault {
     }
 
     #[inline]
-    fn create_random_nonce() -> [u8; 12] {
+    fn create_random_nonce() -> Nonce<U12> {
         let mut nonce: [u8; 12] = [0; 12];
         let mut rng = rand::thread_rng();
-        rng.fill(nonce.as_mut_slice());
-        nonce
+        rng.fill(&mut nonce);
+        Nonce::from(nonce)
     }
 }
 
