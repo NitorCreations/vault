@@ -1,5 +1,6 @@
-use std::{env, fmt};
+use std::fmt;
 
+use aes_gcm::aead::consts::U12;
 use aes_gcm::aead::{Aead, Payload};
 use aes_gcm::aes::{cipher, Aes256};
 use aes_gcm::{AesGcm, KeyInit, Nonce};
@@ -39,16 +40,18 @@ pub struct Vault {
 
 impl Vault {
     /// Construct Vault for an existing vault stack with defaults.
+    ///
     /// This will try reading environment variables for the config values,
     /// and otherwise fall back to current AWS config and/or retrieve config values from the
     /// Cloudformation stack description.
     ///
-    /// The Default trait can't be implemented for Vault since it can fail.
+    // The Default trait can't be implemented for Vault since it can fail.
     pub async fn default() -> Result<Self, VaultError> {
-        Self::new(None, None, None, None, None).await
+        Self::new(None, None, None, None, None, None).await
     }
 
     /// Construct Vault for an existing vault stack with optional arguments.
+    ///
     /// This will try reading environment variables for the config values that are `None`.
     pub async fn new(
         vault_stack: Option<String>,
@@ -56,8 +59,9 @@ impl Vault {
         bucket: Option<String>,
         key: Option<String>,
         prefix: Option<String>,
+        profile: Option<String>,
     ) -> Result<Self, VaultError> {
-        let config = crate::get_aws_config(region).await;
+        let config = crate::get_aws_config(region, profile).await;
         let region = config
             .region()
             .map(ToOwned::to_owned)
@@ -66,12 +70,12 @@ impl Vault {
         // Check env variables directly in case the library is not used through the CLI.
         // These are also handled in the CLI, so they are documented in the CLI help.
         let stack_name = vault_stack
-            .or_else(|| get_env_variable("VAULT_STACK"))
+            .or_else(|| crate::get_env_variable("VAULT_STACK"))
             .unwrap_or_else(|| "vault".to_string());
-        let bucket = bucket.or_else(|| get_env_variable("VAULT_BUCKET"));
-        let key = key.or_else(|| get_env_variable("VAULT_KEY"));
+        let bucket = bucket.or_else(|| crate::get_env_variable("VAULT_BUCKET"));
+        let key = key.or_else(|| crate::get_env_variable("VAULT_KEY"));
         let mut prefix = prefix
-            .or_else(|| get_env_variable("VAULT_PREFIX"))
+            .or_else(|| crate::get_env_variable("VAULT_PREFIX"))
             .unwrap_or_default();
 
         if !prefix.is_empty() && !prefix.ends_with('/') {
@@ -105,8 +109,9 @@ impl Vault {
         vault_stack: Option<String>,
         region: Option<String>,
         bucket: Option<String>,
+        profile: Option<String>,
     ) -> Result<CreateStackResult, VaultError> {
-        let config = crate::get_aws_config(region).await;
+        let config = crate::get_aws_config(region, profile).await;
         let region = config
             .region()
             .map(ToOwned::to_owned)
@@ -115,11 +120,11 @@ impl Vault {
         // Check env variables directly in case the library is not used through the CLI.
         // These are also handled in the CLI, so they are documented in the CLI help.
         let stack_name = vault_stack
-            .or_else(|| get_env_variable("VAULT_STACK"))
+            .or_else(|| crate::get_env_variable("VAULT_STACK"))
             .unwrap_or_else(|| "vault".to_string());
 
         let bucket = bucket
-            .or_else(|| get_env_variable("VAULT_BUCKET"))
+            .or_else(|| crate::get_env_variable("VAULT_BUCKET"))
             .unwrap_or({
                 let sts_client = stsClient::new(&config);
                 let identity = sts_client
@@ -418,14 +423,12 @@ impl Vault {
             .plaintext()
             .ok_or(VaultError::KmsDataKeyPlainTextMissingError)?;
 
-        let aesgcm_cipher: AesGcm<Aes256, cipher::typenum::U12> =
-            AesGcm::new_from_slice(plaintext.as_ref())?;
-        let nonce = create_random_nonce();
-        let nonce = Nonce::from_slice(nonce.as_slice());
-        let meta = Meta::aesgcm(nonce).to_json()?;
+        let aesgcm_cipher: AesGcm<Aes256, U12> = AesGcm::new_from_slice(plaintext.as_ref())?;
+        let nonce = Self::create_random_nonce();
+        let meta = Meta::aesgcm(&nonce).to_json()?;
         let aes_gcm_ciphertext = aesgcm_cipher
             .encrypt(
-                nonce,
+                &nonce,
                 Payload {
                     msg: data,
                     aad: meta.as_bytes(),
@@ -471,24 +474,22 @@ impl Vault {
             format!("{}{}", self.prefix, name)
         }
     }
+
+    #[inline]
+    fn create_random_nonce() -> Nonce<U12> {
+        let mut nonce: [u8; 12] = [0; 12];
+        let mut rng = rand::thread_rng();
+        rng.fill(&mut nonce);
+        Nonce::from(nonce)
+    }
 }
 
 impl fmt::Display for Vault {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "region: {}\n{}", self.region, self.cloudformation_params)
+        write!(f, "region: {}\n{}", self.region, self.cloudformation_params)?;
+        if !self.prefix.is_empty() {
+            write!(f, "\nprefix: {}", self.prefix)?;
+        }
+        Ok(())
     }
-}
-
-#[inline]
-fn create_random_nonce() -> [u8; 12] {
-    let mut nonce: [u8; 12] = [0; 12];
-    let mut rng = rand::thread_rng();
-    rng.fill(nonce.as_mut_slice());
-    nonce
-}
-
-#[inline]
-/// Return possible env variable value as Option.
-fn get_env_variable(name: &str) -> Option<String> {
-    env::var(name).ok()
 }

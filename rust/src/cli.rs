@@ -21,9 +21,10 @@ pub async fn init_vault_stack(
     stack_name: Option<String>,
     region: Option<String>,
     bucket: Option<String>,
+    profile: Option<String>,
     quiet: bool,
 ) -> Result<()> {
-    match Vault::init(stack_name, region, bucket).await? {
+    match Vault::init(stack_name, region, bucket, profile).await? {
         CreateStackResult::Exists { data } => {
             if !quiet {
                 println!("{}", "Vault stack already initialized:".bold());
@@ -241,8 +242,12 @@ pub async fn decrypt(
 }
 
 /// Print the information from AWS STS "get caller identity" call.
-pub async fn print_aws_account_id(region: Option<String>, quiet: bool) -> Result<()> {
-    let config = crate::get_aws_config(region).await;
+pub async fn print_aws_account_id(
+    region: Option<String>,
+    profile: Option<String>,
+    quiet: bool,
+) -> Result<()> {
+    let config = crate::get_aws_config(region, profile).await;
     let client = aws_sdk_sts::Client::new(&config);
     let result = client.get_caller_identity().send().await?;
     if !quiet {

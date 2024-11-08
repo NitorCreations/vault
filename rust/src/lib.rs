@@ -121,10 +121,20 @@ impl S3DataKeys {
 }
 
 #[inline]
+/// Return possible env variable value as Option.
+#[must_use]
+pub fn get_env_variable(name: &str) -> Option<String> {
+    std::env::var(name).ok()
+}
+
+#[inline]
 #[must_use]
 /// Return AWS SDK config with optional region name to use.
-pub async fn get_aws_config(region: Option<String>) -> SdkConfig {
-    aws_config::from_env()
+pub async fn get_aws_config(region: Option<String>, profile: Option<String>) -> SdkConfig {
+    profile
+        .map_or_else(aws_config::from_env, |profile| {
+            aws_config::from_env().profile_name(profile)
+        })
         .region(get_region_provider(region))
         .load()
         .await

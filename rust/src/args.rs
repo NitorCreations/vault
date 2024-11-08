@@ -32,8 +32,12 @@ struct Args {
     region: Option<String>,
 
     /// Specify CloudFormation stack name to use
-    #[arg(long, name = "NAME", env = "VAULT_STACK")]
+    #[arg(long = "vaultstack", name = "NAME", env = "VAULT_STACK")]
     vault_stack: Option<String>,
+
+    /// Specify AWS profile to use
+    #[arg(long = "profile", name = "PROFILE", env = "AWS_PROFILE")]
+    aws_profile: Option<String>,
 
     /// Suppress additional output and error messages
     #[arg(short, long)]
@@ -68,7 +72,7 @@ enum Command {
     },
 
     /// Delete an existing key from the store
-    #[command(short_flag('d'), long_flag("delete"), alias("d"))]
+    #[command(short_flag('d'), long_flag("delete"), visible_alias("d"))]
     Delete {
         /// Key name to delete
         key: String,
@@ -80,7 +84,7 @@ enum Command {
     Describe {},
 
     /// Directly decrypt given value
-    #[command(short_flag('y'), long_flag("decrypt"), alias("y"))]
+    #[command(short_flag('y'), long_flag("decrypt"), visible_alias("y"))]
     Decrypt {
         /// Value to decrypt, use '-' for stdin
         value: Option<String>,
@@ -109,7 +113,7 @@ enum Command {
     },
 
     /// Directly encrypt given value
-    #[command(short_flag('e'), long_flag("encrypt"), alias("e"))]
+    #[command(short_flag('e'), long_flag("encrypt"), visible_alias("e"))]
     Encrypt {
         /// Value to encrypt, use '-' for stdin
         value: Option<String>,
@@ -155,7 +159,9 @@ enum Command {
     Info {},
 
     /// Print AWS user account information
-    #[command(long_flag("id"))]
+    #[command(long_about = "Print AWS user account information.\n\n\
+        Same as calling `aws sts get-caller-identity`,\n\
+        but faster than awscli and output is in plain text.")]
     Id {},
 
     /// Print vault stack information
@@ -166,7 +172,7 @@ enum Command {
     #[command(
         short_flag('i'),
         long_flag("init"),
-        alias("i"),
+        visible_alias("i"),
         long_about = "Initialize a KMS key and a S3 bucket with roles for reading\n\
                       and writing on a fresh account via CloudFormation.\n\
                       The account used has to have rights to create the resources.\n\n\
@@ -185,7 +191,7 @@ enum Command {
     #[command(
         short_flag('u'),
         long_flag("update"),
-        alias("u"),
+        visible_alias("u"),
         long_about = "Update the CloudFormation stack which declares all resources needed by the vault.\n\n\
                       Usage examples:\n\
                       - `vault update`\n\
@@ -200,7 +206,7 @@ enum Command {
     },
 
     /// Output secret value for given key
-    #[command(short_flag('l'), long_flag("lookup"), alias("l"))]
+    #[command(short_flag('l'), long_flag("lookup"), visible_alias("l"))]
     Lookup {
         /// Key name to lookup
         key: String,
@@ -214,7 +220,7 @@ enum Command {
     #[command(
         short_flag('s'),
         long_flag("store"),
-        alias("s"),
+        visible_alias("s"),
         long_about = "Store a new key-value pair in the vault.\n\
                       You can provide the key and value directly, or specify a file to store.\n\n\
                       Usage examples:\n\
@@ -301,6 +307,7 @@ async fn run(args: Args) -> Result<()> {
                     args.vault_stack.or(name),
                     args.region,
                     args.bucket,
+                    args.aws_profile,
                     args.quiet,
                 )
                 .await
@@ -313,6 +320,7 @@ async fn run(args: Args) -> Result<()> {
                     args.bucket,
                     args.key_arn,
                     args.prefix,
+                    args.aws_profile,
                 )
                 .await
                 .with_context(|| "Failed to create vault with given parameters".red())?;
@@ -325,7 +333,7 @@ async fn run(args: Args) -> Result<()> {
                 cli::generate_shell_completion(shell, Args::command(), install, args.quiet)?;
             }
             Command::Id {} => {
-                cli::print_aws_account_id(args.region, args.quiet).await?;
+                cli::print_aws_account_id(args.region, args.aws_profile, args.quiet).await?;
             }
             // All other commands can use the same single Vault
             Command::All {}
@@ -344,6 +352,7 @@ async fn run(args: Args) -> Result<()> {
                     args.bucket,
                     args.key_arn,
                     args.prefix,
+                    args.aws_profile,
                 )
                 .await
                 .with_context(|| "Failed to create vault with given parameters".red())?;
