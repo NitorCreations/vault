@@ -2,9 +2,9 @@
 #    uv pip compile --output-file=dev-requirements.txt --all-extras pyproject.toml
 argcomplete==3.5.1
     # via nitor-vault (pyproject.toml)
-boto3==1.35.29
+boto3==1.35.56
     # via threadlocal-aws
-botocore==1.35.29
+botocore==1.35.56
     # via
     #   boto3
     #   s3transfer
@@ -56,9 +56,9 @@ more-itertools==10.5.0
     #   jaraco-functools
 nh3==0.2.18
     # via readme-renderer
-packaging==24.1
+packaging==24.2
     # via build
-pkginfo==1.11.2
+pkginfo==1.10.0
     # via twine
 pycparser==2.22
     # via cffi
@@ -85,6 +85,8 @@ rfc3986==2.0.0
     # via twine
 rich==13.9.4
     # via twine
+ruff==0.7.3
+    # via nitor-vault (pyproject.toml)
 s3transfer==0.10.3
     # via boto3
 setuptools==75.3.0
