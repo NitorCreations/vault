@@ -17,36 +17,37 @@ By default, cargo puts the vault binary under `~/.cargo/bin/vault`.
 Check with `which -a vault` to see what vault version you have first in path.
 
 ```console
-Encrypted AWS key-value storage utility.
+Encrypted AWS key-value storage utility
 
 Usage: vault [OPTIONS] [COMMAND]
 
 Commands:
-  all, -a, --all            List available secrets
+  all, -a, --all            List available secrets [aliases: a, list, ls]
   completion, --completion  Generate shell completion
-  delete, -d, --delete      Delete an existing key from the store
-  describe, --describe      Describe CloudFormation stack parameters for current configuration
-  decrypt, -y, --decrypt    Directly decrypt given value
-  encrypt, -e, --encrypt    Directly encrypt given value
+  delete, -d, --delete      Delete an existing key from the store [aliases: d]
+  describe, --describe      Print CloudFormation stack parameters for current configuration
+  decrypt, -y, --decrypt    Directly decrypt given value [aliases: y]
+  encrypt, -e, --encrypt    Directly encrypt given value [aliases: e]
   exists, --exists          Check if a key exists
   info, --info              Print vault information
-  id, --id                  Print AWS user account information
+  id                        Print AWS user account information
   status, --status          Print vault stack information
-  init, -i, --init          Initialize a new KMS key and S3 bucket
-  update, -u, --update      Update the vault CloudFormation stack
-  lookup, -l, --lookup      Output secret value for given key
-  store, -s, --store        Store a new key-value pair
+  init, -i, --init          Initialize a new KMS key and S3 bucket [aliases: i]
+  update, -u, --update      Update the vault CloudFormation stack [aliases: u]
+  lookup, -l, --lookup      Output secret value for given key [aliases: l]
+  store, -s, --store        Store a new key-value pair [aliases: s]
   help                      Print this message or the help of the given subcommand(s)
 
 Options:
-  -b, --bucket <BUCKET>     Override the bucket name [env: VAULT_BUCKET=]
-  -k, --key-arn <ARN>       Override the KMS key ARN [env: VAULT_KEY=]
-  -p, --prefix <PREFIX>     Optional prefix for key name [env: VAULT_PREFIX=]
-  -r, --region <REGION>     Specify AWS region for the bucket [env: AWS_REGION=]
-      --vault-stack <NAME>  Specify CloudFormation stack name to use [env: VAULT_STACK=]
-  -q, --quiet               Suppress additional output and error messages
-  -h, --help                Print help (see more with '--help')
-  -V, --version             Print version
+  -b, --bucket <BUCKET>    Override the bucket name [env: VAULT_BUCKET=]
+  -k, --key-arn <ARN>      Override the KMS key ARN [env: VAULT_KEY=]
+  -p, --prefix <PREFIX>    Optional prefix for key name [env: VAULT_PREFIX=]
+  -r, --region <REGION>    Specify AWS region for the bucket [env: AWS_REGION=]
+      --vaultstack <NAME>  Specify CloudFormation stack name to use [env: VAULT_STACK=]
+      --profile <PROFILE>  Specify AWS profile to use [env: AWS_PROFILE=]
+  -q, --quiet              Suppress additional output and error messages
+  -h, --help               Print help (see more with '--help')
+  -V, --version            Print version
 ```
 
 ANSI color output can be disabled by setting the env variable `NO_COLOR=1`.
