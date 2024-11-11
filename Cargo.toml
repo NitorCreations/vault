@@ -1,0 +1,11 @@
+# Share version definiton for both Rust and Python-pyo3 packages
+[workspace]
+members = ["rust", "python-pyo3"]
+resolver = "2"
+
+[workspace.package]
+edition = "2021"
+version = "2.1.1"
+
+[profile.release]
+lto = "thin"

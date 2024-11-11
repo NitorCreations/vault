@@ -1,7 +1,7 @@
 [package]
 name = "nitor-vault"
-version = "2.1.0"
-edition = "2021"
+version.workspace = true
+edition.workspace = true
 description = "Encrypted AWS key-value storage utility"
 license = "Apache-2.0"
 repository = "https://github.com/nitorcreations/vault"
@@ -33,9 +33,6 @@ tokio = { version = "1.41.0", features = ["full"] }
 [[bin]]
 name = "vault"
 path = "src/main.rs"
-
-[profile.release]
-lto = "thin"
 
 [lints.rust]
 unsafe_code = "forbid"
