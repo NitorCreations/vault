@@ -2,7 +2,7 @@
 
 Python vault implementation using the Rust vault library.
 
-See the [repo](https://github.com/NitorCreations/vault) for more general information.
+See the [repo](https://github.com/NitorCreations/vault) root readme for more general information.
 
 ## Usage
 
@@ -42,7 +42,7 @@ Options:
 
 ## Install
 
-### PyPI
+### From PyPI
 
 Use [pipx](https://github.com/pypa/pipx) or [uv](https://github.com/astral-sh/uv)
 to install the Python vault package from [PyPI](https://pypi.org/project/nitor-vault/) globally in an isolated environment.
@@ -53,11 +53,13 @@ pipx install nitor-vault
 uv tool install nitor-vault
 ```
 
-### From Source
+The command `vault` should now be available in path.
+
+### From source
 
 Build and install locally from source code using pip.
 This requires a [Rust toolchain](https://rustup.rs/) to be able to build the Rust library.
-From repo root:
+From the repo root:
 
 ```shell
 cd python-pyo3
