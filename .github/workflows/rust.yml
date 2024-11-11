@@ -8,18 +8,18 @@ on:
     paths:
       - ".github/workflows/rust.yml"
       - "**.rs"
-      - "rust/Cargo.lock"
-      - "rust/Cargo.toml"
-      - "python-pyo3/Cargo.lock"
+      - "Cargo.lock"
+      - "Cargo.toml"
       - "python-pyo3/Cargo.toml"
+      - "rust/Cargo.toml"
   pull_request:
     paths:
       - ".github/workflows/rust.yml"
       - "**.rs"
-      - "rust/Cargo.lock"
-      - "rust/Cargo.toml"
-      - "python-pyo3/Cargo.lock"
+      - "Cargo.lock"
+      - "Cargo.toml"
       - "python-pyo3/Cargo.toml"
+      - "rust/Cargo.toml"
 
 # Cancel previous runs for PRs but not pushes to main
 concurrency:
