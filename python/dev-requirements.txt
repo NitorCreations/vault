@@ -58,7 +58,7 @@ nh3==0.2.18
     # via readme-renderer
 packaging==24.2
     # via build
-pkginfo==1.10.0
+pkginfo==1.11.2
     # via twine
 pycparser==2.22
     # via cffi
@@ -103,7 +103,7 @@ urllib3==2.2.3
     #   requests
     #   threadlocal-aws
     #   twine
-wheel==0.44.0
+wheel==0.45.0
     # via nitor-vault (pyproject.toml)
-zipp==3.20.2
+zipp==3.21.0
     # via importlib-metadata
