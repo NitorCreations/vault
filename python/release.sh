@@ -87,6 +87,8 @@ init_options() {
 
 init_options "$@"
 
+print_error_and_exit "This implementation has been replaced with the python-pyo3 version"
+
 print_magenta "Updating version number..."
 "${SED_COMMAND[@]}" "s/^VERSION = .*/VERSION = \"$NEW_VERSION\"/g" n_vault/__init__.py
 "${SED_COMMAND[@]}" "s/^version = .*/version = \"$NEW_VERSION\"/g" pyproject.toml

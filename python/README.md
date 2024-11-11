@@ -1,5 +1,9 @@
 # nitor-vault
 
+> [!CAUTION]
+> This implementation has been superceded by the [Python-pyo3](../python-pyo3) version
+> that uses the Rust implementation internally.
+
 Python vault implementation.
 
 See the [root readme](../README.md) for more information.
@@ -58,17 +62,6 @@ python -m pip install .
 ```
 
 After installing, you will have `vault` available in path.
-
-## Release
-
-Use the provided shell script.
-Note that you need to have a venv with the extra dependencies installed active when running the script.
-
-```shell
-./release.sh
-# See help
-./release.sh -h
-```
 
 ## Code formatting and linting
 
