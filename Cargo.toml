@@ -1,4 +1,4 @@
-# Share version definiton for both Rust and Python-pyo3 packages
+# Share version definition for both Rust and Python-pyo3 packages
 [workspace]
 members = ["rust", "python-pyo3"]
 resolver = "2"

@@ -8,18 +8,18 @@ on:
     paths:
       - ".github/workflows/rust.yml"
       - "**.rs"
-      - "rust/Cargo.lock"
-      - "rust/Cargo.toml"
-      - "python-pyo3/Cargo.lock"
+      - "Cargo.lock"
+      - "Cargo.toml"
       - "python-pyo3/Cargo.toml"
+      - "rust/Cargo.toml"
   pull_request:
     paths:
       - ".github/workflows/rust.yml"
       - "**.rs"
-      - "rust/Cargo.lock"
-      - "rust/Cargo.toml"
-      - "python-pyo3/Cargo.lock"
+      - "Cargo.lock"
+      - "Cargo.toml"
       - "python-pyo3/Cargo.toml"
+      - "rust/Cargo.toml"
 
 # Cancel previous runs for PRs but not pushes to main
 concurrency:
@@ -47,21 +47,6 @@ jobs:
           components: clippy
 
       - uses: Swatinem/rust-cache@v2.7.5
-        with:
-          workspaces: ./rust -> target
-
-      - name: Set up cargo cache
-        uses: actions/cache@v4
-        continue-on-error: false
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-cargo-
 
       - name: Build
         run: cargo build
