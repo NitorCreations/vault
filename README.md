@@ -25,9 +25,9 @@ Use [pipx](https://github.com/pypa/pipx) or [uv](https://github.com/astral-sh/uv
 to install the Python vault from [PyPI](https://pypi.org/project/nitor-vault/) globally in an isolated environment.
 
 ```shell
-pipx install nameless-deploy-tools
+pipx install nitor-vault
 # or
-uv tool install nameless-deploy-tools
+uv tool install nitor-vault
 ```
 
 Directly installing with pip is no longer supported by most Python distributions.
