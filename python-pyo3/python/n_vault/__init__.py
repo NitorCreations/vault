@@ -16,8 +16,7 @@
 Vault module for securely storing secrets in s3 with local encryption with data keys from AWS KMS.
 """
 
-# Simplify importing for library users,
-# so one can simply do:
-# from n_vault import Vault
+# Simplify importing for library users, enabling:
+# `from n_vault import Vault`
 
 from n_vault.vault import Vault as Vault  # noqa: E402
