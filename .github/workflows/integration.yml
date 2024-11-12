@@ -35,6 +35,9 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2.7.5
         if: ${{ matrix.lang == 'rust'}}
+        with:
+          # The build script creates a `release` build so use separate cache
+          key: "release"
 
       - uses: actions/setup-go@v5
         if: ${{ matrix.lang == 'go'}}
