@@ -352,7 +352,7 @@ jobs:
 
       - name: Lookup with Python library
         run: |
-          diff <(python -c "from n_vault import Vault; print(Vault().lookup('secret-python-library').decode('utf-8'), end='', flush=True)") <(echo -n sha-${{github.sha}})
+          diff <(python -c "from n_vault import Vault; print(Vault().lookup('secret-python-library'), end='', flush=True)") <(echo -n sha-${{github.sha}})
 
       - name: List with Python library
         run: python -c "from n_vault import Vault; print('\n'.join(Vault().list_all()))"
