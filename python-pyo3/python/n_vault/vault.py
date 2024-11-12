@@ -26,3 +26,18 @@ class Vault:
     @staticmethod
     def list_all() -> list[str]:
         return nitor_vault_rs.list_all()
+
+    @staticmethod
+    def delete(name: str) -> None:
+        return nitor_vault_rs.delete(name)
+
+    @staticmethod
+    def store(key: str, value: bytes | str) -> None:
+        if isinstance(value, str):
+            value = value.encode("utf-8")
+
+        return nitor_vault_rs.store(key, value)
+
+    @staticmethod
+    def exists(name: str) -> bool:
+        return nitor_vault_rs.exists(name)
