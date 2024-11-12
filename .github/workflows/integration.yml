@@ -346,7 +346,7 @@ jobs:
         run: python -c "from n_vault import Vault; Vault().delete_many(Vault().list_all())"
 
       - name: List with Python library
-        run: python -c "from n_vault import Vault; print('\n'.join(Vault().list_all()))" | wc -l | grep -q "0"
+        run: python -c "from n_vault import Vault; print('\n'.join(Vault().list_all()))" | grep -ve '^\s*$' | wc -l | grep -q "0"
 
       - name: Store secret using Python library
         run: |
