@@ -1,6 +1,6 @@
 import sys
 
-from p_vault import nitor_vault_rs
+from n_vault import nitor_vault_rs
 
 
 def main():
