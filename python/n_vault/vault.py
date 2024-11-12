@@ -113,6 +113,9 @@ class Vault:
             self._vault_bucket = self._stack + "-" + self._region + "-" + account_id
 
     def store(self, name, data):
+        if isinstance(data, str):
+            data = data.encode("utf-8")
+
         encrypted = self._encrypt(data)
         s3(**self._c_args).put_object(
             Bucket=self._vault_bucket,
