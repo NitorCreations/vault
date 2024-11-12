@@ -20,16 +20,20 @@ class Vault:
     """Nitor Vault wrapper around the Rust vault library."""
 
     @staticmethod
-    def lookup(name: str) -> str:
-        return nitor_vault_rs.lookup(name)
+    def delete(name: str) -> None:
+        return nitor_vault_rs.delete(name)
+
+    @staticmethod
+    def exists(name: str) -> bool:
+        return nitor_vault_rs.exists(name)
 
     @staticmethod
     def list_all() -> list[str]:
         return nitor_vault_rs.list_all()
 
     @staticmethod
-    def delete(name: str) -> None:
-        return nitor_vault_rs.delete(name)
+    def lookup(name: str) -> str:
+        return nitor_vault_rs.lookup(name)
 
     @staticmethod
     def store(key: str, value: bytes | str) -> None:
@@ -37,7 +41,3 @@ class Vault:
             value = value.encode("utf-8")
 
         return nitor_vault_rs.store(key, value)
-
-    @staticmethod
-    def exists(name: str) -> bool:
-        return nitor_vault_rs.exists(name)
