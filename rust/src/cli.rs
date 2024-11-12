@@ -177,6 +177,36 @@ pub async fn list_all_keys(vault: &Vault) -> Result<()> {
         })
 }
 
+/// List all vault stacks.
+pub async fn list_stacks(
+    region: Option<String>,
+    profile: Option<String>,
+    quiet: bool,
+) -> Result<()> {
+    let config = crate::get_aws_config(region, profile).await;
+    let client = aws_sdk_cloudformation::Client::new(&config);
+    let stacks = cloudformation::list_stacks(&client).await?;
+    if stacks.is_empty() {
+        if !quiet {
+            println!("No vault stacks found");
+        }
+    } else {
+        if !quiet && stacks.len() > 1 {
+            println!("{}", format!("Found {} stacks:", stacks.len()).bold());
+        }
+        println!(
+            "{}",
+            stacks
+                .into_iter()
+                .map(|stack| stack.to_string())
+                .collect::<Vec<String>>()
+                .join("\n--------------------------------------------\n")
+        );
+    }
+
+    Ok(())
+}
+
 /// Check if key exists.
 pub async fn exists(vault: &Vault, key: &str, quiet: bool) -> Result<bool> {
     if key.trim().is_empty() {
@@ -394,6 +424,7 @@ fn get_filename_from_path(path: &str) -> Result<String> {
 }
 
 /// Resolves an optional output file path and creates all directories if necessary.
+///
 /// Returns `Some(PathBuf)` if the file path is valid,
 /// or `None` if a file path was not provided.
 fn resolve_output_file_path(outfile: Option<String>) -> Result<Option<PathBuf>> {

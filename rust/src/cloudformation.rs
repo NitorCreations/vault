@@ -1,7 +1,7 @@
 use std::fmt;
 
 use aws_sdk_cloudformation::operation::describe_stacks::DescribeStacksOutput;
-use aws_sdk_cloudformation::types::{Output, StackStatus};
+use aws_sdk_cloudformation::types::{Output, StackStatus, StackSummary};
 
 use crate::errors::VaultError;
 
@@ -21,6 +21,14 @@ pub struct CloudFormationStackData {
     pub version: Option<u32>,
     pub status: Option<StackStatus>,
     pub status_reason: Option<String>,
+}
+
+pub struct CloudFormationStackSummary {
+    pub stack_name: Option<String>,
+    pub stack_id: Option<String>,
+    pub template_description: Option<String>,
+    pub stack_status: Option<StackStatus>,
+    pub stack_status_reason: Option<String>,
 }
 
 impl CloudFormationParams {
@@ -107,6 +115,42 @@ impl fmt::Display for CloudFormationStackData {
     }
 }
 
+impl CloudFormationStackSummary {
+    /// Create from AWS SDK `StackSummary`
+    #[must_use]
+    pub fn from_aws_stack_summary(stack: &StackSummary) -> Self {
+        Self {
+            stack_name: stack.stack_name().map(ToString::to_string),
+            stack_id: stack.stack_id().map(ToString::to_string),
+            template_description: stack.template_description().map(ToString::to_string),
+            stack_status: stack.stack_status().cloned(),
+            stack_status_reason: stack.stack_status_reason().map(ToString::to_string),
+        }
+    }
+}
+
+impl fmt::Display for CloudFormationStackSummary {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "name: {}\nid: {}\ndescription: {}\nstatus: {}{}",
+            self.stack_name.as_deref().unwrap_or("None"),
+            self.stack_id.as_deref().unwrap_or("None"),
+            self.template_description.as_deref().unwrap_or("None"),
+            self.stack_status
+                .as_ref()
+                .map(|s| format!("{s:?}"))
+                .as_deref()
+                .unwrap_or("None"),
+            self.stack_status_reason
+                .as_ref()
+                .map_or_else(String::new, |reason| format!("\nreason: {reason}"))
+        )?;
+
+        Ok(())
+    }
+}
+
 /// Extract relevant information from Cloudformation stack outputs
 pub async fn get_stack_data(
     cf_client: &aws_sdk_cloudformation::Client,
@@ -163,4 +207,49 @@ pub async fn describe_stack(
         .send()
         .await
         .map_err(VaultError::from)
+}
+
+/// List all vault stacks
+///
+/// Stacks are identified by the description set by the Cloudformation template.
+pub async fn list_stacks(
+    cf_client: &aws_sdk_cloudformation::Client,
+) -> Result<Vec<CloudFormationStackSummary>, VaultError> {
+    let mut stacks = Vec::new();
+    let mut next_token: Option<String> = None;
+
+    loop {
+        let response = cf_client
+            .list_stacks()
+            .set_next_token(next_token.clone())
+            .send()
+            .await?;
+
+        stacks.extend(
+            response
+                .stack_summaries()
+                .iter()
+                .filter(|summary| {
+                    summary.stack_status.as_ref().map_or(false, |status| {
+                        *status != StackStatus::DeleteComplete
+                            && *status != StackStatus::DeleteInProgress
+                    })
+                })
+                .filter(|&summary| {
+                    summary.template_description().is_some_and(|description| {
+                        description.eq_ignore_ascii_case("nitor vault stack")
+                    }) || summary
+                        .stack_name()
+                        .is_some_and(|name| name.eq_ignore_ascii_case("vault"))
+                })
+                .map(CloudFormationStackSummary::from_aws_stack_summary),
+        );
+
+        next_token = response.next_token().map(ToString::to_string);
+        if next_token.is_none() {
+            break;
+        }
+    }
+
+    Ok(stacks)
 }

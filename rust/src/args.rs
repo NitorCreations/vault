@@ -91,6 +91,17 @@ enum Command {
         key: String,
     },
 
+    /// Delete vault stack
+    #[command(long_flag("delete-stack"))]
+    DeleteStack {
+        /// Vault name to delete
+        name: Option<String>,
+
+        /// Do not ask for confirmation
+        #[arg(short, long)]
+        force: bool,
+    },
+
     /// Print CloudFormation stack parameters for current configuration.
     // This value is useful for Lambdas as you can load the CloudFormation parameters from env.
     #[command(long_flag("describe"))]
@@ -223,6 +234,10 @@ enum Command {
         name: Option<String>,
     },
 
+    /// List all vault stacks
+    #[command(long_flag("list-stacks"))]
+    ListStacks {},
+
     /// Output secret value for given key
     ///
     /// Note that for binary secret data, the raw bytes will be outputted as is.
@@ -281,6 +296,24 @@ enum Command {
         /// Overwrite existing key
         #[arg(short = 'w', long)]
         overwrite: bool,
+    },
+
+    /// Update the vault CloudFormation stack.
+    #[command(
+        short_flag('u'),
+        long_flag("update"),
+        visible_alias("u"),
+        long_about = "Update the CloudFormation stack which declares all resources needed by the vault.\n\n\
+                      Usage examples:\n\
+                      - `vault update`\n\
+                      - `vault update \"vault-name\"`\n\
+                      - `vault -u \"vault-name\"`\n\
+                      - `vault --vault-stack \"vault-name\" --update`\n\
+                      - `VAULT_STACK=\"vault-name\" vault u`"
+    )]
+    Update {
+        /// Optional vault stack name
+        name: Option<String>,
     },
 }
 
@@ -370,6 +403,12 @@ async fn run(args: Args) -> Result<()> {
             Command::Id {} => {
                 cli::print_aws_account_id(args.region, args.aws_profile, args.quiet).await?;
             }
+            Command::DeleteStack { name, force } => {
+                println!("{name:?} {force:?}");
+            }
+            Command::ListStacks {} => {
+                cli::list_stacks(args.region, args.aws_profile, args.quiet).await?;
+            }
             // All other commands can use the same single Vault
             Command::All {}
             | Command::Decrypt { .. }
@@ -442,12 +481,7 @@ async fn run(args: Args) -> Result<()> {
                         )
                         .await?;
                     }
-                    // These are here again instead of a `_` so that if new commands are added,
-                    // there is an error about missing handling for that.
-                    Command::Init { .. } => unreachable!(),
-                    Command::Update { .. } => unreachable!(),
-                    Command::Id { .. } => unreachable!(),
-                    Command::Completion { .. } => unreachable!(),
+                    _ => unreachable!(),
                 }
             }
         };
