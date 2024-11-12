@@ -99,6 +99,10 @@ value = Vault().lookup("key")
 
 if Vault().exists("key"):
     Vault().delete("key")
+
+# specify vault parameters
+vault = Vault(vault_stack="stack-name", profile="aws-credentials-name")
+value = vault.lookup("key")
 ```
 
 ## Development

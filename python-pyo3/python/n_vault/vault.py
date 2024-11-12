@@ -21,29 +21,87 @@ from n_vault import nitor_vault_rs
 class Vault:
     """Nitor Vault wrapper around the Rust vault library."""
 
-    @staticmethod
-    def delete(name: str) -> None:
-        return nitor_vault_rs.delete(name)
+    def __init__(
+        self,
+        vault_stack: str = None,
+        region: str = None,
+        bucket: str = None,
+        key: str = None,
+        prefix: str = None,
+        profile: str = None,
+    ):
+        self.vault_stack = vault_stack
+        self.region = region
+        self.bucket = bucket
+        self.key = key
+        self.prefix = prefix
+        self.profile = profile
 
-    @staticmethod
-    def delete_many(names: Collection[str]) -> None:
-        return nitor_vault_rs.delete_many(sorted(names))
+    def delete(self, name: str) -> None:
+        return nitor_vault_rs.delete(
+            name,
+            vault_stack=self.vault_stack,
+            region=self.region,
+            bucket=self.bucket,
+            key=self.key,
+            prefix=self.prefix,
+            profile=self.profile,
+        )
 
-    @staticmethod
-    def exists(name: str) -> bool:
-        return nitor_vault_rs.exists(name)
+    def delete_many(self, names: Collection[str]) -> None:
+        return nitor_vault_rs.delete_many(
+            sorted(names),
+            vault_stack=self.vault_stack,
+            region=self.region,
+            bucket=self.bucket,
+            key=self.key,
+            prefix=self.prefix,
+            profile=self.profile,
+        )
 
-    @staticmethod
-    def list_all() -> list[str]:
-        return nitor_vault_rs.list_all()
+    def exists(self, name: str) -> bool:
+        return nitor_vault_rs.exists(
+            name,
+            vault_stack=self.vault_stack,
+            region=self.region,
+            bucket=self.bucket,
+            key=self.key,
+            prefix=self.prefix,
+            profile=self.profile,
+        )
 
-    @staticmethod
-    def lookup(name: str) -> str:
-        return nitor_vault_rs.lookup(name)
+    def list_all(self) -> list[str]:
+        return nitor_vault_rs.list_all(
+            vault_stack=self.vault_stack,
+            region=self.region,
+            bucket=self.bucket,
+            key=self.key,
+            prefix=self.prefix,
+            profile=self.profile,
+        )
 
-    @staticmethod
-    def store(key: str, value: bytes | str) -> None:
+    def lookup(self, name: str) -> str:
+        return nitor_vault_rs.lookup(
+            name,
+            vault_stack=self.vault_stack,
+            region=self.region,
+            bucket=self.bucket,
+            key=self.key,
+            prefix=self.prefix,
+            profile=self.profile,
+        )
+
+    def store(self, key: str, value: bytes | str) -> None:
         if isinstance(value, str):
             value = value.encode("utf-8")
 
-        return nitor_vault_rs.store(key, value)
+        return nitor_vault_rs.store(
+            key,
+            value,
+            vault_stack=self.vault_stack,
+            region=self.region,
+            bucket=self.bucket,
+            key=self.key,
+            prefix=self.prefix,
+            profile=self.profile,
+        )

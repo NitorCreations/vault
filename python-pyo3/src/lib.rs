@@ -8,35 +8,63 @@ fn vault_error_to_anyhow(err: VaultError) -> anyhow::Error {
     err.into()
 }
 
-#[pyfunction]
-fn delete(name: &str) -> PyResult<()> {
+#[pyfunction(signature = (name, vault_stack=None, region=None, bucket=None, key=None, prefix=None, profile=None))]
+fn delete(
+    name: &str,
+    vault_stack: Option<String>,
+    region: Option<String>,
+    bucket: Option<String>,
+    key: Option<String>,
+    prefix: Option<String>,
+    profile: Option<String>,
+) -> PyResult<()> {
     Runtime::new()?.block_on(async {
-        Ok(Vault::default()
-            .await
-            .map_err(vault_error_to_anyhow)?
-            .delete(name)
-            .await
-            .map_err(vault_error_to_anyhow)?)
+        Ok(
+            Vault::new(vault_stack, region, bucket, key, prefix, profile)
+                .await
+                .map_err(vault_error_to_anyhow)?
+                .delete(name)
+                .await
+                .map_err(vault_error_to_anyhow)?,
+        )
     })
 }
 
-#[pyfunction]
+#[pyfunction(signature = (names, vault_stack=None, region=None, bucket=None, key=None, prefix=None, profile=None))]
 #[allow(clippy::needless_pass_by_value)]
-fn delete_many(names: Vec<String>) -> PyResult<()> {
+fn delete_many(
+    names: Vec<String>,
+    vault_stack: Option<String>,
+    region: Option<String>,
+    bucket: Option<String>,
+    key: Option<String>,
+    prefix: Option<String>,
+    profile: Option<String>,
+) -> PyResult<()> {
     Runtime::new()?.block_on(async {
-        Ok(Vault::default()
-            .await
-            .map_err(vault_error_to_anyhow)?
-            .delete_many(&names)
-            .await
-            .map_err(vault_error_to_anyhow)?)
+        Ok(
+            Vault::new(vault_stack, region, bucket, key, prefix, profile)
+                .await
+                .map_err(vault_error_to_anyhow)?
+                .delete_many(&names)
+                .await
+                .map_err(vault_error_to_anyhow)?,
+        )
     })
 }
 
-#[pyfunction]
-fn exists(name: &str) -> PyResult<bool> {
+#[pyfunction(signature = (name, vault_stack=None, region=None, bucket=None, key=None, prefix=None, profile=None))]
+fn exists(
+    name: &str,
+    vault_stack: Option<String>,
+    region: Option<String>,
+    bucket: Option<String>,
+    key: Option<String>,
+    prefix: Option<String>,
+    profile: Option<String>,
+) -> PyResult<bool> {
     Runtime::new()?.block_on(async {
-        let result: bool = Vault::default()
+        let result: bool = Vault::new(vault_stack, region, bucket, key, prefix, profile)
             .await
             .map_err(vault_error_to_anyhow)?
             .exists(name)
@@ -47,10 +75,17 @@ fn exists(name: &str) -> PyResult<bool> {
     })
 }
 
-#[pyfunction]
-fn list_all() -> PyResult<Vec<String>> {
+#[pyfunction(signature = (vault_stack=None, region=None, bucket=None, key=None, prefix=None, profile=None))]
+fn list_all(
+    vault_stack: Option<String>,
+    region: Option<String>,
+    bucket: Option<String>,
+    key: Option<String>,
+    prefix: Option<String>,
+    profile: Option<String>,
+) -> PyResult<Vec<String>> {
     Runtime::new()?.block_on(async {
-        let result = Vault::default()
+        let result = Vault::new(vault_stack, region, bucket, key, prefix, profile)
             .await
             .map_err(vault_error_to_anyhow)?
             .all()
@@ -61,11 +96,19 @@ fn list_all() -> PyResult<Vec<String>> {
     })
 }
 
-#[pyfunction]
-fn lookup(name: &str) -> PyResult<String> {
+#[pyfunction(signature = (name, vault_stack=None, region=None, bucket=None, key=None, prefix=None, profile=None))]
+fn lookup(
+    name: &str,
+    vault_stack: Option<String>,
+    region: Option<String>,
+    bucket: Option<String>,
+    key: Option<String>,
+    prefix: Option<String>,
+    profile: Option<String>,
+) -> PyResult<String> {
     Runtime::new()?.block_on(async {
         let result: Value = Box::pin(
-            Vault::default()
+            Vault::new(vault_stack, region, bucket, key, prefix, profile)
                 .await
                 .map_err(vault_error_to_anyhow)?
                 .lookup(name),
@@ -86,14 +129,23 @@ fn run(args: Vec<String>) -> PyResult<()> {
     })
 }
 
-#[pyfunction]
-fn store(key: &str, value: &[u8]) -> PyResult<()> {
+#[pyfunction(signature = (name, value, vault_stack=None, region=None, bucket=None, key=None, prefix=None, profile=None))]
+fn store(
+    name: &str,
+    value: &[u8],
+    vault_stack: Option<String>,
+    region: Option<String>,
+    bucket: Option<String>,
+    key: Option<String>,
+    prefix: Option<String>,
+    profile: Option<String>,
+) -> PyResult<()> {
     Runtime::new()?.block_on(async {
         Ok(Box::pin(
-            Vault::default()
+            Vault::new(vault_stack, region, bucket, key, prefix, profile)
                 .await
                 .map_err(vault_error_to_anyhow)?
-                .store(key, value),
+                .store(name, value),
         )
         .await
         .map_err(vault_error_to_anyhow)?)
