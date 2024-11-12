@@ -161,10 +161,13 @@ impl fmt::Display for Value {
         match self {
             Self::Utf8(text) => write!(f, "{text}"),
             Self::Binary(bytes) => {
-                write!(f, "{}", base64::engine::general_purpose::STANDARD.encode(bytes))?;
+                write!(
+                    f,
+                    "{}",
+                    base64::engine::general_purpose::STANDARD.encode(bytes)
+                )
             }
         }
-        Ok(())
     }
 }
 
