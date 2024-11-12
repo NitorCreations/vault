@@ -303,7 +303,9 @@ impl Vault {
     /// Delete data in S3 for given key.
     pub async fn delete(&self, name: &str) -> Result<(), VaultError> {
         if !self.exists(name).await? {
-            return Err(VaultError::S3DeleteObjectKeyMissingError);
+            return Err(VaultError::S3DeleteObjectKeyMissingError {
+                name: name.to_string(),
+            });
         }
 
         let key = &self.full_key_name(name);
@@ -315,6 +317,14 @@ impl Vault {
             .send()
             .await?;
 
+        Ok(())
+    }
+
+    /// Delete data for multiple keys.
+    pub async fn delete_many(&self, names: &[String]) -> Result<(), VaultError> {
+        for name in names {
+            self.delete(name).await?;
+        }
         Ok(())
     }
 

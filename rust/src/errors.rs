@@ -54,8 +54,8 @@ pub enum VaultError {
     S3GetObjectError(#[from] SdkError<GetObjectError>),
     #[error("Failed deleting object from S3")]
     S3DeleteObjectError(#[from] SdkError<DeleteObjectError>),
-    #[error("Key does not exist in S3")]
-    S3DeleteObjectKeyMissingError,
+    #[error("Key does not exist in S3: '{name}'")]
+    S3DeleteObjectKeyMissingError { name: String },
     #[error("Failed getting head-object from S3")]
     S3HeadObjectError(#[from] HeadObjectError),
     #[error("Failed to decrypt S3-object body")]

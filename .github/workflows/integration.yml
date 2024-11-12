@@ -339,6 +339,15 @@ jobs:
       - name: Check Python vault package
         run: python -m pip show nitor-vault
 
+      - name: List with Python library
+        run: python -c "from n_vault import Vault; print('\n'.join(Vault().list_all()))"
+
+      - name: Delete all keys with Python library
+        run: python -c "from n_vault import Vault; Vault().delete_many(Vault().list_all())"
+
+      - name: List with Python library
+        run: python -c "from n_vault import Vault; print('\n'.join(Vault().list_all()))" | wc -l | grep -q "0"
+
       - name: Store secret using Python library
         run: |
           python -c "from n_vault import Vault; Vault().store('secret-python-library', 'sha-${{github.sha}}')"
@@ -355,7 +364,7 @@ jobs:
           diff <(python -c "from n_vault import Vault; print(Vault().lookup('secret-python-library'), end='', flush=True)") <(echo -n sha-${{github.sha}})
 
       - name: List with Python library
-        run: python -c "from n_vault import Vault; print('\n'.join(Vault().list_all()))"
+        run: python -c "from n_vault import Vault; print('\n'.join(Vault().list_all()))" | wc -l | grep -q "1"
 
       - name: Delete with Python library
         run: python -c "from n_vault import Vault; Vault().delete('secret-python-library')"

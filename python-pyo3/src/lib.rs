@@ -21,6 +21,19 @@ fn delete(name: &str) -> PyResult<()> {
 }
 
 #[pyfunction]
+#[allow(clippy::needless_pass_by_value)]
+fn delete_many(names: Vec<String>) -> PyResult<()> {
+    Runtime::new()?.block_on(async {
+        Ok(Vault::default()
+            .await
+            .map_err(vault_error_to_anyhow)?
+            .delete_many(&names)
+            .await
+            .map_err(vault_error_to_anyhow)?)
+    })
+}
+
+#[pyfunction]
 fn exists(name: &str) -> PyResult<bool> {
     Runtime::new()?.block_on(async {
         let result: bool = Vault::default()
@@ -91,6 +104,7 @@ fn store(key: &str, value: &[u8]) -> PyResult<()> {
 #[pyo3(name = "nitor_vault_rs")]
 fn nitor_vault_rs(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(delete, m)?)?;
+    m.add_function(wrap_pyfunction!(delete_many, m)?)?;
     m.add_function(wrap_pyfunction!(exists, m)?)?;
     m.add_function(wrap_pyfunction!(list_all, m)?)?;
     m.add_function(wrap_pyfunction!(lookup, m)?)?;

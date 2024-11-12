@@ -13,6 +13,8 @@
 # limitations under the License.
 
 
+from collections.abc import Collection
+
 from n_vault import nitor_vault_rs
 
 
@@ -22,6 +24,10 @@ class Vault:
     @staticmethod
     def delete(name: str) -> None:
         return nitor_vault_rs.delete(name)
+
+    @staticmethod
+    def delete_many(names: Collection[str]) -> None:
+        return nitor_vault_rs.delete_many(sorted(names))
 
     @staticmethod
     def exists(name: str) -> bool:
