@@ -160,13 +160,11 @@ impl fmt::Display for Value {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Utf8(text) => write!(f, "{text}"),
-            Self::Binary(data) => {
-                for byte in data {
-                    write!(f, "{byte:02x}")?;
-                }
-                Ok(())
+            Self::Binary(bytes) => {
+                write!(f, "{}", base64::engine::general_purpose::STANDARD.encode(bytes))?;
             }
         }
+        Ok(())
     }
 }
 
