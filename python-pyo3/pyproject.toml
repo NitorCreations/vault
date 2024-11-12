@@ -22,7 +22,7 @@ authors = [
     { name = "Pasi Niemi", email = "pasi@nitor.com" },
     { name = "Akseli Lukkarila", email = "akseli.lukkarila@nitor.com" },
 ]
-license = { text = "Apache 2.0" }
+license = { text = "Apache-2.0" }
 classifiers = [
     "Programming Language :: Rust",
     "Programming Language :: Python :: Implementation :: CPython",
@@ -35,6 +35,7 @@ dev = ["ruff"]
 
 [project.urls]
 Repository = "https://github.com/NitorCreations/vault"
+Homepage = "https://github.com/NitorCreations/vault"
 
 [project.scripts]
 vault = "n_vault.cli:main"

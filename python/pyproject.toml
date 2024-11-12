@@ -22,7 +22,7 @@ authors = [
     { name = "Pasi Niemi", email = "pasi@nitor.com" },
     { name = "Akseli Lukkarila", email = "akseli.lukkarila@nitor.com" },
 ]
-license = { text = "Apache 2.0" }
+license = { text = "Apache-2.0" }
 dependencies = [
     "argcomplete",
     "cryptography",
