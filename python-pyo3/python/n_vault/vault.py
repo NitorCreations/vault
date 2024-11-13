@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 
 from collections.abc import Collection
 from dataclasses import dataclass
@@ -61,16 +62,22 @@ class Vault:
         vault_stack: str = None,
         region: str = None,
         bucket: str = None,
-        key: str = None,
+        vault_key: str = None,
         prefix: str = None,
         profile: str = None,
     ):
         self.vault_stack = vault_stack
         self.region = region
         self.bucket = bucket
-        self.key = key
+        self.vault_key = vault_key
         self.prefix = prefix
         self.profile = profile
+
+    def all(self) -> str:
+        """
+        Return a string with all keys separated by os.linesep.
+        """
+        return os.linesep.join(item for item in self.list_all())
 
     def delete(self, name: str) -> None:
         """
@@ -81,7 +88,7 @@ class Vault:
             vault_stack=self.vault_stack,
             region=self.region,
             bucket=self.bucket,
-            key=self.key,
+            key=self.vault_key,
             prefix=self.prefix,
             profile=self.profile,
         )
@@ -97,7 +104,7 @@ class Vault:
             vault_stack=self.vault_stack,
             region=self.region,
             bucket=self.bucket,
-            key=self.key,
+            key=self.vault_key,
             prefix=self.prefix,
             profile=self.profile,
         )
@@ -113,7 +120,7 @@ class Vault:
             vault_stack=self.vault_stack,
             region=self.region,
             bucket=self.bucket,
-            key=self.key,
+            key=self.vault_key,
             prefix=self.prefix,
             profile=self.profile,
         )
@@ -152,7 +159,7 @@ class Vault:
             vault_stack=self.vault_stack,
             region=self.region,
             bucket=self.bucket,
-            key=self.key,
+            key=self.vault_key,
             prefix=self.prefix,
             profile=self.profile,
         )
@@ -168,7 +175,7 @@ class Vault:
             vault_stack=self.vault_stack,
             region=self.region,
             bucket=self.bucket,
-            key=self.key,
+            key=self.vault_key,
             prefix=self.prefix,
             profile=self.profile,
         )
@@ -181,26 +188,26 @@ class Vault:
             vault_stack=self.vault_stack,
             region=self.region,
             bucket=self.bucket,
-            key=self.key,
+            key=self.vault_key,
             prefix=self.prefix,
             profile=self.profile,
         )
         return CloudFormationStackData(**data)
 
-    def store(self, key: str, value: bytes | str) -> None:
+    def store(self, name: str, data: bytes | str) -> None:
         """
         Store encrypted value with given key name in S3.
         """
-        if isinstance(value, str):
-            value = value.encode("utf-8")
+        if isinstance(name, str):
+            name = name.encode("utf-8")
 
         return nitor_vault_rs.store(
-            key,
-            value,
+            name,
+            data,
             vault_stack=self.vault_stack,
             region=self.region,
             bucket=self.bucket,
-            key=self.key,
+            key=self.vault_key,
             prefix=self.prefix,
             profile=self.profile,
         )
@@ -216,7 +223,7 @@ class Vault:
             vault_stack=self.vault_stack,
             region=self.region,
             bucket=self.bucket,
-            key=self.key,
+            key=self.vault_key,
             prefix=self.prefix,
             profile=self.profile,
         )

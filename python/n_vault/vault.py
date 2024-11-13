@@ -207,6 +207,7 @@ class Vault:
         ret = ""
         for item in self.list_all():
             ret = ret + item + os.linesep
+
         return ret
 
     def list_all(self):
@@ -216,6 +217,7 @@ class Vault:
                 ret.append(next_object.key[:-17])
             elif next_object.key.endswith(".encrypted") and next_object.key[:-10] not in ret:
                 ret.append(next_object.key[:-10])
+
         return ret
 
     def get_key(self):
