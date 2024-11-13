@@ -198,8 +198,8 @@ class Vault:
         """
         Store encrypted value with given key name in S3.
         """
-        if isinstance(name, str):
-            name = name.encode("utf-8")
+        if isinstance(data, str):
+            data = data.encode("utf-8")
 
         return nitor_vault_rs.store(
             name,
