@@ -228,6 +228,8 @@ impl Vault {
     }
 
     /// Get all available secrets.
+    ///
+    /// Returns a list of key names.
     pub async fn all(&self) -> Result<Vec<String>, VaultError> {
         let output = self
             .s3
@@ -258,7 +260,9 @@ impl Vault {
         self.cloudformation_params.clone()
     }
 
-    /// Check if key already exists in bucket.
+    /// Check if the given key name already exists in the S3 bucket.
+    ///
+    /// Returns `true` if the key exists, `false` otherwise.
     pub async fn exists(&self, name: &str) -> Result<bool, VaultError> {
         let name = self.full_key_name(name);
         match self
@@ -283,7 +287,7 @@ impl Vault {
         }
     }
 
-    /// Store encrypted data in S3.
+    /// Store encrypted data with given key name in S3
     pub async fn store(&self, name: &str, data: &[u8]) -> Result<(), VaultError> {
         let encrypted = self.encrypt(data).await?;
 

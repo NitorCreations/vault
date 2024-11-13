@@ -89,6 +89,11 @@ class Vault:
         )
 
     def exists(self, name: str) -> bool:
+        """
+        Check if the given key name already exists in the S3 bucket.
+
+        Returns True if the key exists, False otherwise.
+        """
         return nitor_vault_rs.exists(
             name,
             vault_stack=self.vault_stack,
@@ -100,6 +105,15 @@ class Vault:
         )
 
     def init(self) -> StackCreated | CloudFormationStackData:
+        """
+        Initialize new Vault stack.
+
+        This will create all required resources in AWS,
+        after which the Vault can be used to store and lookup values.
+
+        Returns a `StackCreated` if a new vault stack was initialized,
+        or `CloudFormationStackData` if it already exists.
+        """
         result = nitor_vault_rs.init(
             vault_stack=self.vault_stack,
             region=self.region,
@@ -115,6 +129,11 @@ class Vault:
         raise RuntimeError(f"Unexpected result data: {result}")
 
     def list_all(self) -> list[str]:
+        """
+        Get all available secrets.
+
+        Returns a list of key names.
+        """
         return nitor_vault_rs.list_all(
             vault_stack=self.vault_stack,
             region=self.region,
@@ -152,6 +171,9 @@ class Vault:
         return CloudFormationStackData(**data)
 
     def store(self, key: str, value: bytes | str) -> None:
+        """
+        Store encrypted value with given key name in S3.
+        """
         if isinstance(value, str):
             value = value.encode("utf-8")
 
@@ -167,6 +189,12 @@ class Vault:
         )
 
     def update(self) -> StackUpdated | CloudFormationStackData:
+        """
+        Update the vault Cloudformation stack with the current template.
+
+        Returns `StackUpdated` if the vault stack was updated to a new version,
+        or `CloudFormationStackData` if it is already up to date.
+        """
         result = nitor_vault_rs.update(
             vault_stack=self.vault_stack,
             region=self.region,
