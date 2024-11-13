@@ -60,7 +60,7 @@ venv = ".venv"
 [tool.ruff]
 # https://docs.astral.sh/ruff/configuration/
 include = ["*.py", "*.pyi", "**/pyproject.toml"]
-target-version = "py311"
+target-version = "py39"
 line-length = 120
 
 [tool.ruff.lint]

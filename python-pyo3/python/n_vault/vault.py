@@ -16,6 +16,7 @@ import os
 
 from collections.abc import Collection
 from dataclasses import dataclass
+from typing import Optional
 
 from n_vault import nitor_vault_rs
 
@@ -25,11 +26,11 @@ class CloudFormationStackData:
     """Vault stack data from AWS CloudFormation describe stack."""
 
     result: str
-    bucket: str | None
-    key: str | None
-    status: str | None
-    status_reason: str | None
-    version: int | None
+    bucket: Optional[str]
+    key: Optional[str]
+    status: Optional[str]
+    status_reason: Optional[str]
+    version: Optional[int]
 
 
 @dataclass
@@ -37,9 +38,9 @@ class StackCreated:
     """Result data for vault init."""
 
     result: str
-    stack_name: str | None
-    stack_id: str | None
-    region: str | None
+    stack_name: Optional[str]
+    stack_id: Optional[str]
+    region: Optional[str]
 
 
 @dataclass
@@ -47,9 +48,9 @@ class StackUpdated:
     """Result data for vault update."""
 
     result: str
-    stack_id: str | None
-    previous_version: int | None
-    new_version: int | None
+    stack_id: Optional[str]
+    previous_version: Optional[int]
+    new_version: Optional[int]
 
 
 class Vault:
