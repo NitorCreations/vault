@@ -1,9 +1,12 @@
-use nitor_vault::cloudformation::CloudFormationStackData;
-use nitor_vault::errors::VaultError;
-use nitor_vault::{CreateStackResult, UpdateStackResult, Value, Vault};
+use std::borrow::Cow;
+
 use pyo3::prelude::*;
 use pyo3::types::{IntoPyDict, PyDict};
 use tokio::runtime::Runtime;
+
+use nitor_vault::cloudformation::CloudFormationStackData;
+use nitor_vault::errors::VaultError;
+use nitor_vault::{CreateStackResult, UpdateStackResult, Value, Vault};
 
 /// Convert `VaultError` to `anyhow::Error`
 fn vault_error_to_anyhow(err: VaultError) -> anyhow::Error {
@@ -86,7 +89,9 @@ fn direct_decrypt(
     key: Option<String>,
     prefix: Option<String>,
     profile: Option<String>,
-) -> PyResult<Vec<u8>> {
+) -> PyResult<Cow<[u8]>> {
+    // Returns Cow<[u8]> instead of Vec since that will get mapped to bytes for the Python side
+    // https://pyo3.rs/main/conversions/tables#returning-rust-values-to-python
     Runtime::new()?.block_on(async {
         let result = Vault::new(vault_stack, region, bucket, key, prefix, profile)
             .await
@@ -95,7 +100,7 @@ fn direct_decrypt(
             .await
             .map_err(vault_error_to_anyhow)?;
 
-        Ok(result)
+        Ok(result.into())
     })
 }
 
@@ -108,7 +113,7 @@ fn direct_encrypt(
     key: Option<String>,
     prefix: Option<String>,
     profile: Option<String>,
-) -> PyResult<Vec<u8>> {
+) -> PyResult<Cow<[u8]>> {
     Runtime::new()?.block_on(async {
         let result = Vault::new(vault_stack, region, bucket, key, prefix, profile)
             .await
@@ -117,7 +122,7 @@ fn direct_encrypt(
             .await
             .map_err(vault_error_to_anyhow)?;
 
-        Ok(result)
+        Ok(result.into())
     })
 }
 
