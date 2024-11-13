@@ -99,6 +99,16 @@ class Vault:
             profile=self.profile,
         )
 
+    def stack_status(self) -> dict[str]:
+        return nitor_vault_rs.stack_status(
+            vault_stack=self.vault_stack,
+            region=self.region,
+            bucket=self.bucket,
+            key=self.key,
+            prefix=self.prefix,
+            profile=self.profile,
+        )
+
     def store(self, key: str, value: bytes | str) -> None:
         if isinstance(value, str):
             value = value.encode("utf-8")

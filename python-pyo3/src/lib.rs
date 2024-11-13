@@ -196,6 +196,27 @@ fn run(args: Vec<String>) -> PyResult<()> {
     })
 }
 
+#[pyfunction(signature = (vault_stack=None, region=None, bucket=None, key=None, prefix=None, profile=None))]
+fn stack_status(
+    vault_stack: Option<String>,
+    region: Option<String>,
+    bucket: Option<String>,
+    key: Option<String>,
+    prefix: Option<String>,
+    profile: Option<String>,
+) -> PyResult<HashMap<String, String>> {
+    Runtime::new()?.block_on(async {
+        let data = Vault::new(vault_stack, region, bucket, key, prefix, profile)
+            .await
+            .map_err(vault_error_to_anyhow)?
+            .stack_status()
+            .await
+            .map_err(vault_error_to_anyhow)?;
+
+        Ok(to_hash_map(data, "success".to_string()))
+    })
+}
+
 #[pyfunction(signature = (name, value, vault_stack=None, region=None, bucket=None, key=None, prefix=None, profile=None))]
 fn store(
     name: &str,
@@ -264,6 +285,7 @@ fn nitor_vault_rs(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(list_all, m)?)?;
     m.add_function(wrap_pyfunction!(lookup, m)?)?;
     m.add_function(wrap_pyfunction!(run, m)?)?;
+    m.add_function(wrap_pyfunction!(stack_status, m)?)?;
     m.add_function(wrap_pyfunction!(store, m)?)?;
     m.add_function(wrap_pyfunction!(update, m)?)?;
     Ok(())
