@@ -262,8 +262,17 @@ enum Command {
     },
 }
 
-/// Run Vault CLI with the given arguments
-pub async fn run_cli_with_args(args: Vec<String>) -> Result<()> {
+/// Run Vault CLI with the given arguments.
+///
+/// The argument list needs to include the binary name as the first element.
+pub async fn run_cli_with_args(mut args: Vec<String>) -> Result<()> {
+    // If args are empty, need to manually trigger the help output.
+    // `parse_from` does not do it automatically unlike `parse`.
+    if args.is_empty() {
+        args = vec!["vault".to_string(), "-h".to_string()];
+    } else if args.len() == 1 {
+        args.push("-h".to_string());
+    }
     let args = Args::parse_from(args);
     let quiet = args.quiet;
 
@@ -279,7 +288,7 @@ pub async fn run_cli_with_args(args: Vec<String>) -> Result<()> {
     Ok(())
 }
 
-/// Run Vault CLI
+/// Run Vault CLI.
 pub async fn run_cli() -> Result<()> {
     let args = Args::parse();
     let quiet = args.quiet;
