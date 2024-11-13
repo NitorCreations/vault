@@ -55,23 +55,27 @@ class StackUpdated:
 
 class Vault:
     """
-    Nitor Vault wrapper around the Rust vault library.
+    Nitor Vault Python wrapper class around the Rust vault library.
+
+    Note that initializing this class only saves the optional parameters,
+    but does *not* construct an actual vault instance.
+    Each method in this class creates its own Vault instance internally in the Rust library.
     """
 
     def __init__(
         self,
         vault_stack: str = None,
-        region: str = None,
-        bucket: str = None,
         vault_key: str = None,
-        prefix: str = None,
+        vault_bucket: str = None,
+        vault_prefix: str = None,
+        vault_region: str = None,
         profile: str = None,
     ):
         self.vault_stack = vault_stack
-        self.region = region
-        self.bucket = bucket
         self.vault_key = vault_key
-        self.prefix = prefix
+        self.vault_bucket = vault_bucket
+        self.vault_prefix = vault_prefix
+        self.vault_region = vault_region
         self.profile = profile
 
     def all(self) -> str:
@@ -87,10 +91,10 @@ class Vault:
         return nitor_vault_rs.delete(
             name,
             vault_stack=self.vault_stack,
-            region=self.region,
-            bucket=self.bucket,
+            region=self.vault_region,
+            bucket=self.vault_bucket,
             key=self.vault_key,
-            prefix=self.prefix,
+            prefix=self.vault_prefix,
             profile=self.profile,
         )
 
@@ -103,10 +107,10 @@ class Vault:
         return nitor_vault_rs.delete_many(
             sorted(names),
             vault_stack=self.vault_stack,
-            region=self.region,
-            bucket=self.bucket,
+            region=self.vault_region,
+            bucket=self.vault_bucket,
             key=self.vault_key,
-            prefix=self.prefix,
+            prefix=self.vault_prefix,
             profile=self.profile,
         )
 
@@ -119,10 +123,10 @@ class Vault:
         return nitor_vault_rs.exists(
             name,
             vault_stack=self.vault_stack,
-            region=self.region,
-            bucket=self.bucket,
+            region=self.vault_region,
+            bucket=self.vault_bucket,
             key=self.vault_key,
-            prefix=self.prefix,
+            prefix=self.vault_prefix,
             profile=self.profile,
         )
 
@@ -138,8 +142,8 @@ class Vault:
         """
         result = nitor_vault_rs.init(
             vault_stack=self.vault_stack,
-            region=self.region,
-            bucket=self.bucket,
+            region=self.vault_region,
+            bucket=self.vault_bucket,
             profile=self.profile,
         )
         result_status = result.get("result")
@@ -158,10 +162,10 @@ class Vault:
         """
         return nitor_vault_rs.list_all(
             vault_stack=self.vault_stack,
-            region=self.region,
-            bucket=self.bucket,
+            region=self.vault_region,
+            bucket=self.vault_bucket,
             key=self.vault_key,
-            prefix=self.prefix,
+            prefix=self.vault_prefix,
             profile=self.profile,
         )
 
@@ -174,10 +178,10 @@ class Vault:
         return nitor_vault_rs.lookup(
             name,
             vault_stack=self.vault_stack,
-            region=self.region,
-            bucket=self.bucket,
+            region=self.vault_region,
+            bucket=self.vault_bucket,
             key=self.vault_key,
-            prefix=self.prefix,
+            prefix=self.vault_prefix,
             profile=self.profile,
         )
 
@@ -187,10 +191,10 @@ class Vault:
         """
         data = nitor_vault_rs.stack_status(
             vault_stack=self.vault_stack,
-            region=self.region,
-            bucket=self.bucket,
+            region=self.vault_region,
+            bucket=self.vault_bucket,
             key=self.vault_key,
-            prefix=self.prefix,
+            prefix=self.vault_prefix,
             profile=self.profile,
         )
         return CloudFormationStackData(**data)
@@ -206,10 +210,10 @@ class Vault:
             name,
             data,
             vault_stack=self.vault_stack,
-            region=self.region,
-            bucket=self.bucket,
+            region=self.vault_region,
+            bucket=self.vault_bucket,
             key=self.vault_key,
-            prefix=self.prefix,
+            prefix=self.vault_prefix,
             profile=self.profile,
         )
 
@@ -222,10 +226,10 @@ class Vault:
         """
         result = nitor_vault_rs.update(
             vault_stack=self.vault_stack,
-            region=self.region,
-            bucket=self.bucket,
+            region=self.vault_region,
+            bucket=self.vault_bucket,
             key=self.vault_key,
-            prefix=self.prefix,
+            prefix=self.vault_prefix,
             profile=self.profile,
         )
         result_status = result.get("result")
