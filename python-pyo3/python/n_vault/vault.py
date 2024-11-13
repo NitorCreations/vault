@@ -33,6 +33,8 @@ class CloudFormationStackData:
 
 @dataclass
 class StackCreated:
+    """Result data for vault init."""
+
     result: str
     stack_name: str | None
     stack_id: str | None
@@ -41,6 +43,8 @@ class StackCreated:
 
 @dataclass
 class StackUpdated:
+    """Result data for vault update."""
+
     result: str
     stack_id: str | None
     previous_version: int | None
@@ -48,7 +52,9 @@ class StackUpdated:
 
 
 class Vault:
-    """Nitor Vault wrapper around the Rust vault library."""
+    """
+    Nitor Vault wrapper around the Rust vault library.
+    """
 
     def __init__(
         self,
@@ -67,6 +73,9 @@ class Vault:
         self.profile = profile
 
     def delete(self, name: str) -> None:
+        """
+        Delete data in S3 for given key name.
+        """
         return nitor_vault_rs.delete(
             name,
             vault_stack=self.vault_stack,
@@ -78,6 +87,11 @@ class Vault:
         )
 
     def delete_many(self, names: Collection[str]) -> None:
+        """
+        Delete data for multiple keys.
+
+        Takes in a collection of key name strings, such as a `list`, `tuple`, or `set`.
+        """
         return nitor_vault_rs.delete_many(
             sorted(names),
             vault_stack=self.vault_stack,
@@ -160,6 +174,9 @@ class Vault:
         )
 
     def stack_status(self) -> CloudFormationStackData:
+        """
+        Get vault Cloudformation stack status.
+        """
         data = nitor_vault_rs.stack_status(
             vault_stack=self.vault_stack,
             region=self.region,

@@ -222,7 +222,7 @@ impl Vault {
         }
     }
 
-    /// Get Cloudformation stack status.
+    /// Get Cloudformation vault stack status.
     pub async fn stack_status(&self) -> Result<CloudFormationStackData, VaultError> {
         cloudformation::get_stack_data(&self.cf, &self.cloudformation_params.stack_name).await
     }
@@ -304,7 +304,7 @@ impl Vault {
         Ok(())
     }
 
-    /// Delete data in S3 for given key.
+    /// Delete data in S3 for given key name.
     pub async fn delete(&self, name: &str) -> Result<(), VaultError> {
         if !self.exists(name).await? {
             return Err(VaultError::S3DeleteObjectKeyMissingError {

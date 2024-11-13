@@ -10,6 +10,9 @@ fn vault_error_to_anyhow(err: VaultError) -> anyhow::Error {
     err.into()
 }
 
+/// Convert `CloudFormationStackData` to a Python dictionary.
+// Lifetime annotations are required due to `&str` usage,
+// could be left out if passing a `String` for result message.
 fn stack_data_to_to_pydict<'a>(
     py: Python<'a>,
     data: CloudFormationStackData,
@@ -111,12 +114,10 @@ fn init(
     Python::with_gil(|py| match result {
         CreateStackResult::Exists { data } => {
             let dict = stack_data_to_to_pydict(py, data, "EXISTS");
-
             Ok(dict.into())
         }
         CreateStackResult::ExistsWithFailedState { data } => {
             let dict = stack_data_to_to_pydict(py, data, "EXISTS_WITH_FAILED_STATE");
-
             Ok(dict.into())
         }
         CreateStackResult::Created {
@@ -130,7 +131,6 @@ fn init(
                 ("stack_id", stack_id.to_object(py)),
                 ("region", region.to_string().to_object(py)),
             ];
-
             let dict = key_vals.into_py_dict_bound(py);
             Ok(dict.into())
         }
@@ -178,6 +178,7 @@ fn lookup(
         .await
         .map_err(vault_error_to_anyhow)?;
 
+        // Binary data will get base64 encoded in the Display trait implementation
         Ok(result.to_string())
     })
 }
@@ -211,7 +212,6 @@ fn stack_status(
 
     Python::with_gil(|py| {
         let dict = stack_data_to_to_pydict(py, data, "SUCCESS");
-
         Ok(dict.into())
     })
 }
@@ -260,7 +260,6 @@ fn update(
     Python::with_gil(|py| match result {
         UpdateStackResult::UpToDate { data } => {
             let dict = stack_data_to_to_pydict(py, data, "UP_TO_DATE");
-
             Ok(dict.into())
         }
         UpdateStackResult::Updated {
@@ -274,7 +273,6 @@ fn update(
                 ("previous_version", previous_version.to_object(py)),
                 ("new_version", new_version.to_object(py)),
             ];
-
             let dict = key_vals.into_py_dict_bound(py);
             Ok(dict.into())
         }
