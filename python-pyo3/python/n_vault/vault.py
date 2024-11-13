@@ -114,12 +114,12 @@ class Vault:
             profile=self.profile,
         )
 
-    def direct_decrypt(self, data: bytes) -> bytes:
+    def direct_decrypt(self, encrypted_data: bytes) -> bytes:
         """
         Decrypt data with KMS.
         """
         return nitor_vault_rs.direct_decrypt(
-            data,
+            encrypted_data,
             vault_stack=self.vault_stack,
             region=self.vault_region,
             bucket=self.vault_bucket,
