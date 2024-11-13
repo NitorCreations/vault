@@ -30,8 +30,8 @@ classifiers = [
 dependencies = []
 
 [project.optional-dependencies]
-build = ["maturin", "twine", "wheel"]
-dev = ["ruff"]
+build = ["maturin", "wheel"]
+dev = ["maturin", "ruff"]
 
 [project.urls]
 Repository = "https://github.com/NitorCreations/vault"

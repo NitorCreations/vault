@@ -16,7 +16,7 @@ import os
 
 from collections.abc import Collection
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Union
 
 from n_vault import nitor_vault_rs
 
@@ -128,7 +128,7 @@ class Vault:
             profile=self.profile,
         )
 
-    def direct_encrypt(self, data: bytes | str) -> bytes:
+    def direct_encrypt(self, data: Union[bytes, str]) -> bytes:
         """
         Encrypt data with KMS.
         """
@@ -161,7 +161,7 @@ class Vault:
             profile=self.profile,
         )
 
-    def init(self) -> StackCreated | CloudFormationStackData:
+    def init(self) -> Union[StackCreated, CloudFormationStackData]:
         """
         Initialize new Vault stack.
 
@@ -230,7 +230,7 @@ class Vault:
         )
         return CloudFormationStackData(**data)
 
-    def store(self, name: str, data: bytes | str) -> None:
+    def store(self, name: str, data: Union[bytes, str]) -> None:
         """
         Store encrypted value with given key name in S3.
         """
@@ -248,7 +248,7 @@ class Vault:
             profile=self.profile,
         )
 
-    def update(self) -> StackUpdated | CloudFormationStackData:
+    def update(self) -> Union[StackUpdated, CloudFormationStackData]:
         """
         Update the vault Cloudformation stack with the current template.
 
