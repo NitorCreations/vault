@@ -14,8 +14,37 @@
 
 
 from collections.abc import Collection
+from dataclasses import dataclass
 
 from n_vault import nitor_vault_rs
+
+
+@dataclass
+class CloudFormationStackData:
+    """Vault stack data from AWS CloudFormation describe stack."""
+
+    result: str
+    bucket: str | None
+    key: str | None
+    status: str | None
+    status_reason: str | None
+    version: int | None
+
+
+@dataclass
+class StackCreated:
+    result: str
+    stack_name: str | None
+    stack_id: str | None
+    region: str | None
+
+
+@dataclass
+class StackUpdated:
+    result: str
+    stack_id: str | None
+    previous_version: int | None
+    new_version: int | None
 
 
 class Vault:
@@ -70,13 +99,20 @@ class Vault:
             profile=self.profile,
         )
 
-    def init(self) -> dict[str]:
-        return nitor_vault_rs.init(
+    def init(self) -> StackCreated | CloudFormationStackData:
+        result = nitor_vault_rs.init(
             vault_stack=self.vault_stack,
             region=self.region,
             bucket=self.bucket,
             profile=self.profile,
         )
+        result_status = result.get("result")
+        if result_status == "CREATED":
+            return StackCreated(**result)
+        elif result_status == "EXISTS" or result_status == "EXISTS_WITH_FAILED_STATE":
+            return CloudFormationStackData(**result)
+
+        raise RuntimeError(f"Unexpected result data: {result}")
 
     def list_all(self) -> list[str]:
         return nitor_vault_rs.list_all(
@@ -89,6 +125,11 @@ class Vault:
         )
 
     def lookup(self, name: str) -> str:
+        """
+        Lookup value for given key name.
+
+        Always returns a string, with binary data encoded in base64.
+        """
         return nitor_vault_rs.lookup(
             name,
             vault_stack=self.vault_stack,
@@ -99,8 +140,8 @@ class Vault:
             profile=self.profile,
         )
 
-    def stack_status(self) -> dict[str]:
-        return nitor_vault_rs.stack_status(
+    def stack_status(self) -> CloudFormationStackData:
+        data = nitor_vault_rs.stack_status(
             vault_stack=self.vault_stack,
             region=self.region,
             bucket=self.bucket,
@@ -108,6 +149,7 @@ class Vault:
             prefix=self.prefix,
             profile=self.profile,
         )
+        return CloudFormationStackData(**data)
 
     def store(self, key: str, value: bytes | str) -> None:
         if isinstance(value, str):
@@ -124,8 +166,8 @@ class Vault:
             profile=self.profile,
         )
 
-    def update(self) -> dict[str]:
-        return nitor_vault_rs.update(
+    def update(self) -> StackUpdated | CloudFormationStackData:
+        result = nitor_vault_rs.update(
             vault_stack=self.vault_stack,
             region=self.region,
             bucket=self.bucket,
@@ -133,3 +175,10 @@ class Vault:
             prefix=self.prefix,
             profile=self.profile,
         )
+        result_status = result.get("result")
+        if result_status == "UPDATED":
+            return StackUpdated(**result)
+        elif result_status == "UP_TO_DATE":
+            return CloudFormationStackData(**result)
+
+        raise RuntimeError(f"Unexpected result data: {result}")
