@@ -70,6 +70,14 @@ class Vault:
             profile=self.profile,
         )
 
+    def init(self) -> dict[str]:
+        return nitor_vault_rs.init(
+            vault_stack=self.vault_stack,
+            region=self.region,
+            bucket=self.bucket,
+            profile=self.profile,
+        )
+
     def list_all(self) -> list[str]:
         return nitor_vault_rs.list_all(
             vault_stack=self.vault_stack,
@@ -98,6 +106,16 @@ class Vault:
         return nitor_vault_rs.store(
             key,
             value,
+            vault_stack=self.vault_stack,
+            region=self.region,
+            bucket=self.bucket,
+            key=self.key,
+            prefix=self.prefix,
+            profile=self.profile,
+        )
+
+    def update(self) -> dict[str]:
+        return nitor_vault_rs.update(
             vault_stack=self.vault_stack,
             region=self.region,
             bucket=self.bucket,
