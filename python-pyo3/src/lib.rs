@@ -77,6 +77,50 @@ fn delete_many(
     })
 }
 
+#[pyfunction(signature = (data, vault_stack=None, region=None, bucket=None, key=None, prefix=None, profile=None))]
+fn direct_decrypt(
+    data: &[u8],
+    vault_stack: Option<String>,
+    region: Option<String>,
+    bucket: Option<String>,
+    key: Option<String>,
+    prefix: Option<String>,
+    profile: Option<String>,
+) -> PyResult<Vec<u8>> {
+    Runtime::new()?.block_on(async {
+        let result = Vault::new(vault_stack, region, bucket, key, prefix, profile)
+            .await
+            .map_err(vault_error_to_anyhow)?
+            .direct_decrypt(data)
+            .await
+            .map_err(vault_error_to_anyhow)?;
+
+        Ok(result)
+    })
+}
+
+#[pyfunction(signature = (data, vault_stack=None, region=None, bucket=None, key=None, prefix=None, profile=None))]
+fn direct_encrypt(
+    data: &[u8],
+    vault_stack: Option<String>,
+    region: Option<String>,
+    bucket: Option<String>,
+    key: Option<String>,
+    prefix: Option<String>,
+    profile: Option<String>,
+) -> PyResult<Vec<u8>> {
+    Runtime::new()?.block_on(async {
+        let result = Vault::new(vault_stack, region, bucket, key, prefix, profile)
+            .await
+            .map_err(vault_error_to_anyhow)?
+            .direct_encrypt(data)
+            .await
+            .map_err(vault_error_to_anyhow)?;
+
+        Ok(result)
+    })
+}
+
 #[pyfunction(signature = (name, vault_stack=None, region=None, bucket=None, key=None, prefix=None, profile=None))]
 fn exists(
     name: &str,
@@ -284,6 +328,8 @@ fn update(
 fn nitor_vault_rs(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(delete, m)?)?;
     m.add_function(wrap_pyfunction!(delete_many, m)?)?;
+    m.add_function(wrap_pyfunction!(direct_decrypt, m)?)?;
+    m.add_function(wrap_pyfunction!(direct_encrypt, m)?)?;
     m.add_function(wrap_pyfunction!(exists, m)?)?;
     m.add_function(wrap_pyfunction!(init, m)?)?;
     m.add_function(wrap_pyfunction!(list_all, m)?)?;

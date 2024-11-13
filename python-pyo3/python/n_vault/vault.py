@@ -114,6 +114,37 @@ class Vault:
             profile=self.profile,
         )
 
+    def direct_decrypt(self, data: bytes) -> bytes:
+        """
+        Decrypt data with KMS.
+        """
+        return nitor_vault_rs.direct_decrypt(
+            data,
+            vault_stack=self.vault_stack,
+            region=self.vault_region,
+            bucket=self.vault_bucket,
+            key=self.vault_key,
+            prefix=self.vault_prefix,
+            profile=self.profile,
+        )
+
+    def direct_encrypt(self, data: bytes | str) -> bytes:
+        """
+        Encrypt data with KMS.
+        """
+        if isinstance(data, str):
+            data = data.encode("utf-8")
+
+        return nitor_vault_rs.direct_encrypt(
+            data,
+            vault_stack=self.vault_stack,
+            region=self.vault_region,
+            bucket=self.vault_bucket,
+            key=self.vault_key,
+            prefix=self.vault_prefix,
+            profile=self.profile,
+        )
+
     def exists(self, name: str) -> bool:
         """
         Check if the given key name already exists in the S3 bucket.
