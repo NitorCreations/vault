@@ -178,7 +178,12 @@ enum Command {
     /// - `vault -i "vault-name"`
     /// - `vault --vault-stack "vault-name" --init"`
     /// - `VAULT_STACK="vault-name" vault i`
-    #[command(short_flag('i'), long_flag("init"), visible_alias("i"))]
+    #[command(
+        short_flag('i'),
+        long_flag("init"),
+        visible_alias("i"),
+        verbatim_doc_comment
+    )]
     Init {
         /// Vault stack name
         name: Option<String>,
@@ -187,19 +192,27 @@ enum Command {
     /// Update the vault CloudFormation stack.
     ///
     /// The CloudFormation stack declares all resources needed by the vault.
+    ///
     /// Usage examples:
     /// - `vault update`
-    /// - `vault update \"vault-name\"`
-    /// - `vault -u \"vault-name\"`
-    /// - `vault --vault-stack \"vault-name\" --update`
-    /// - `VAULT_STACK=\"vault-name\" vault u`
-    #[command(short_flag('u'), long_flag("update"), visible_alias("u"))]
+    /// - `vault update "vault-name"`
+    /// - `vault -u "vault-name"`
+    /// - `vault --vault-stack "vault-name" --update`
+    /// - `VAULT_STACK="vault-name" vault u`
+    #[command(
+        short_flag('u'),
+        long_flag("update"),
+        visible_alias("u"),
+        verbatim_doc_comment
+    )]
     Update {
         /// Optional vault stack name
         name: Option<String>,
     },
 
     /// Output secret value for given key
+    ///
+    /// Note that for binary secret data, the raw bytes will be outputted as is.
     #[command(short_flag('l'), long_flag("lookup"), visible_alias("l"))]
     Lookup {
         /// Key name to lookup
@@ -221,7 +234,12 @@ enum Command {
     /// - Store from a file with filename as key: `vault store --file "path/to/file.txt"`
     /// - Store from stdin: `echo "some data" | vault store "key" --value -`
     /// - Store from stdin: `cat file.zip | vault store "key" --file -`
-    #[command(short_flag('s'), long_flag("store"), visible_alias("s"))]
+    #[command(
+        short_flag('s'),
+        long_flag("store"),
+        visible_alias("s"),
+        verbatim_doc_comment
+    )]
     Store {
         /// Key name to use for stored value
         key: Option<String>,
