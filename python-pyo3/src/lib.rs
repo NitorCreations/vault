@@ -15,8 +15,8 @@ fn vault_error_to_anyhow(err: VaultError) -> anyhow::Error {
 
 /// Convert `CloudFormationStackData` to a Python dictionary.
 // Lifetime annotations are required due to `&str` usage,
-// could be left out if passing a `String` for result message.
-fn stack_data_to_to_pydict<'a>(
+// could be left out if passing a `String` for the result message.
+fn stack_data_to_pydict<'a>(
     py: Python<'a>,
     data: CloudFormationStackData,
     result: &'a str,
@@ -162,11 +162,11 @@ fn init(
     })?;
     Python::with_gil(|py| match result {
         CreateStackResult::Exists { data } => {
-            let dict = stack_data_to_to_pydict(py, data, "EXISTS");
+            let dict = stack_data_to_pydict(py, data, "EXISTS");
             Ok(dict.into())
         }
         CreateStackResult::ExistsWithFailedState { data } => {
-            let dict = stack_data_to_to_pydict(py, data, "EXISTS_WITH_FAILED_STATE");
+            let dict = stack_data_to_pydict(py, data, "EXISTS_WITH_FAILED_STATE");
             Ok(dict.into())
         }
         CreateStackResult::Created {
@@ -260,7 +260,7 @@ fn stack_status(
     })?;
 
     Python::with_gil(|py| {
-        let dict = stack_data_to_to_pydict(py, data, "SUCCESS");
+        let dict = stack_data_to_pydict(py, data, "SUCCESS");
         Ok(dict.into())
     })
 }
@@ -308,7 +308,7 @@ fn update(
 
     Python::with_gil(|py| match result {
         UpdateStackResult::UpToDate { data } => {
-            let dict = stack_data_to_to_pydict(py, data, "UP_TO_DATE");
+            let dict = stack_data_to_pydict(py, data, "UP_TO_DATE");
             Ok(dict.into())
         }
         UpdateStackResult::Updated {
