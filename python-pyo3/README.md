@@ -4,7 +4,7 @@ Python vault implementation using the Rust vault library.
 
 See the [repo](https://github.com/NitorCreations/vault) root readme for more general information.
 
-## Usage
+## Vault CLI
 
 ```console
 Encrypted AWS key-value storage utility
@@ -40,12 +40,13 @@ Options:
   -V, --version            Print version
 ```
 
-## Install
+### Install
 
-### From PyPI
+#### From PyPI
 
 Use [pipx](https://github.com/pypa/pipx) or [uv](https://github.com/astral-sh/uv)
-to install the Python vault package from [PyPI](https://pypi.org/project/nitor-vault/) globally in an isolated environment.
+to install the Python vault package from [PyPI](https://pypi.org/project/nitor-vault/)
+globally in an isolated environment.
 
 ```shell
 pipx install nitor-vault
@@ -55,7 +56,7 @@ uv tool install nitor-vault
 
 The command `vault` should now be available in path.
 
-### From source
+#### From source
 
 Build and install locally from source code using pip.
 This requires a [Rust toolchain](https://rustup.rs/) to be able to build the Rust library.
@@ -75,6 +76,33 @@ and will not be available in path globally.
 
 ```shell
 which -a vault
+```
+
+## Vault library
+
+This Python package can also be used as a Python library to interact with the Vault directly from Python code.
+
+Add the `nitor-vault` package to your project dependencies,
+or install directly with pip.
+
+Example usage:
+
+```python
+from n_vault import Vault
+
+if not Vault().exists("key"):
+    Vault().store("key", "value")
+
+keys = Vault().list_all()
+
+value = Vault().lookup("key")
+
+if Vault().exists("key"):
+    Vault().delete("key")
+
+# specify vault parameters
+vault = Vault(vault_stack="stack-name", profile="aws-credentials-name")
+value = vault.lookup("key")
 ```
 
 ## Development
@@ -112,9 +140,9 @@ Run Python CLI:
 
 ```shell
 # uv
-uv run python/p_vault/vault.py -h
+uv run python/n_vault/cli.py -h
 # venv
-python3 python/p_vault/vault.py -h
+python3 python/n_vault/cli.py -h
 ```
 
 Install and run vault inside virtual env:

@@ -22,7 +22,7 @@ authors = [
     { name = "Pasi Niemi", email = "pasi@nitor.com" },
     { name = "Akseli Lukkarila", email = "akseli.lukkarila@nitor.com" },
 ]
-license = { text = "Apache 2.0" }
+license = { text = "Apache-2.0" }
 classifiers = [
     "Programming Language :: Rust",
     "Programming Language :: Python :: Implementation :: CPython",
@@ -30,14 +30,15 @@ classifiers = [
 dependencies = []
 
 [project.optional-dependencies]
-build = ["maturin", "twine", "wheel"]
-dev = ["ruff"]
+build = ["maturin", "wheel"]
+dev = ["maturin", "ruff"]
 
 [project.urls]
 Repository = "https://github.com/NitorCreations/vault"
+Homepage = "https://github.com/NitorCreations/vault"
 
 [project.scripts]
-vault = "p_vault.vault:main"
+vault = "n_vault.cli:main"
 
 [build-system]
 requires = ["maturin>=1.7,<2.0"]
@@ -46,9 +47,9 @@ build-backend = "maturin"
 [tool.maturin]
 bindings = "pyo3"
 features = ["pyo3/extension-module"]
-module-name = "p_vault.nitor_vault_rs"
+module-name = "n_vault.nitor_vault_rs"
 profile = "release"
-python-packages = ["p_vault"]
+python-packages = ["n_vault"]
 python-source = "python"
 strip = true
 
@@ -59,7 +60,7 @@ venv = ".venv"
 [tool.ruff]
 # https://docs.astral.sh/ruff/configuration/
 include = ["*.py", "*.pyi", "**/pyproject.toml"]
-target-version = "py311"
+target-version = "py39"
 line-length = 120
 
 [tool.ruff.lint]

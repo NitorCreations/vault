@@ -8,8 +8,6 @@ on:
     paths:
       - "!**/README.md"
   pull_request:
-    paths:
-      - "!**/README.md"
 
 permissions:
   id-token: write
@@ -37,6 +35,9 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2.7.5
         if: ${{ matrix.lang == 'rust'}}
+        with:
+          # The build script creates a `release` build so use separate cache
+          key: "release"
 
       - uses: actions/setup-go@v5
         if: ${{ matrix.lang == 'go'}}
@@ -218,9 +219,6 @@ jobs:
       - name: Delete secret with Rust
         run: bin/rust/vault -d "secret-${{github.sha}}.zip"
 
-      - name: Verify that key has been deleted with Rust
-        run: bin/rust/vault exists secret-${{github.sha}}.zip | grep -q "does not exist"
-
       - name: Verify that keys have been deleted using Rust
         run: |
           bin/rust/vault exists secret-python | grep -q "key 'secret-python' does not exist"
@@ -228,6 +226,33 @@ jobs:
           bin/rust/vault exists secret-go | grep -q "key 'secret-go' does not exist"
           bin/rust/vault exists secret-rust | grep -q "key 'secret-rust' does not exist"
           bin/rust/vault exists secret-nodejs | grep -q "key 'secret-nodejs' does not exist"
+
+      - name: Check Python vault package
+        run: python -m pip show nitor-vault
+
+      - name: Store secret using Python library
+        run: |
+          python -c "from n_vault import Vault; Vault().store('secret-python-library', 'sha-${{github.sha}}')"
+
+      - name: Verify secret using Python library
+        run: |
+          python -c "from n_vault import Vault; print('true') if Vault().exists('secret-python-library') else print('false')" | grep -q "true"
+
+      - name: Validate storing worked with Rust
+        run: diff <(bin/rust/vault -l secret-python-library) <(echo -n sha-${{github.sha}})
+
+      - name: Lookup with Python library
+        run: |
+          diff <(python -c "from n_vault import Vault; print(Vault().lookup('secret-python-library').decode('utf-8'), end='', flush=True)") <(echo -n sha-${{github.sha}})
+
+      - name: List with Python library
+        run: python -c "from n_vault import Vault; print('\n'.join(Vault().list_all()))"
+
+      - name: Delete with Python library
+        run: python -c "from n_vault import Vault; Vault().delete('secret-python-library')"
+
+      - name: Verify that key has been deleted with Rust
+        run: bin/rust/vault exists secret-python-library | grep -q "key 'secret-python-library' does not exist"
 
       - name: Install Python PyO3 vault
         run: python -m pip install --force-reinstall .
@@ -310,3 +335,36 @@ jobs:
 
       - name: Verify that key has been deleted with Python-pyo3
         run: vault exists secret-${{github.sha}}.zip | grep -q "does not exist"
+
+      - name: Check Python vault package
+        run: python -m pip show nitor-vault
+
+      - name: Delete all keys with Python library
+        run: python -c "from n_vault import Vault; Vault().delete_many(Vault().list_all())"
+
+      - name: List with Python library
+        run: python -c "from n_vault import Vault; print('\n'.join(Vault().list_all()))" | grep -ve '^\s*$' | wc -l | grep -q "0"
+
+      - name: Store secret using Python library
+        run: |
+          python -c "from n_vault import Vault; Vault().store('secret-python-library', 'sha-${{github.sha}}')"
+
+      - name: Verify secret using Python library
+        run: |
+          python -c "from n_vault import Vault; print('true') if Vault().exists('secret-python-library') else print('false')" | grep -q "true"
+
+      - name: Validate storing worked with Rust
+        run: diff <(bin/rust/vault -l secret-python-library) <(echo -n sha-${{github.sha}})
+
+      - name: Lookup with Python library
+        run: |
+          diff <(python -c "from n_vault import Vault; print(Vault().lookup('secret-python-library'), end='', flush=True)") <(echo -n sha-${{github.sha}})
+
+      - name: List with Python library
+        run: python -c "from n_vault import Vault; print('\n'.join(Vault().list_all()))" | wc -l | grep -q "1"
+
+      - name: Delete with Python library
+        run: python -c "from n_vault import Vault; Vault().delete('secret-python-library')"
+
+      - name: Verify that key has been deleted with Rust
+        run: bin/rust/vault exists secret-python-library | grep -q "key 'secret-python-library' does not exist"

@@ -222,12 +222,14 @@ impl Vault {
         }
     }
 
-    /// Get Cloudformation stack status.
+    /// Get Cloudformation vault stack status.
     pub async fn stack_status(&self) -> Result<CloudFormationStackData, VaultError> {
         cloudformation::get_stack_data(&self.cf, &self.cloudformation_params.stack_name).await
     }
 
     /// Get all available secrets.
+    ///
+    /// Returns a list of key names.
     pub async fn all(&self) -> Result<Vec<String>, VaultError> {
         let output = self
             .s3
@@ -258,7 +260,9 @@ impl Vault {
         self.cloudformation_params.clone()
     }
 
-    /// Check if key already exists in bucket.
+    /// Check if the given key name already exists in the S3 bucket.
+    ///
+    /// Returns `true` if the key exists, `false` otherwise.
     pub async fn exists(&self, name: &str) -> Result<bool, VaultError> {
         let name = self.full_key_name(name);
         match self
@@ -283,7 +287,7 @@ impl Vault {
         }
     }
 
-    /// Store encrypted data in S3.
+    /// Store encrypted data with given key name in S3
     pub async fn store(&self, name: &str, data: &[u8]) -> Result<(), VaultError> {
         let encrypted = self.encrypt(data).await?;
 
@@ -300,10 +304,12 @@ impl Vault {
         Ok(())
     }
 
-    /// Delete data in S3 for given key.
+    /// Delete data in S3 for given key name.
     pub async fn delete(&self, name: &str) -> Result<(), VaultError> {
         if !self.exists(name).await? {
-            return Err(VaultError::S3DeleteObjectKeyMissingError);
+            return Err(VaultError::S3DeleteObjectKeyMissingError {
+                name: name.to_string(),
+            });
         }
 
         let key = &self.full_key_name(name);
@@ -315,6 +321,14 @@ impl Vault {
             .send()
             .await?;
 
+        Ok(())
+    }
+
+    /// Delete data for multiple keys.
+    pub async fn delete_many(&self, names: &[String]) -> Result<(), VaultError> {
+        for name in names {
+            self.delete(name).await?;
+        }
         Ok(())
     }
 

@@ -16,24 +16,7 @@
 Vault module for securely storing secrets in s3 with local encryption with data keys from AWS KMS.
 """
 
-import sys
-from os import environ
-
-cov = None
-VERSION = "0.55"
-if "VAULT_MEASURE_COVERAGE" in environ:
-    from coverage import Coverage
-
-    cov = Coverage(auto_data=True, source=["n_vault"], branch=False, omit=["n_vault/__init__.py"])
-    cov.start()
-
-
-def stop_cov(signum, frame):
-    if cov:
-        cov.save()
-        cov.stop()
-    if signum:
-        sys.exit(0)
-
+# Simplify importing for library users, enabling:
+# `from n_vault import Vault`
 
 from n_vault.vault import Vault as Vault  # noqa: E402
