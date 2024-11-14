@@ -141,14 +141,12 @@ enum Command {
         outfile: Option<String>,
     },
 
-    /// Check if a key exists
-    #[command(
-        long_flag("exists"),
-        long_about = "Check if the given key exists.\n\n\
-                      Exits with code 0 if the key exists,\n\
-                      code 5 if it does *not* exist,\n\
-                      and with code 1 for other errors."
-    )]
+    /// Check if a key exists.
+    ///
+    /// Exits with code 0 if the key exists,
+    /// code 5 if it does *not* exist
+    /// and with code 1 for other errors.
+    #[command(long_flag("exists"))]
     Exists {
         /// Key name to check
         key: String,
@@ -158,48 +156,44 @@ enum Command {
     #[command(long_flag("info"))]
     Info {},
 
-    /// Print AWS user account information
-    #[command(long_about = "Print AWS user account information.\n\n\
-        Same as calling `aws sts get-caller-identity`,\n\
-        but faster than awscli and output is in plain text.")]
+    /// Print AWS user account information.
+    ///
+    /// Same as calling `aws sts get-caller-identity`,
+    /// but faster than awscli and output is in plain text.
+    #[command()]
     Id {},
 
     /// Print vault stack information
     #[command(long_flag("status"))]
     Status {},
 
-    /// Initialize a new KMS key and S3 bucket
-    #[command(
-        short_flag('i'),
-        long_flag("init"),
-        visible_alias("i"),
-        long_about = "Initialize a KMS key and a S3 bucket with roles for reading\n\
-                      and writing on a fresh account via CloudFormation.\n\
-                      The account used has to have rights to create the resources.\n\n\
-                      Usage examples:\n\
-                      - `vault init \"vault-name\"`\n\
-                      - `vault -i \"vault-name\"`\n\
-                      - `vault --vault-stack \"vault-name\" --init`\n\
-                      - `VAULT_STACK=\"vault-name\" vault i`"
-    )]
+    /// Initialize a new KMS key and S3 bucket.
+    ///
+    /// Initialize a KMS key and a S3 bucket with roles for reading
+    /// and writing on a fresh account via CloudFormation.
+    /// The account used must have permissions to create these resources.
+    ///
+    /// Usage examples:
+    /// - `vault init "vault-name"`
+    /// - `vault -i "vault-name"`
+    /// - `vault --vault-stack "vault-name" --init"`
+    /// - `VAULT_STACK="vault-name" vault i`
+    #[command(short_flag('i'), long_flag("init"), visible_alias("i"))]
     Init {
         /// Vault stack name
         name: Option<String>,
     },
 
     /// Update the vault CloudFormation stack.
-    #[command(
-        short_flag('u'),
-        long_flag("update"),
-        visible_alias("u"),
-        long_about = "Update the CloudFormation stack which declares all resources needed by the vault.\n\n\
-                      Usage examples:\n\
-                      - `vault update`\n\
-                      - `vault update \"vault-name\"`\n\
-                      - `vault -u \"vault-name\"`\n\
-                      - `vault --vault-stack \"vault-name\" --update`\n\
-                      - `VAULT_STACK=\"vault-name\" vault u`"
-    )]
+    ///
+    /// The CloudFormation stack declares all resources needed by the vault.
+    /// Usage examples:
+    /// - `vault update`
+    /// - `vault update \"vault-name\"`
+    /// - `vault -u \"vault-name\"`
+    /// - `vault --vault-stack \"vault-name\" --update`
+    /// - `VAULT_STACK=\"vault-name\" vault u`
+    #[command(short_flag('u'), long_flag("update"), visible_alias("u"))]
     Update {
         /// Optional vault stack name
         name: Option<String>,
@@ -216,21 +210,18 @@ enum Command {
         outfile: Option<String>,
     },
 
-    /// Store a new key-value pair
-    #[command(
-        short_flag('s'),
-        long_flag("store"),
-        visible_alias("s"),
-        long_about = "Store a new key-value pair in the vault.\n\
-                      You can provide the key and value directly, or specify a file to store.\n\n\
-                      Usage examples:\n\
-                      - Store a value: `vault store mykey \"some value\"`\n\
-                      - Store a value from args: `vault store mykey --value \"some value\"`\n\
-                      - Store from a file: `vault store mykey --file path/to/file.txt`\n\
-                      - Store from a file with filename as key: `vault store --file path/to/file.txt`\n\
-                      - Store from stdin: `echo \"some data\" | vault store mykey --value -`\n\
-                      - Store from stdin: `cat file.zip | vault store mykey --file -`"
-    )]
+    /// Store a new key-value pair.
+    ///
+    /// You can provide the key and value directly, or specify a file to store the contents.
+    ///
+    /// Usage examples:
+    /// - Store a value: `vault store "key" "some value"`
+    /// - Store a value from args: `vault store "key" --value "some value"`
+    /// - Store from a file: `vault store "key" --file "path/to/file.txt"`
+    /// - Store from a file with filename as key: `vault store --file "path/to/file.txt"`
+    /// - Store from stdin: `echo "some data" | vault store "key" --value -`
+    /// - Store from stdin: `cat file.zip | vault store "key" --file -`
+    #[command(short_flag('s'), long_flag("store"), visible_alias("s"))]
     Store {
         /// Key name to use for stored value
         key: Option<String>,
