@@ -35,7 +35,15 @@ struct Args {
     #[arg(long = "vaultstack", name = "NAME", env = "VAULT_STACK")]
     vault_stack: Option<String>,
 
-    /// Specify AWS profile to use
+    /// Specify AWS IAM access key ID
+    #[arg(long = "id", name = "ID", requires = "SECRET")]
+    iam_id: Option<String>,
+
+    /// Specify AWS IAM secret access key
+    #[arg(long = "secret", name = "SECRET", requires = "ID")]
+    iam_secret: Option<String>,
+
+    /// Specify AWS profile name to use
     #[arg(long = "profile", name = "PROFILE", env = "AWS_PROFILE")]
     aws_profile: Option<String>,
 
@@ -326,6 +334,8 @@ async fn run(args: Args) -> Result<()> {
                     args.region,
                     args.bucket,
                     args.aws_profile,
+                    args.iam_id,
+                    args.iam_secret,
                     args.quiet,
                 )
                 .await
@@ -339,6 +349,8 @@ async fn run(args: Args) -> Result<()> {
                     args.key_arn,
                     args.prefix,
                     args.aws_profile,
+                    args.iam_id,
+                    args.iam_secret,
                 )
                 .await
                 .with_context(|| "Failed to create vault with given parameters".red())?;
@@ -371,6 +383,8 @@ async fn run(args: Args) -> Result<()> {
                     args.key_arn,
                     args.prefix,
                     args.aws_profile,
+                    args.iam_id,
+                    args.iam_secret,
                 )
                 .await
                 .with_context(|| "Failed to create vault with given parameters".red())?;

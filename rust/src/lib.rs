@@ -16,6 +16,7 @@ pub use crate::vault::Vault;
 use aws_config::meta::region::RegionProviderChain;
 use aws_config::{Region, SdkConfig};
 use aws_sdk_s3::types::ObjectIdentifier;
+use aws_sdk_sts::config::Credentials;
 use base64::Engine;
 use serde::{Deserialize, Serialize};
 
@@ -127,6 +128,26 @@ pub fn get_env_variable(name: &str) -> Option<String> {
     std::env::var(name).ok()
 }
 
+#[must_use]
+/// Get AWS SDK config from optional arguments.
+///
+/// Uses the following priority:
+/// 1. Use `id` and `secret` if provided.
+/// 2. Use the specified profile name if available.
+/// 3. Fallback to environment variables and defaults.
+pub async fn resolve_aws_config_from_args(
+    region: Option<String>,
+    profile: Option<String>,
+    iam_id: Option<String>,
+    iam_secret: Option<String>,
+) -> SdkConfig {
+    if let (Some(id), Some(secret)) = (iam_id, iam_secret) {
+        get_aws_config_from_credentials(&id, &secret, region).await
+    } else {
+        get_aws_config(region, profile).await
+    }
+}
+
 #[inline]
 #[must_use]
 /// Return AWS SDK config with optional region name to use.
@@ -136,6 +157,22 @@ pub async fn get_aws_config(region: Option<String>, profile: Option<String>) -> 
             aws_config::from_env().profile_name(profile)
         })
         .region(get_region_provider(region))
+        .load()
+        .await
+}
+
+#[inline]
+#[must_use]
+/// Return AWS SDK config from id and secret with optional region name to use.
+async fn get_aws_config_from_credentials(
+    id: &str,
+    secret: &str,
+    region: Option<String>,
+) -> SdkConfig {
+    let credentials_provider = Credentials::new(id, secret, None, None, "manual");
+    aws_config::from_env()
+        .region(get_region_provider(region))
+        .credentials_provider(credentials_provider)
         .load()
         .await
 }

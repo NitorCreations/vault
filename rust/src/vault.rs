@@ -47,7 +47,7 @@ impl Vault {
     ///
     // The Default trait can't be implemented for Vault since it can fail.
     pub async fn default() -> Result<Self, VaultError> {
-        Self::new(None, None, None, None, None, None).await
+        Self::new(None, None, None, None, None, None, None, None).await
     }
 
     /// Construct Vault for an existing vault stack with optional arguments.
@@ -60,8 +60,10 @@ impl Vault {
         key: Option<String>,
         prefix: Option<String>,
         profile: Option<String>,
+        iam_id: Option<String>,
+        iam_secret: Option<String>,
     ) -> Result<Self, VaultError> {
-        let config = crate::get_aws_config(region, profile).await;
+        let config = crate::resolve_aws_config_from_args(region, profile, iam_id, iam_secret).await;
         let region = config
             .region()
             .map(ToOwned::to_owned)
@@ -110,8 +112,10 @@ impl Vault {
         region: Option<String>,
         bucket: Option<String>,
         profile: Option<String>,
+        iam_id: Option<String>,
+        iam_secret: Option<String>,
     ) -> Result<CreateStackResult, VaultError> {
-        let config = crate::get_aws_config(region, profile).await;
+        let config = crate::resolve_aws_config_from_args(region, profile, iam_id, iam_secret).await;
         let region = config
             .region()
             .map(ToOwned::to_owned)

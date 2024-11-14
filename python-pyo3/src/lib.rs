@@ -35,7 +35,17 @@ fn stack_data_to_pydict<'a>(
     key_vals.into_py_dict_bound(py)
 }
 
-#[pyfunction(signature = (name, vault_stack=None, region=None, bucket=None, key=None, prefix=None, profile=None))]
+#[pyfunction(signature = (
+    name,
+    vault_stack=None,
+    region=None,
+    bucket=None,
+    key=None,
+    prefix=None,
+    profile=None,
+    iam_id=None,
+    iam_secret=None
+))]
 fn delete(
     name: &str,
     vault_stack: Option<String>,
@@ -44,20 +54,39 @@ fn delete(
     key: Option<String>,
     prefix: Option<String>,
     profile: Option<String>,
+    iam_id: Option<String>,
+    iam_secret: Option<String>,
 ) -> PyResult<()> {
     Runtime::new()?.block_on(async {
-        Ok(
-            Vault::new(vault_stack, region, bucket, key, prefix, profile)
-                .await
-                .map_err(vault_error_to_anyhow)?
-                .delete(name)
-                .await
-                .map_err(vault_error_to_anyhow)?,
+        Ok(Vault::new(
+            vault_stack,
+            region,
+            bucket,
+            key,
+            prefix,
+            profile,
+            iam_id,
+            iam_secret,
         )
+        .await
+        .map_err(vault_error_to_anyhow)?
+        .delete(name)
+        .await
+        .map_err(vault_error_to_anyhow)?)
     })
 }
 
-#[pyfunction(signature = (names, vault_stack=None, region=None, bucket=None, key=None, prefix=None, profile=None))]
+#[pyfunction(signature = (
+    names,
+    vault_stack=None,
+    region=None,
+    bucket=None,
+    key=None,
+    prefix=None,
+    profile=None,
+    iam_id=None,
+    iam_secret=None,
+))]
 #[allow(clippy::needless_pass_by_value)]
 fn delete_many(
     names: Vec<String>,
@@ -67,20 +96,39 @@ fn delete_many(
     key: Option<String>,
     prefix: Option<String>,
     profile: Option<String>,
+    iam_id: Option<String>,
+    iam_secret: Option<String>,
 ) -> PyResult<()> {
     Runtime::new()?.block_on(async {
-        Ok(
-            Vault::new(vault_stack, region, bucket, key, prefix, profile)
-                .await
-                .map_err(vault_error_to_anyhow)?
-                .delete_many(&names)
-                .await
-                .map_err(vault_error_to_anyhow)?,
+        Ok(Vault::new(
+            vault_stack,
+            region,
+            bucket,
+            key,
+            prefix,
+            profile,
+            iam_id,
+            iam_secret,
         )
+        .await
+        .map_err(vault_error_to_anyhow)?
+        .delete_many(&names)
+        .await
+        .map_err(vault_error_to_anyhow)?)
     })
 }
 
-#[pyfunction(signature = (data, vault_stack=None, region=None, bucket=None, key=None, prefix=None, profile=None))]
+#[pyfunction(signature = (
+    data,
+    vault_stack=None,
+    region=None,
+    bucket=None,
+    key=None,
+    prefix=None,
+    profile=None,
+    iam_id=None,
+    iam_secret=None,
+))]
 fn direct_decrypt(
     data: &[u8],
     vault_stack: Option<String>,
@@ -89,22 +137,43 @@ fn direct_decrypt(
     key: Option<String>,
     prefix: Option<String>,
     profile: Option<String>,
+    iam_id: Option<String>,
+    iam_secret: Option<String>,
 ) -> PyResult<Cow<[u8]>> {
     // Returns Cow<[u8]> instead of Vec since that will get mapped to bytes for the Python side
     // https://pyo3.rs/main/conversions/tables#returning-rust-values-to-python
     Runtime::new()?.block_on(async {
-        let result = Vault::new(vault_stack, region, bucket, key, prefix, profile)
-            .await
-            .map_err(vault_error_to_anyhow)?
-            .direct_decrypt(data)
-            .await
-            .map_err(vault_error_to_anyhow)?;
+        let result = Vault::new(
+            vault_stack,
+            region,
+            bucket,
+            key,
+            prefix,
+            profile,
+            iam_id,
+            iam_secret,
+        )
+        .await
+        .map_err(vault_error_to_anyhow)?
+        .direct_decrypt(data)
+        .await
+        .map_err(vault_error_to_anyhow)?;
 
         Ok(result.into())
     })
 }
 
-#[pyfunction(signature = (data, vault_stack=None, region=None, bucket=None, key=None, prefix=None, profile=None))]
+#[pyfunction(signature = (
+    data,
+    vault_stack=None,
+    region=None,
+    bucket=None,
+    key=None,
+    prefix=None,
+    profile=None,
+    iam_id=None,
+    iam_secret=None,
+))]
 fn direct_encrypt(
     data: &[u8],
     vault_stack: Option<String>,
@@ -113,20 +182,41 @@ fn direct_encrypt(
     key: Option<String>,
     prefix: Option<String>,
     profile: Option<String>,
+    iam_id: Option<String>,
+    iam_secret: Option<String>,
 ) -> PyResult<Cow<[u8]>> {
     Runtime::new()?.block_on(async {
-        let result = Vault::new(vault_stack, region, bucket, key, prefix, profile)
-            .await
-            .map_err(vault_error_to_anyhow)?
-            .direct_encrypt(data)
-            .await
-            .map_err(vault_error_to_anyhow)?;
+        let result = Vault::new(
+            vault_stack,
+            region,
+            bucket,
+            key,
+            prefix,
+            profile,
+            iam_id,
+            iam_secret,
+        )
+        .await
+        .map_err(vault_error_to_anyhow)?
+        .direct_encrypt(data)
+        .await
+        .map_err(vault_error_to_anyhow)?;
 
         Ok(result.into())
     })
 }
 
-#[pyfunction(signature = (name, vault_stack=None, region=None, bucket=None, key=None, prefix=None, profile=None))]
+#[pyfunction(signature = (
+    name,
+    vault_stack=None,
+    region=None,
+    bucket=None,
+    key=None,
+    prefix=None,
+    profile=None,
+    iam_id=None,
+    iam_secret=None,
+))]
 fn exists(
     name: &str,
     vault_stack: Option<String>,
@@ -135,28 +225,48 @@ fn exists(
     key: Option<String>,
     prefix: Option<String>,
     profile: Option<String>,
+    iam_id: Option<String>,
+    iam_secret: Option<String>,
 ) -> PyResult<bool> {
     Runtime::new()?.block_on(async {
-        let result: bool = Vault::new(vault_stack, region, bucket, key, prefix, profile)
-            .await
-            .map_err(vault_error_to_anyhow)?
-            .exists(name)
-            .await
-            .map_err(vault_error_to_anyhow)?;
+        let result: bool = Vault::new(
+            vault_stack,
+            region,
+            bucket,
+            key,
+            prefix,
+            profile,
+            iam_id,
+            iam_secret,
+        )
+        .await
+        .map_err(vault_error_to_anyhow)?
+        .exists(name)
+        .await
+        .map_err(vault_error_to_anyhow)?;
 
         Ok(result)
     })
 }
 
-#[pyfunction(signature = (vault_stack=None, region=None, bucket=None, profile=None))]
+#[pyfunction(signature = (
+    vault_stack=None,
+    region=None,
+    bucket=None,
+    profile=None,
+    iam_id=None,
+    iam_secret=None,
+))]
 fn init(
     vault_stack: Option<String>,
     region: Option<String>,
     bucket: Option<String>,
     profile: Option<String>,
+    iam_id: Option<String>,
+    iam_secret: Option<String>,
 ) -> PyResult<PyObject> {
     let result = Runtime::new()?.block_on(async {
-        Vault::init(vault_stack, region, bucket, profile)
+        Vault::init(vault_stack, region, bucket, profile, iam_id, iam_secret)
             .await
             .map_err(vault_error_to_anyhow)
     })?;
@@ -186,7 +296,16 @@ fn init(
     })
 }
 
-#[pyfunction(signature = (vault_stack=None, region=None, bucket=None, key=None, prefix=None, profile=None))]
+#[pyfunction(signature = (
+    vault_stack=None,
+    region=None,
+    bucket=None,
+    key=None,
+    prefix=None,
+    profile=None,
+    iam_id=None,
+    iam_secret=None,
+))]
 fn list_all(
     vault_stack: Option<String>,
     region: Option<String>,
@@ -194,20 +313,41 @@ fn list_all(
     key: Option<String>,
     prefix: Option<String>,
     profile: Option<String>,
+    iam_id: Option<String>,
+    iam_secret: Option<String>,
 ) -> PyResult<Vec<String>> {
     Runtime::new()?.block_on(async {
-        let result = Vault::new(vault_stack, region, bucket, key, prefix, profile)
-            .await
-            .map_err(vault_error_to_anyhow)?
-            .all()
-            .await
-            .map_err(vault_error_to_anyhow)?;
+        let result = Vault::new(
+            vault_stack,
+            region,
+            bucket,
+            key,
+            prefix,
+            profile,
+            iam_id,
+            iam_secret,
+        )
+        .await
+        .map_err(vault_error_to_anyhow)?
+        .all()
+        .await
+        .map_err(vault_error_to_anyhow)?;
 
         Ok(result)
     })
 }
 
-#[pyfunction(signature = (name, vault_stack=None, region=None, bucket=None, key=None, prefix=None, profile=None))]
+#[pyfunction(signature = (
+    name,
+    vault_stack=None,
+    region=None,
+    bucket=None,
+    key=None,
+    prefix=None,
+    profile=None,
+    iam_id=None,
+    iam_secret=None,
+))]
 fn lookup(
     name: &str,
     vault_stack: Option<String>,
@@ -216,13 +356,24 @@ fn lookup(
     key: Option<String>,
     prefix: Option<String>,
     profile: Option<String>,
+    iam_id: Option<String>,
+    iam_secret: Option<String>,
 ) -> PyResult<String> {
     Runtime::new()?.block_on(async {
         let result: Value = Box::pin(
-            Vault::new(vault_stack, region, bucket, key, prefix, profile)
-                .await
-                .map_err(vault_error_to_anyhow)?
-                .lookup(name),
+            Vault::new(
+                vault_stack,
+                region,
+                bucket,
+                key,
+                prefix,
+                profile,
+                iam_id,
+                iam_secret,
+            )
+            .await
+            .map_err(vault_error_to_anyhow)?
+            .lookup(name),
         )
         .await
         .map_err(vault_error_to_anyhow)?;
@@ -241,7 +392,16 @@ fn run(args: Vec<String>) -> PyResult<()> {
     })
 }
 
-#[pyfunction(signature = (vault_stack=None, region=None, bucket=None, key=None, prefix=None, profile=None))]
+#[pyfunction(signature = (
+    vault_stack=None,
+    region=None,
+    bucket=None,
+    key=None,
+    prefix=None,
+    profile=None,
+    iam_id=None,
+    iam_secret=None,
+))]
 fn stack_status(
     vault_stack: Option<String>,
     region: Option<String>,
@@ -249,14 +409,25 @@ fn stack_status(
     key: Option<String>,
     prefix: Option<String>,
     profile: Option<String>,
+    iam_id: Option<String>,
+    iam_secret: Option<String>,
 ) -> PyResult<PyObject> {
     let data = Runtime::new()?.block_on(async {
-        Vault::new(vault_stack, region, bucket, key, prefix, profile)
-            .await
-            .map_err(vault_error_to_anyhow)?
-            .stack_status()
-            .await
-            .map_err(vault_error_to_anyhow)
+        Vault::new(
+            vault_stack,
+            region,
+            bucket,
+            key,
+            prefix,
+            profile,
+            iam_id,
+            iam_secret,
+        )
+        .await
+        .map_err(vault_error_to_anyhow)?
+        .stack_status()
+        .await
+        .map_err(vault_error_to_anyhow)
     })?;
 
     Python::with_gil(|py| {
@@ -265,7 +436,18 @@ fn stack_status(
     })
 }
 
-#[pyfunction(signature = (name, value, vault_stack=None, region=None, bucket=None, key=None, prefix=None, profile=None))]
+#[pyfunction(signature = (
+    name,
+    value,
+    vault_stack=None,
+    region=None,
+    bucket=None,
+    key=None,
+    prefix=None,
+    profile=None,
+    iam_id=None,
+    iam_secret=None,
+))]
 fn store(
     name: &str,
     value: &[u8],
@@ -275,20 +457,39 @@ fn store(
     key: Option<String>,
     prefix: Option<String>,
     profile: Option<String>,
+    iam_id: Option<String>,
+    iam_secret: Option<String>,
 ) -> PyResult<()> {
     Runtime::new()?.block_on(async {
         Ok(Box::pin(
-            Vault::new(vault_stack, region, bucket, key, prefix, profile)
-                .await
-                .map_err(vault_error_to_anyhow)?
-                .store(name, value),
+            Vault::new(
+                vault_stack,
+                region,
+                bucket,
+                key,
+                prefix,
+                profile,
+                iam_id,
+                iam_secret,
+            )
+            .await
+            .map_err(vault_error_to_anyhow)?
+            .store(name, value),
         )
         .await
         .map_err(vault_error_to_anyhow)?)
     })
 }
-
-#[pyfunction(signature = (vault_stack=None, region=None, bucket=None, key=None, prefix=None, profile=None))]
+#[pyfunction(signature = (
+    vault_stack=None,
+    region=None,
+    bucket=None,
+    key=None,
+    prefix=None,
+    profile=None,
+    iam_id=None,
+    iam_secret=None,
+))]
 fn update(
     vault_stack: Option<String>,
     region: Option<String>,
@@ -296,14 +497,25 @@ fn update(
     key: Option<String>,
     prefix: Option<String>,
     profile: Option<String>,
+    iam_id: Option<String>,
+    iam_secret: Option<String>,
 ) -> PyResult<PyObject> {
     let result = Runtime::new()?.block_on(async {
-        Vault::new(vault_stack, region, bucket, key, prefix, profile)
-            .await
-            .map_err(vault_error_to_anyhow)?
-            .update_stack()
-            .await
-            .map_err(vault_error_to_anyhow)
+        Vault::new(
+            vault_stack,
+            region,
+            bucket,
+            key,
+            prefix,
+            profile,
+            iam_id,
+            iam_secret,
+        )
+        .await
+        .map_err(vault_error_to_anyhow)?
+        .update_stack()
+        .await
+        .map_err(vault_error_to_anyhow)
     })?;
 
     Python::with_gil(|py| match result {

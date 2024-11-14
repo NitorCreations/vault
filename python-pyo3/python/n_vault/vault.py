@@ -67,6 +67,8 @@ class Vault:
         vault_stack: str = None,
         vault_key: str = None,
         vault_bucket: str = None,
+        vault_iam_id: str = None,
+        vault_iam_secret: str = None,
         vault_prefix: str = None,
         vault_region: str = None,
         profile: str = None,
@@ -74,6 +76,8 @@ class Vault:
         self.vault_stack = vault_stack
         self.vault_key = vault_key
         self.vault_bucket = vault_bucket
+        self.vault_iam_id = vault_iam_id
+        self.vault_iam_secret = vault_iam_secret
         self.vault_prefix = vault_prefix
         self.vault_region = vault_region
         self.profile = profile
@@ -96,6 +100,8 @@ class Vault:
             key=self.vault_key,
             prefix=self.vault_prefix,
             profile=self.profile,
+            iam_id=self.vault_iam_id,
+            iam_secret=self.vault_iam_secret,
         )
 
     def delete_many(self, names: Collection[str]) -> None:
@@ -112,6 +118,8 @@ class Vault:
             key=self.vault_key,
             prefix=self.vault_prefix,
             profile=self.profile,
+            iam_id=self.vault_iam_id,
+            iam_secret=self.vault_iam_secret,
         )
 
     def direct_decrypt(self, encrypted_data: bytes) -> bytes:
@@ -126,6 +134,8 @@ class Vault:
             key=self.vault_key,
             prefix=self.vault_prefix,
             profile=self.profile,
+            iam_id=self.vault_iam_id,
+            iam_secret=self.vault_iam_secret,
         )
 
     def direct_encrypt(self, data: Union[bytes, str]) -> bytes:
@@ -143,6 +153,8 @@ class Vault:
             key=self.vault_key,
             prefix=self.vault_prefix,
             profile=self.profile,
+            iam_id=self.vault_iam_id,
+            iam_secret=self.vault_iam_secret,
         )
 
     def exists(self, name: str) -> bool:
@@ -159,6 +171,8 @@ class Vault:
             key=self.vault_key,
             prefix=self.vault_prefix,
             profile=self.profile,
+            iam_id=self.vault_iam_id,
+            iam_secret=self.vault_iam_secret,
         )
 
     def init(self) -> Union[StackCreated, CloudFormationStackData]:
@@ -176,6 +190,8 @@ class Vault:
             region=self.vault_region,
             bucket=self.vault_bucket,
             profile=self.profile,
+            iam_id=self.vault_iam_id,
+            iam_secret=self.vault_iam_secret,
         )
         result_status = result.get("result")
         if result_status == "CREATED":
@@ -198,6 +214,8 @@ class Vault:
             key=self.vault_key,
             prefix=self.vault_prefix,
             profile=self.profile,
+            iam_id=self.vault_iam_id,
+            iam_secret=self.vault_iam_secret,
         )
 
     def lookup(self, name: str) -> str:
@@ -214,6 +232,8 @@ class Vault:
             key=self.vault_key,
             prefix=self.vault_prefix,
             profile=self.profile,
+            iam_id=self.vault_iam_id,
+            iam_secret=self.vault_iam_secret,
         )
 
     def stack_status(self) -> CloudFormationStackData:
@@ -227,6 +247,8 @@ class Vault:
             key=self.vault_key,
             prefix=self.vault_prefix,
             profile=self.profile,
+            iam_id=self.vault_iam_id,
+            iam_secret=self.vault_iam_secret,
         )
         return CloudFormationStackData(**data)
 
@@ -246,6 +268,8 @@ class Vault:
             key=self.vault_key,
             prefix=self.vault_prefix,
             profile=self.profile,
+            iam_id=self.vault_iam_id,
+            iam_secret=self.vault_iam_secret,
         )
 
     def update(self) -> Union[StackUpdated, CloudFormationStackData]:
@@ -262,6 +286,8 @@ class Vault:
             key=self.vault_key,
             prefix=self.vault_prefix,
             profile=self.profile,
+            iam_id=self.vault_iam_id,
+            iam_secret=self.vault_iam_secret,
         )
         result_status = result.get("result")
         if result_status == "UPDATED":
