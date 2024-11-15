@@ -1,6 +1,8 @@
 # nitor-vault
 
-Python vault implementation using the Rust vault library.
+Python Vault CLI and library implementation using the Rust vault exposed as a Python extension module.
+
+Encrypt data using client-side encryption with [AWS KMS](https://aws.amazon.com/kms/) keys.
 
 See the [repo](https://github.com/NitorCreations/vault) root readme for more general information.
 
