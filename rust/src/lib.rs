@@ -121,8 +121,8 @@ impl S3DataKeys {
 }
 
 #[inline]
-/// Return possible env variable value as Option.
 #[must_use]
+/// Return possible env variable value as Option.
 pub fn get_env_variable(name: &str) -> Option<String> {
     std::env::var(name).ok()
 }
