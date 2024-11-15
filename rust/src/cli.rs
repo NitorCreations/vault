@@ -22,9 +22,11 @@ pub async fn init_vault_stack(
     region: Option<String>,
     bucket: Option<String>,
     profile: Option<String>,
+    iam_id: Option<String>,
+    iam_secret: Option<String>,
     quiet: bool,
 ) -> Result<()> {
-    match Vault::init(stack_name, region, bucket, profile).await? {
+    match Vault::init(stack_name, region, bucket, profile, iam_id, iam_secret).await? {
         CreateStackResult::Exists { data } => {
             if !quiet {
                 println!("{}", "Vault stack already initialized:".bold());

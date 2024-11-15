@@ -23,7 +23,7 @@ use crate::cloudformation::{CloudFormationParams, CloudFormationStackData};
 use crate::errors::VaultError;
 use crate::template::{template, VAULT_STACK_VERSION};
 use crate::value::Value;
-use crate::{CreateStackResult, EncryptObject, Meta, S3DataKeys, UpdateStackResult};
+use crate::{CreateStackResult, EncryptObject, Meta, S3DataKeys, UpdateStackResult, VaultConfig};
 
 #[derive(Debug)]
 pub struct Vault {
@@ -47,7 +47,7 @@ impl Vault {
     ///
     // The Default trait can't be implemented for Vault since it can fail.
     pub async fn default() -> Result<Self, VaultError> {
-        Self::new(None, None, None, None, None, None).await
+        Self::new(None, None, None, None, None, None, None, None).await
     }
 
     /// Construct Vault for an existing vault stack with optional arguments.
@@ -60,8 +60,10 @@ impl Vault {
         key: Option<String>,
         prefix: Option<String>,
         profile: Option<String>,
+        iam_id: Option<String>,
+        iam_secret: Option<String>,
     ) -> Result<Self, VaultError> {
-        let config = crate::get_aws_config(region, profile).await;
+        let config = crate::resolve_aws_config_from_args(region, profile, iam_id, iam_secret).await;
         let region = config
             .region()
             .map(ToOwned::to_owned)
@@ -99,6 +101,21 @@ impl Vault {
         })
     }
 
+    /// Construct Vault for an existing vault stack from given `VaultConfig`.
+    pub async fn from_config(config: VaultConfig) -> Result<Self, VaultError> {
+        Self::new(
+            config.vault_stack,
+            config.region,
+            config.bucket,
+            config.key,
+            config.prefix,
+            config.profile,
+            config.iam_id,
+            config.iam_secret,
+        )
+        .await
+    }
+
     /// Initialize new Vault stack.
     /// This will create all required resources in AWS,
     /// after which the Vault can be used to store and lookup values.
@@ -110,8 +127,10 @@ impl Vault {
         region: Option<String>,
         bucket: Option<String>,
         profile: Option<String>,
+        iam_id: Option<String>,
+        iam_secret: Option<String>,
     ) -> Result<CreateStackResult, VaultError> {
-        let config = crate::get_aws_config(region, profile).await;
+        let config = crate::resolve_aws_config_from_args(region, profile, iam_id, iam_secret).await;
         let region = config
             .region()
             .map(ToOwned::to_owned)

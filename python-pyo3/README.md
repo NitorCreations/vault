@@ -34,7 +34,9 @@ Options:
   -p, --prefix <PREFIX>    Optional prefix for key name [env: VAULT_PREFIX=]
   -r, --region <REGION>    Specify AWS region for the bucket [env: AWS_REGION=]
       --vaultstack <NAME>  Specify CloudFormation stack name to use [env: VAULT_STACK=]
-      --profile <PROFILE>  Specify AWS profile to use [env: AWS_PROFILE=]
+      --id <ID>            Specify AWS IAM access key ID
+      --secret <SECRET>    Specify AWS IAM secret access key
+      --profile <PROFILE>  Specify AWS profile name to use [env: AWS_PROFILE=]
   -q, --quiet              Suppress additional output and error messages
   -h, --help               Print help (see more with '--help')
   -V, --version            Print version
