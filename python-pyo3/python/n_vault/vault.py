@@ -163,11 +163,11 @@ class Vault:
         """
         return nitor_vault_rs.list_all(self.config)
 
-    def lookup(self, name: str) -> str:
+    def lookup(self, name: str) -> bytes:
         """
         Lookup value for given key name.
 
-        Always returns a string, with binary data encoded in base64.
+        Returns raw bytes. Use `.decode("utf-8")` to convert to a string.
         """
         return nitor_vault_rs.lookup(name, self.config)
 
