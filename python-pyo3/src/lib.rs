@@ -197,7 +197,7 @@ fn list_all(config: VaultConfig) -> PyResult<Vec<String>> {
 }
 
 #[pyfunction()]
-fn lookup(name: &str, config: VaultConfig) -> PyResult<Cow<[u8]> {
+fn lookup(name: &str, config: VaultConfig) -> PyResult<Cow<[u8]>> {
     Runtime::new()?.block_on(async {
         let result: Value = Box::pin(
             Vault::from_config(config.into())
