@@ -41,12 +41,12 @@ impl Value {
         )
     }
 
+    #[must_use]
     /// Create a `Value` from a string,
     /// and try to decode the value as base64 binary data.
     ///
     /// If the decoded result is valid UTF-8, return `Value::Utf8`.
     /// Otherwise, return `Value::Binary`.
-    #[must_use]
     pub fn from_possibly_base64_encoded(value: String) -> Self {
         #[allow(clippy::option_if_let_else)]
         // ^using `map_or` would require cloning buffer
@@ -96,12 +96,21 @@ impl Value {
         }
     }
 
-    /// Returns the data as a byte slice `&[u8]`
     #[must_use]
+    /// Returns the data as a byte slice `&[u8]`.
     pub fn as_bytes(&self) -> &[u8] {
         match self {
             Self::Utf8(ref string) => string.as_bytes(),
             Self::Binary(ref bytes) => bytes,
+        }
+    }
+
+    #[must_use]
+    /// Returns the data as owned bytes, consuming the Value.
+    pub fn to_bytes(self) -> Vec<u8> {
+        match self {
+            Self::Utf8(string) => string.as_bytes().into(),
+            Self::Binary(bytes) => bytes,
         }
     }
 

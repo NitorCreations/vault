@@ -197,7 +197,7 @@ fn list_all(config: VaultConfig) -> PyResult<Vec<String>> {
 }
 
 #[pyfunction()]
-fn lookup(name: &str, config: VaultConfig) -> PyResult<String> {
+fn lookup(name: &str, config: VaultConfig) -> PyResult<Cow<[u8]> {
     Runtime::new()?.block_on(async {
         let result: Value = Box::pin(
             Vault::from_config(config.into())
@@ -208,8 +208,7 @@ fn lookup(name: &str, config: VaultConfig) -> PyResult<String> {
         .await
         .map_err(vault_error_to_anyhow)?;
 
-        // Binary data will get base64 encoded in the Display trait implementation
-        Ok(result.to_string())
+        Ok(Cow::Owned(result.to_bytes()))
     })
 }
 
