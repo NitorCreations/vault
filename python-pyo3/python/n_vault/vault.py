@@ -82,6 +82,17 @@ class Vault:
         self.vault_region = vault_region
         self.profile = profile
 
+        self.config = nitor_vault_rs.VaultConfig(
+            vault_stack=self.vault_stack,
+            region=self.vault_region,
+            bucket=self.vault_bucket,
+            key=self.vault_key,
+            prefix=self.vault_prefix,
+            profile=self.profile,
+            iam_id=self.vault_iam_id,
+            iam_secret=self.vault_iam_secret,
+        )
+
     def all(self) -> str:
         """
         Return a string with all keys separated by os.linesep.
@@ -92,17 +103,7 @@ class Vault:
         """
         Delete data in S3 for given key name.
         """
-        return nitor_vault_rs.delete(
-            name,
-            vault_stack=self.vault_stack,
-            region=self.vault_region,
-            bucket=self.vault_bucket,
-            key=self.vault_key,
-            prefix=self.vault_prefix,
-            profile=self.profile,
-            iam_id=self.vault_iam_id,
-            iam_secret=self.vault_iam_secret,
-        )
+        return nitor_vault_rs.delete(name, self.config)
 
     def delete_many(self, names: Collection[str]) -> None:
         """
@@ -110,33 +111,13 @@ class Vault:
 
         Takes in a collection of key name strings, such as a `list`, `tuple`, or `set`.
         """
-        return nitor_vault_rs.delete_many(
-            sorted(names),
-            vault_stack=self.vault_stack,
-            region=self.vault_region,
-            bucket=self.vault_bucket,
-            key=self.vault_key,
-            prefix=self.vault_prefix,
-            profile=self.profile,
-            iam_id=self.vault_iam_id,
-            iam_secret=self.vault_iam_secret,
-        )
+        return nitor_vault_rs.delete_many(sorted(names), self.config)
 
     def direct_decrypt(self, encrypted_data: bytes) -> bytes:
         """
         Decrypt data with KMS.
         """
-        return nitor_vault_rs.direct_decrypt(
-            encrypted_data,
-            vault_stack=self.vault_stack,
-            region=self.vault_region,
-            bucket=self.vault_bucket,
-            key=self.vault_key,
-            prefix=self.vault_prefix,
-            profile=self.profile,
-            iam_id=self.vault_iam_id,
-            iam_secret=self.vault_iam_secret,
-        )
+        return nitor_vault_rs.direct_decrypt(encrypted_data, self.config)
 
     def direct_encrypt(self, data: Union[bytes, str]) -> bytes:
         """
@@ -145,17 +126,7 @@ class Vault:
         if isinstance(data, str):
             data = data.encode("utf-8")
 
-        return nitor_vault_rs.direct_encrypt(
-            data,
-            vault_stack=self.vault_stack,
-            region=self.vault_region,
-            bucket=self.vault_bucket,
-            key=self.vault_key,
-            prefix=self.vault_prefix,
-            profile=self.profile,
-            iam_id=self.vault_iam_id,
-            iam_secret=self.vault_iam_secret,
-        )
+        return nitor_vault_rs.direct_encrypt(data, self.config)
 
     def exists(self, name: str) -> bool:
         """
@@ -163,17 +134,7 @@ class Vault:
 
         Returns True if the key exists, False otherwise.
         """
-        return nitor_vault_rs.exists(
-            name,
-            vault_stack=self.vault_stack,
-            region=self.vault_region,
-            bucket=self.vault_bucket,
-            key=self.vault_key,
-            prefix=self.vault_prefix,
-            profile=self.profile,
-            iam_id=self.vault_iam_id,
-            iam_secret=self.vault_iam_secret,
-        )
+        return nitor_vault_rs.exists(name, self.config)
 
     def init(self) -> Union[StackCreated, CloudFormationStackData]:
         """
@@ -185,14 +146,7 @@ class Vault:
         Returns a `StackCreated` if a new vault stack was initialized,
         or `CloudFormationStackData` if it already exists.
         """
-        result = nitor_vault_rs.init(
-            vault_stack=self.vault_stack,
-            region=self.vault_region,
-            bucket=self.vault_bucket,
-            profile=self.profile,
-            iam_id=self.vault_iam_id,
-            iam_secret=self.vault_iam_secret,
-        )
+        result = nitor_vault_rs.init(self.config)
         result_status = result.get("result")
         if result_status == "CREATED":
             return StackCreated(**result)
@@ -207,16 +161,7 @@ class Vault:
 
         Returns a list of key names.
         """
-        return nitor_vault_rs.list_all(
-            vault_stack=self.vault_stack,
-            region=self.vault_region,
-            bucket=self.vault_bucket,
-            key=self.vault_key,
-            prefix=self.vault_prefix,
-            profile=self.profile,
-            iam_id=self.vault_iam_id,
-            iam_secret=self.vault_iam_secret,
-        )
+        return nitor_vault_rs.list_all(self.config)
 
     def lookup(self, name: str) -> str:
         """
@@ -224,32 +169,13 @@ class Vault:
 
         Always returns a string, with binary data encoded in base64.
         """
-        return nitor_vault_rs.lookup(
-            name,
-            vault_stack=self.vault_stack,
-            region=self.vault_region,
-            bucket=self.vault_bucket,
-            key=self.vault_key,
-            prefix=self.vault_prefix,
-            profile=self.profile,
-            iam_id=self.vault_iam_id,
-            iam_secret=self.vault_iam_secret,
-        )
+        return nitor_vault_rs.lookup(name, self.config)
 
     def stack_status(self) -> CloudFormationStackData:
         """
         Get vault Cloudformation stack status.
         """
-        data = nitor_vault_rs.stack_status(
-            vault_stack=self.vault_stack,
-            region=self.vault_region,
-            bucket=self.vault_bucket,
-            key=self.vault_key,
-            prefix=self.vault_prefix,
-            profile=self.profile,
-            iam_id=self.vault_iam_id,
-            iam_secret=self.vault_iam_secret,
-        )
+        data = nitor_vault_rs.stack_status(self.config)
         return CloudFormationStackData(**data)
 
     def store(self, name: str, data: Union[bytes, str]) -> None:
@@ -259,18 +185,7 @@ class Vault:
         if isinstance(data, str):
             data = data.encode("utf-8")
 
-        return nitor_vault_rs.store(
-            name,
-            data,
-            vault_stack=self.vault_stack,
-            region=self.vault_region,
-            bucket=self.vault_bucket,
-            key=self.vault_key,
-            prefix=self.vault_prefix,
-            profile=self.profile,
-            iam_id=self.vault_iam_id,
-            iam_secret=self.vault_iam_secret,
-        )
+        return nitor_vault_rs.store(name, data, self.config)
 
     def update(self) -> Union[StackUpdated, CloudFormationStackData]:
         """
@@ -279,16 +194,7 @@ class Vault:
         Returns `StackUpdated` if the vault stack was updated to a new version,
         or `CloudFormationStackData` if it is already up to date.
         """
-        result = nitor_vault_rs.update(
-            vault_stack=self.vault_stack,
-            region=self.vault_region,
-            bucket=self.vault_bucket,
-            key=self.vault_key,
-            prefix=self.vault_prefix,
-            profile=self.profile,
-            iam_id=self.vault_iam_id,
-            iam_secret=self.vault_iam_secret,
-        )
+        result = nitor_vault_rs.update(self.config)
         result_status = result.get("result")
         if result_status == "UPDATED":
             return StackUpdated(**result)

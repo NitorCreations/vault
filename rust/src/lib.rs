@@ -51,6 +51,19 @@ pub enum UpdateStackResult {
     },
 }
 
+#[derive(Debug, Default, Clone)]
+/// Optional parameters for a `Vault` instance.
+pub struct VaultConfig {
+    pub vault_stack: Option<String>,
+    pub region: Option<String>,
+    pub bucket: Option<String>,
+    pub key: Option<String>,
+    pub prefix: Option<String>,
+    pub profile: Option<String>,
+    pub iam_id: Option<String>,
+    pub iam_secret: Option<String>,
+}
+
 #[derive(Debug, Clone)]
 pub(crate) struct EncryptObject {
     data_key: Vec<u8>,

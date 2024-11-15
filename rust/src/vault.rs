@@ -23,7 +23,7 @@ use crate::cloudformation::{CloudFormationParams, CloudFormationStackData};
 use crate::errors::VaultError;
 use crate::template::{template, VAULT_STACK_VERSION};
 use crate::value::Value;
-use crate::{CreateStackResult, EncryptObject, Meta, S3DataKeys, UpdateStackResult};
+use crate::{CreateStackResult, EncryptObject, Meta, S3DataKeys, UpdateStackResult, VaultConfig};
 
 #[derive(Debug)]
 pub struct Vault {
@@ -99,6 +99,21 @@ impl Vault {
             kms: KmsClient::new(&config),
             s3: S3Client::new(&config),
         })
+    }
+
+    /// Construct Vault for an existing vault stack from given `VaultConfig`.
+    pub async fn from_config(config: VaultConfig) -> Result<Self, VaultError> {
+        Self::new(
+            config.vault_stack,
+            config.region,
+            config.bucket,
+            config.key,
+            config.prefix,
+            config.profile,
+            config.iam_id,
+            config.iam_secret,
+        )
+        .await
     }
 
     /// Initialize new Vault stack.
