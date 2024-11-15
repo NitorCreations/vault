@@ -7,7 +7,7 @@ with [AWS KMS](https://aws.amazon.com/kms/) keys.
 
 Install the Rust vault CLI from [crates.io](https://crates.io/crates/nitor-vault) with:
 
-```terminal
+```shell
 cargo install nitor-vault
 ```
 

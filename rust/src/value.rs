@@ -1,6 +1,6 @@
+use std::fmt;
 use std::io::{stdin, BufWriter, Read, Write};
 use std::path::Path;
-use std::{fmt, io};
 
 use base64::Engine;
 
@@ -109,7 +109,7 @@ impl Value {
     ///
     /// String data is printed.
     /// Binary data is outputted raw.
-    pub fn output_to_stdout(&self) -> io::Result<()> {
+    pub fn output_to_stdout(&self) -> std::io::Result<()> {
         match self {
             Self::Utf8(ref string) => {
                 print!("{string}");
@@ -117,7 +117,7 @@ impl Value {
                 Ok(())
             }
             Self::Binary(ref bytes) => {
-                let stdout = io::stdout();
+                let stdout = std::io::stdout();
                 let mut handle = stdout.lock();
                 handle.write_all(bytes)?;
                 handle.flush()
@@ -126,7 +126,7 @@ impl Value {
     }
 
     /// Outputs the data to the specified file path.
-    pub fn output_to_file(&self, path: &Path) -> io::Result<()> {
+    pub fn output_to_file(&self, path: &Path) -> std::io::Result<()> {
         let file = std::fs::File::create(path)?;
         let mut writer = BufWriter::new(file);
         writer.write_all(self.as_bytes())?;
