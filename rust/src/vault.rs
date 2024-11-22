@@ -425,32 +425,32 @@ impl Vault {
 
     /// Get S3 Object data for given key as a vec of bytes.
     async fn get_s3_object(&self, key: String) -> Result<Vec<u8>, VaultError> {
-        match self
+        let response = self
             .s3
             .get_object()
             .bucket(self.cloudformation_params.bucket_name.clone())
             .key(&key)
             .send()
             .await
-        {
-            Ok(response) => Ok(response
-                .body
-                .collect()
-                .await
-                .map_err(|_| VaultError::S3GetObjectBodyError)
-                .map(aws_sdk_s3::primitives::AggregatedBytes::to_vec)?),
-            Err(err) => {
+            .map_err(|err| {
                 if let Some(service_error) = err.as_service_error() {
                     if service_error.is_no_such_key() {
-                        Err(VaultError::KeyDoesNotExistError)
+                        VaultError::KeyDoesNotExistError
                     } else {
-                        Err(VaultError::S3GetObjectError(err))
+                        VaultError::S3GetObjectError(err)
                     }
                 } else {
-                    Err(VaultError::S3GetObjectError(err))
+                    VaultError::S3GetObjectError(err)
                 }
-            }
-        }
+            })?;
+
+        let body = response
+            .body
+            .collect()
+            .await
+            .map_err(|_| VaultError::S3GetObjectBodyError)?;
+
+        Ok(body.to_vec())
     }
 
     /// Encrypt data
