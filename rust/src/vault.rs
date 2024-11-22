@@ -363,19 +363,40 @@ impl Vault {
         let cipher_text = self.get_s3_object(keys.cipher);
         let meta_add = self.get_s3_object(keys.meta);
 
-        let (cipher_text, meta_add) = tokio::try_join!(cipher_text, meta_add)?;
+        match tokio::try_join!(cipher_text, meta_add) {
+            Ok((cipher_text, meta_add)) => {
+                self.lookup_aesgcm_data(&data_key, &cipher_text, &meta_add)
+                    .await
+            }
+            Err(err) => {
+                if matches!(err, VaultError::KeyDoesNotExistError) {
+                    // Data key exists but other AES-GCM files do not:
+                    // This secret has been encrypted with the old deprecated method
+                    Err(VaultError::DeprecatedEncryptionError)
+                } else {
+                    Err(err)
+                }
+            }
+        }
+    }
 
-        let meta: Meta = serde_json::from_slice(&meta_add)?;
+    async fn lookup_aesgcm_data(
+        &self,
+        data_key: &[u8],
+        cipher_text: &Vec<u8>,
+        meta_add: &Vec<u8>,
+    ) -> Result<Value, VaultError> {
+        let meta: Meta = serde_json::from_slice(meta_add)?;
         let cipher: AesGcm<Aes256, U12> =
-            AesGcm::new_from_slice(self.direct_decrypt(&data_key).await?.as_slice())?;
+            AesGcm::new_from_slice(self.direct_decrypt(data_key).await?.as_slice())?;
         let nonce = base64::engine::general_purpose::STANDARD.decode(meta.nonce)?;
         let nonce = Nonce::from_slice(nonce.as_slice());
         let decrypted_bytes = cipher
             .decrypt(
                 nonce,
                 Payload {
-                    msg: &cipher_text,
-                    aad: &meta_add,
+                    msg: cipher_text,
+                    aad: meta_add,
                 },
             )
             .map_err(|_| VaultError::NonceDecryptError)?;
