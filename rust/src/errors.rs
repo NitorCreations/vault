@@ -94,4 +94,8 @@ pub enum VaultError {
     MissingStackIdError,
     #[error("Failed to get stack status for vault stack")]
     MissingStackStatusError,
+    #[error("Deprecated encryption method for secret: {0}")]
+    DeprecatedEncryptionError(String),
+    #[error("Key does not exist in S3")]
+    KeyDoesNotExistError,
 }
