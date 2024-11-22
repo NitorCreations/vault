@@ -2,7 +2,7 @@ use std::fmt;
 
 use aes_gcm::aead::consts::U12;
 use aes_gcm::aead::{Aead, Payload};
-use aes_gcm::aes::{cipher, Aes256};
+use aes_gcm::aes::Aes256;
 use aes_gcm::{AesGcm, KeyInit, Nonce};
 use aws_config::Region;
 use aws_sdk_cloudformation::types::{Capability, Parameter, StackStatus};
@@ -358,22 +358,45 @@ impl Vault {
         let key = &self.full_key_name(name);
         let keys = S3DataKeys::new(key);
 
-        let data_key = self.get_s3_object(keys.key);
+        let data_key = self.get_s3_object(keys.key).await?;
+
         let cipher_text = self.get_s3_object(keys.cipher);
         let meta_add = self.get_s3_object(keys.meta);
-        let (data_key, cipher_text, meta_add) = tokio::try_join!(data_key, cipher_text, meta_add)?;
 
-        let meta: Meta = serde_json::from_slice(&meta_add)?;
-        let cipher: AesGcm<Aes256, cipher::typenum::U12> =
-            AesGcm::new_from_slice(self.direct_decrypt(&data_key).await?.as_slice())?;
+        match tokio::try_join!(cipher_text, meta_add) {
+            Ok((cipher_text, meta_add)) => {
+                self.lookup_aesgcm_data(&data_key, &cipher_text, &meta_add)
+                    .await
+            }
+            Err(err) => {
+                if matches!(err, VaultError::KeyDoesNotExistError) {
+                    // Data key exists but other AES-GCM files do not:
+                    // This secret has been encrypted with the old deprecated method
+                    Err(VaultError::DeprecatedEncryptionError)
+                } else {
+                    Err(err)
+                }
+            }
+        }
+    }
+
+    async fn lookup_aesgcm_data(
+        &self,
+        data_key: &[u8],
+        cipher_text: &Vec<u8>,
+        meta_add: &Vec<u8>,
+    ) -> Result<Value, VaultError> {
+        let meta: Meta = serde_json::from_slice(meta_add)?;
+        let cipher: AesGcm<Aes256, U12> =
+            AesGcm::new_from_slice(self.direct_decrypt(data_key).await?.as_slice())?;
         let nonce = base64::engine::general_purpose::STANDARD.decode(meta.nonce)?;
         let nonce = Nonce::from_slice(nonce.as_slice());
         let decrypted_bytes = cipher
             .decrypt(
                 nonce,
                 Payload {
-                    msg: &cipher_text,
-                    aad: &meta_add,
+                    msg: cipher_text,
+                    aad: meta_add,
                 },
             )
             .map_err(|_| VaultError::NonceDecryptError)?;
@@ -423,17 +446,32 @@ impl Vault {
 
     /// Get S3 Object data for given key as a vec of bytes.
     async fn get_s3_object(&self, key: String) -> Result<Vec<u8>, VaultError> {
-        self.s3
+        let response = self
+            .s3
             .get_object()
             .bucket(self.cloudformation_params.bucket_name.clone())
             .key(&key)
             .send()
-            .await?
+            .await
+            .map_err(|err| {
+                if let Some(service_error) = err.as_service_error() {
+                    if service_error.is_no_such_key() {
+                        VaultError::KeyDoesNotExistError
+                    } else {
+                        VaultError::S3GetObjectError(err)
+                    }
+                } else {
+                    VaultError::S3GetObjectError(err)
+                }
+            })?;
+
+        let body = response
             .body
             .collect()
             .await
-            .map_err(|_| VaultError::S3GetObjectBodyError)
-            .map(aws_sdk_s3::primitives::AggregatedBytes::to_vec)
+            .map_err(|_| VaultError::S3GetObjectBodyError)?;
+
+        Ok(body.to_vec())
     }
 
     /// Encrypt data
