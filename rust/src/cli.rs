@@ -369,7 +369,7 @@ pub fn generate_shell_completion(
             println!("Completion file generated to: {}", path.display());
         }
     } else {
-        clap_complete::generate(shell, &mut command, "vault", &mut std::io::stdout());
+        clap_complete::generate(shell, &mut command, "vault", &mut stdout());
     }
 
     Ok(())

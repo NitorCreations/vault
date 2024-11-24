@@ -69,8 +69,13 @@ enum Command {
     )]
     All {},
 
-    /// Generate shell completion
-    #[command(long_flag("completion"))]
+    /// Generate shell completions
+    ///
+    /// Usage examples:
+    /// - `vault completion --install zsh`
+    /// - `vault completion zsh > "$HOME/.oh-my-zsh/custom/plugins/vault/_vault"`
+    /// - `vault --completion bash`
+    #[command(long_flag("completion"), verbatim_doc_comment)]
     Completion {
         shell: Shell,
 
