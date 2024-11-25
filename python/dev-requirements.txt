@@ -16,7 +16,7 @@ cffi==1.17.1
     # via cryptography
 charset-normalizer==3.4.0
     # via requests
-coverage==7.6.7
+coverage==7.6.8
     # via
     #   nitor-vault (pyproject.toml)
     #   coveralls
@@ -85,11 +85,11 @@ rfc3986==2.0.0
     # via twine
 rich==13.9.4
     # via twine
-ruff==0.7.4
+ruff==0.8.0
     # via nitor-vault (pyproject.toml)
-s3transfer==0.10.3
+s3transfer==0.10.4
     # via boto3
-setuptools==75.5.0
+setuptools==75.6.0
     # via nitor-vault (pyproject.toml)
 six==1.16.0
     # via python-dateutil
@@ -103,7 +103,7 @@ urllib3==2.2.3
     #   requests
     #   threadlocal-aws
     #   twine
-wheel==0.45.0
+wheel==0.45.1
     # via nitor-vault (pyproject.toml)
 zipp==3.21.0
     # via importlib-metadata
