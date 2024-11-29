@@ -213,27 +213,6 @@ enum Command {
         name: Option<String>,
     },
 
-    /// Update the vault CloudFormation stack.
-    ///
-    /// The CloudFormation stack declares all resources needed by the vault.
-    ///
-    /// Usage examples:
-    /// - `vault update`
-    /// - `vault update "vault-name"`
-    /// - `vault -u "vault-name"`
-    /// - `vault --vault-stack "vault-name" --update`
-    /// - `VAULT_STACK="vault-name" vault u`
-    #[command(
-        short_flag('u'),
-        long_flag("update"),
-        visible_alias("u"),
-        verbatim_doc_comment
-    )]
-    Update {
-        /// Optional vault stack name
-        name: Option<String>,
-    },
-
     /// List all vault stacks
     #[command(long_flag("list-stacks"))]
     ListStacks {},
@@ -299,17 +278,20 @@ enum Command {
     },
 
     /// Update the vault CloudFormation stack.
+    ///
+    /// The CloudFormation stack declares all resources needed by the vault.
+    ///
+    /// Usage examples:
+    /// - `vault update`
+    /// - `vault update "vault-name"`
+    /// - `vault -u "vault-name"`
+    /// - `vault --vault-stack "vault-name" --update`
+    /// - `VAULT_STACK="vault-name" vault u`
     #[command(
         short_flag('u'),
         long_flag("update"),
         visible_alias("u"),
-        long_about = "Update the CloudFormation stack which declares all resources needed by the vault.\n\n\
-                      Usage examples:\n\
-                      - `vault update`\n\
-                      - `vault update \"vault-name\"`\n\
-                      - `vault -u \"vault-name\"`\n\
-                      - `vault --vault-stack \"vault-name\" --update`\n\
-                      - `VAULT_STACK=\"vault-name\" vault u`"
+        verbatim_doc_comment
     )]
     Update {
         /// Optional vault stack name
