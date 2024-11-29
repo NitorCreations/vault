@@ -192,15 +192,26 @@ pub async fn list_stacks(
         }
     } else {
         if !quiet && stacks.len() > 1 {
-            println!("{}", format!("Found {} stacks:", stacks.len()).bold());
+            println!("{}", format!("Found {} vault stacks:", stacks.len()).bold());
         }
+        let max_chars = stacks
+            .iter()
+            .map(|stack| {
+                stack
+                    .stack_id
+                    .as_ref()
+                    .map_or(0, |id| id.chars().count() + 4)
+            })
+            .max()
+            .unwrap_or(0)
+            .min(120);
         println!(
             "{}",
             stacks
                 .into_iter()
                 .map(|stack| stack.to_string())
                 .collect::<Vec<String>>()
-                .join("\n--------------------------------------------\n")
+                .join(format!("\n{}\n", "-".repeat(max_chars)).as_ref())
         );
     }
 

@@ -213,9 +213,9 @@ enum Command {
         name: Option<String>,
     },
 
-    /// List all vault stacks
-    #[command(long_flag("list-stacks"))]
-    ListStacks {},
+    /// List all vault Stacks
+    #[command(long_flag("stacks"))]
+    Stacks {},
 
     /// Output secret value for given key
     ///
@@ -388,7 +388,7 @@ async fn run(args: Args) -> Result<()> {
             Command::DeleteStack { name, force } => {
                 println!("{name:?} {force:?}");
             }
-            Command::ListStacks {} => {
+            Command::Stacks {} => {
                 cli::list_stacks(args.region, args.aws_profile, args.quiet).await?;
             }
             // All other commands can use the same single Vault
