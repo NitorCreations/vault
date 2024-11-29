@@ -3,6 +3,7 @@ use std::string::FromUtf8Error;
 
 use aws_sdk_cloudformation::error::SdkError;
 use aws_sdk_cloudformation::operation::create_stack::CreateStackError;
+use aws_sdk_cloudformation::operation::delete_stack::DeleteStackError;
 use aws_sdk_cloudformation::operation::describe_stacks::DescribeStacksError;
 use aws_sdk_cloudformation::operation::list_stacks::ListStacksError;
 use aws_sdk_cloudformation::operation::update_stack::UpdateStackError;
@@ -101,4 +102,6 @@ pub enum VaultError {
     KeyDoesNotExistError,
     #[error("Failed to list stacks: {0}")]
     ListVaultStacksError(#[from] SdkError<ListStacksError>),
+    #[error("Failed to delete stack: {0}")]
+    DeleteVaultStackError(#[from] SdkError<DeleteStackError>),
 }

@@ -1,5 +1,4 @@
-use std::io::Write;
-use std::io::{stdout, IsTerminal};
+use std::io::{stdin, stdout, IsTerminal, Write};
 use std::path::{Path, PathBuf};
 
 use anyhow::{anyhow, Context, Result};
@@ -144,6 +143,48 @@ pub async fn delete(vault: &Vault, key: &str) -> Result<()> {
         .delete(key)
         .await
         .with_context(|| format!("Failed to delete key '{key}'").red())
+}
+
+/// Delete specified vault cloudformation stack
+pub async fn delete_stack(
+    region: Option<String>,
+    profile: Option<String>,
+    name: Option<String>,
+    force: bool,
+    quiet: bool,
+) -> Result<()> {
+    let stack_name = name.context("Stack name is required")?;
+
+    let config = crate::get_aws_config(region, profile).await;
+    let client = aws_sdk_cloudformation::Client::new(&config);
+
+    let stacks = cloudformation::list_stacks(&client).await?;
+
+    let stack = stacks
+        .iter()
+        .find(|stack| stack.stack_name.as_ref() == Some(&stack_name))
+        .context(format!("Vault stack with name '{stack_name}' not found"))?;
+
+    if !quiet && !force {
+        println!("{stack}");
+
+        print!("Are you sure you want to delete this stack? [y/N]: ");
+        stdout().flush()?;
+
+        let mut input = String::new();
+        stdin().read_line(&mut input)?;
+        if !matches!(input.trim().to_lowercase().as_str(), "y" | "yes") {
+            println!("skipping stack deletion");
+            return Ok(());
+        }
+    } else if quiet && !force {
+        anyhow::bail!("Refusing to delete stack without --force");
+    }
+
+    client.delete_stack().stack_name(stack_name).send().await?;
+    println!("Stack deletion initiated");
+
+    Ok(())
 }
 
 /// Get key value.
