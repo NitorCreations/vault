@@ -176,9 +176,14 @@ enum Command {
     #[command()]
     Id {},
 
-    /// Print vault stack information
-    #[command(long_flag("status"))]
-    Status {},
+    /// Commands for cloudformation stack.
+    ///
+    /// No subcommand prints vault stack information.
+    #[command()]
+    Stack {
+        #[command(subcommand)]
+        action: Option<StackAction>,
+    },
 
     /// Initialize a new KMS key and S3 bucket.
     ///
@@ -199,27 +204,6 @@ enum Command {
     )]
     Init {
         /// Vault stack name
-        name: Option<String>,
-    },
-
-    /// Update the vault CloudFormation stack.
-    ///
-    /// The CloudFormation stack declares all resources needed by the vault.
-    ///
-    /// Usage examples:
-    /// - `vault update`
-    /// - `vault update "vault-name"`
-    /// - `vault -u "vault-name"`
-    /// - `vault --vault-stack "vault-name" --update`
-    /// - `VAULT_STACK="vault-name" vault u`
-    #[command(
-        short_flag('u'),
-        long_flag("update"),
-        visible_alias("u"),
-        verbatim_doc_comment
-    )]
-    Update {
-        /// Optional vault stack name
         name: Option<String>,
     },
 
@@ -281,6 +265,59 @@ enum Command {
         /// Overwrite existing key
         #[arg(short = 'w', long)]
         overwrite: bool,
+    },
+
+    /// Update the vault CloudFormation stack.
+    ///
+    /// The CloudFormation stack declares all resources needed by the vault.
+    ///
+    /// Usage examples:
+    /// - `vault update`
+    /// - `vault update "vault-name"`
+    /// - `vault -u "vault-name"`
+    /// - `vault --vault-stack "vault-name" --update`
+    /// - `VAULT_STACK="vault-name" vault u`
+    #[command(
+        short_flag('u'),
+        long_flag("update"),
+        visible_alias("u"),
+        verbatim_doc_comment
+    )]
+    Update {
+        /// Optional vault stack name
+        name: Option<String>,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+enum StackAction {
+    #[command(
+        short_flag('l'),
+        long_flag("list"),
+        visible_alias("l"),
+        visible_alias("ls")
+    )]
+    /// List all vault stacks
+    List,
+
+    /// Delete vault stack
+    #[command(long_flag("delete"))]
+    Delete {
+        /// Vault name
+        name: Option<String>,
+
+        /// Vault name
+        #[arg(
+            short,
+            long = "name",
+            value_name = "vault",
+            conflicts_with_all = vec!["name"]
+        )]
+        name_argument: Option<String>,
+
+        /// Do not ask for confirmation
+        #[arg(short, long)]
+        force: bool,
     },
 }
 
@@ -370,6 +407,43 @@ async fn run(args: Args) -> Result<()> {
             Command::Id {} => {
                 cli::print_aws_account_id(args.region, args.aws_profile, args.quiet).await?;
             }
+            Command::Stack { action } => match action {
+                Some(StackAction::Delete {
+                    name,
+                    name_argument,
+                    force,
+                }) => {
+                    cli::delete_stack(
+                        args.region,
+                        args.aws_profile,
+                        args.vault_stack.or_else(|| name_argument.or(name)),
+                        force,
+                        args.quiet,
+                    )
+                    .await?;
+                }
+                Some(StackAction::List) => {
+                    cli::list_stacks(args.region, args.aws_profile, args.quiet).await?;
+                }
+                None => {
+                    let vault = Vault::new(
+                        args.vault_stack,
+                        args.region,
+                        args.bucket,
+                        args.key_arn,
+                        args.prefix,
+                        args.aws_profile,
+                        args.iam_id,
+                        args.iam_secret,
+                    )
+                    .await
+                    .with_context(|| "Failed to create vault with given parameters".red())?;
+                    let status = vault.stack_status().await?;
+                    if !args.quiet {
+                        println!("{status}");
+                    }
+                }
+            },
             // All other commands can use the same single Vault
             Command::All {}
             | Command::Decrypt { .. }
@@ -379,7 +453,6 @@ async fn run(args: Args) -> Result<()> {
             | Command::Exists { .. }
             | Command::Info {}
             | Command::Lookup { .. }
-            | Command::Status {}
             | Command::Store { .. } => {
                 let vault = Vault::new(
                     args.vault_stack,
@@ -417,12 +490,6 @@ async fn run(args: Args) -> Result<()> {
                         }
                     }
                     Command::Info {} => println!("{vault}"),
-                    Command::Status {} => {
-                        let status = vault.stack_status().await?;
-                        if !args.quiet {
-                            println!("{status}");
-                        }
-                    }
                     Command::Lookup { key, outfile } => cli::lookup(&vault, &key, outfile).await?,
                     Command::Store {
                         key,
@@ -442,12 +509,7 @@ async fn run(args: Args) -> Result<()> {
                         )
                         .await?;
                     }
-                    // These are here again instead of a `_` so that if new commands are added,
-                    // there is an error about missing handling for that.
-                    Command::Init { .. } => unreachable!(),
-                    Command::Update { .. } => unreachable!(),
-                    Command::Id { .. } => unreachable!(),
-                    Command::Completion { .. } => unreachable!(),
+                    _ => unreachable!(),
                 }
             }
         };
