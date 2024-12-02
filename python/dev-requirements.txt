@@ -22,7 +22,7 @@ coverage==7.6.8
     #   coveralls
 coveralls==4.0.1
     # via nitor-vault (pyproject.toml)
-cryptography==43.0.3
+cryptography==44.0.0
     # via nitor-vault (pyproject.toml)
 docopt==0.6.2
     # via coveralls
@@ -54,7 +54,7 @@ more-itertools==10.5.0
     # via
     #   jaraco-classes
     #   jaraco-functools
-nh3==0.2.18
+nh3==0.2.19
     # via readme-renderer
 packaging==24.2
     # via build
@@ -85,7 +85,7 @@ rfc3986==2.0.0
     # via twine
 rich==13.9.4
     # via twine
-ruff==0.8.0
+ruff==0.8.1
     # via nitor-vault (pyproject.toml)
 s3transfer==0.10.4
     # via boto3
@@ -95,7 +95,7 @@ six==1.16.0
     # via python-dateutil
 threadlocal-aws==0.11
     # via nitor-vault (pyproject.toml)
-twine==5.1.1
+twine==6.0.1
     # via nitor-vault (pyproject.toml)
 urllib3==2.2.3
     # via
