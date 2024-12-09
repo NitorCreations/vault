@@ -1,5 +1,4 @@
-use std::io::Write;
-use std::io::{stdout, IsTerminal};
+use std::io::{stdin, stdout, IsTerminal, Write};
 use std::path::{Path, PathBuf};
 
 use anyhow::{anyhow, Context, Result};
@@ -146,6 +145,42 @@ pub async fn delete(vault: &Vault, key: &str) -> Result<()> {
         .with_context(|| format!("Failed to delete key '{key}'").red())
 }
 
+/// Delete specified vault cloudformation stack
+pub async fn delete_stack(
+    region: Option<String>,
+    profile: Option<String>,
+    name: Option<String>,
+    force: bool,
+    quiet: bool,
+) -> Result<()> {
+    let stack_name = name.context("Stack name is required")?;
+
+    let config = crate::get_aws_config(region, profile).await;
+    let client = aws_sdk_cloudformation::Client::new(&config);
+
+    if !quiet && !force {
+        let stack = cloudformation::get_stack_data(&client, &stack_name).await?;
+        println!("{stack}");
+
+        print!("Are you sure you want to delete this stack? [y/N]: ");
+        stdout().flush()?;
+
+        let mut input = String::new();
+        stdin().read_line(&mut input)?;
+        if !matches!(input.trim().to_lowercase().as_str(), "y" | "yes") {
+            println!("skipping stack deletion");
+            return Ok(());
+        }
+    } else if quiet && !force {
+        anyhow::bail!("Refusing to delete stack without --force");
+    }
+
+    client.delete_stack().stack_name(stack_name).send().await?;
+    println!("Stack deletion initiated");
+
+    Ok(())
+}
+
 /// Get key value.
 pub async fn lookup(vault: &Vault, key: &str, outfile: Option<String>) -> Result<()> {
     if key.trim().is_empty() {
@@ -175,6 +210,47 @@ pub async fn list_all_keys(vault: &Vault) -> Result<()> {
                 println!("{}", list.join("\n"));
             }
         })
+}
+
+/// List all vault stacks.
+pub async fn list_stacks(
+    region: Option<String>,
+    profile: Option<String>,
+    quiet: bool,
+) -> Result<()> {
+    let config = crate::get_aws_config(region, profile).await;
+    let client = aws_sdk_cloudformation::Client::new(&config);
+    let stacks = cloudformation::list_stacks(&client).await?;
+    if stacks.is_empty() {
+        if !quiet {
+            println!("No vault stacks found");
+        }
+    } else {
+        if !quiet && stacks.len() > 1 {
+            println!("{}", format!("Found {} vault stacks:", stacks.len()).bold());
+        }
+        let max_chars = stacks
+            .iter()
+            .map(|stack| {
+                stack
+                    .stack_id
+                    .as_ref()
+                    .map_or(0, |id| id.chars().count() + 4)
+            })
+            .max()
+            .unwrap_or(0)
+            .min(120);
+        println!(
+            "{}",
+            stacks
+                .into_iter()
+                .map(|stack| stack.to_string())
+                .collect::<Vec<String>>()
+                .join(format!("\n{}\n", "-".repeat(max_chars)).as_ref())
+        );
+    }
+
+    Ok(())
 }
 
 /// Check if key exists.
@@ -394,6 +470,7 @@ fn get_filename_from_path(path: &str) -> Result<String> {
 }
 
 /// Resolves an optional output file path and creates all directories if necessary.
+///
 /// Returns `Some(PathBuf)` if the file path is valid,
 /// or `None` if a file path was not provided.
 fn resolve_output_file_path(outfile: Option<String>) -> Result<Option<PathBuf>> {
