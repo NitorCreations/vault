@@ -157,13 +157,7 @@ pub async fn delete_stack(
 
     let config = crate::get_aws_config(region, profile).await;
     let client = aws_sdk_cloudformation::Client::new(&config);
-
-    let stacks = cloudformation::list_stacks(&client).await?;
-
-    let stack = stacks
-        .iter()
-        .find(|stack| stack.stack_name.as_ref() == Some(&stack_name))
-        .context(format!("Vault stack with name '{stack_name}' not found"))?;
+    let stack = cloudformation::get_stack_data(&client, &stack_name).await?;
 
     if !quiet && !force {
         println!("{stack}");
