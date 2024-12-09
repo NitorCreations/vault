@@ -157,9 +157,9 @@ pub async fn delete_stack(
 
     let config = crate::get_aws_config(region, profile).await;
     let client = aws_sdk_cloudformation::Client::new(&config);
-    let stack = cloudformation::get_stack_data(&client, &stack_name).await?;
 
     if !quiet && !force {
+        let stack = cloudformation::get_stack_data(&client, &stack_name).await?;
         println!("{stack}");
 
         print!("Are you sure you want to delete this stack? [y/N]: ");
