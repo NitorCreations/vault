@@ -1,4 +1,5 @@
 use std::borrow::Cow;
+use std::sync::LazyLock;
 
 use pyo3::prelude::*;
 use pyo3::types::{IntoPyDict, PyDict};
@@ -8,6 +9,9 @@ use nitor_vault::cloudformation::CloudFormationStackData;
 use nitor_vault::errors::VaultError;
 use nitor_vault::VaultConfig as RustVaultConfig;
 use nitor_vault::{CreateStackResult, UpdateStackResult, Value, Vault};
+
+static RUNTIME: LazyLock<Runtime> =
+    LazyLock::new(|| Runtime::new().expect("Failed to start async runtime."));
 
 #[pyclass]
 #[derive(Debug, Default, Clone)]
@@ -75,7 +79,7 @@ impl From<VaultConfig> for RustVaultConfig {
 
 #[pyfunction()]
 fn delete(name: &str, config: VaultConfig) -> PyResult<()> {
-    Runtime::new()?.block_on(async {
+    RUNTIME.block_on(async {
         Ok(Vault::from_config(config.into())
             .await
             .map_err(vault_error_to_anyhow)?
@@ -88,7 +92,7 @@ fn delete(name: &str, config: VaultConfig) -> PyResult<()> {
 #[pyfunction()]
 #[allow(clippy::needless_pass_by_value)]
 fn delete_many(names: Vec<String>, config: VaultConfig) -> PyResult<()> {
-    Runtime::new()?.block_on(async {
+    RUNTIME.block_on(async {
         Ok(Vault::from_config(config.into())
             .await
             .map_err(vault_error_to_anyhow)?
@@ -102,7 +106,7 @@ fn delete_many(names: Vec<String>, config: VaultConfig) -> PyResult<()> {
 fn direct_decrypt(data: &[u8], config: VaultConfig) -> PyResult<Cow<[u8]>> {
     // Returns Cow<[u8]> instead of Vec since that will get mapped to bytes for the Python side
     // https://pyo3.rs/main/conversions/tables#returning-rust-values-to-python
-    Runtime::new()?.block_on(async {
+    RUNTIME.block_on(async {
         let result = Vault::from_config(config.into())
             .await
             .map_err(vault_error_to_anyhow)?
@@ -116,7 +120,7 @@ fn direct_decrypt(data: &[u8], config: VaultConfig) -> PyResult<Cow<[u8]>> {
 
 #[pyfunction()]
 fn direct_encrypt(data: &[u8], config: VaultConfig) -> PyResult<Cow<[u8]>> {
-    Runtime::new()?.block_on(async {
+    RUNTIME.block_on(async {
         let result = Vault::from_config(config.into())
             .await
             .map_err(vault_error_to_anyhow)?
@@ -130,7 +134,7 @@ fn direct_encrypt(data: &[u8], config: VaultConfig) -> PyResult<Cow<[u8]>> {
 
 #[pyfunction()]
 fn exists(name: &str, config: VaultConfig) -> PyResult<bool> {
-    Runtime::new()?.block_on(async {
+    RUNTIME.block_on(async {
         let result: bool = Vault::from_config(config.into())
             .await
             .map_err(vault_error_to_anyhow)?
@@ -144,7 +148,7 @@ fn exists(name: &str, config: VaultConfig) -> PyResult<bool> {
 
 #[pyfunction()]
 fn init(config: VaultConfig) -> PyResult<PyObject> {
-    let result = Runtime::new()?.block_on(async {
+    let result = RUNTIME.block_on(async {
         Vault::init(
             config.vault_stack,
             config.region,
@@ -184,7 +188,7 @@ fn init(config: VaultConfig) -> PyResult<PyObject> {
 
 #[pyfunction()]
 fn list_all(config: VaultConfig) -> PyResult<Vec<String>> {
-    Runtime::new()?.block_on(async {
+    RUNTIME.block_on(async {
         let result = Vault::from_config(config.into())
             .await
             .map_err(vault_error_to_anyhow)?
@@ -198,7 +202,7 @@ fn list_all(config: VaultConfig) -> PyResult<Vec<String>> {
 
 #[pyfunction()]
 fn lookup(name: &str, config: VaultConfig) -> PyResult<Cow<[u8]>> {
-    Runtime::new()?.block_on(async {
+    RUNTIME.block_on(async {
         let result: Value = Box::pin(
             Vault::from_config(config.into())
                 .await
@@ -215,7 +219,7 @@ fn lookup(name: &str, config: VaultConfig) -> PyResult<Cow<[u8]>> {
 #[pyfunction]
 /// Run Vault CLI with given args.
 fn run(args: Vec<String>) -> PyResult<()> {
-    Runtime::new()?.block_on(async {
+    RUNTIME.block_on(async {
         nitor_vault::run_cli_with_args(args).await?;
         Ok(())
     })
@@ -223,7 +227,7 @@ fn run(args: Vec<String>) -> PyResult<()> {
 
 #[pyfunction()]
 fn stack_status(config: VaultConfig) -> PyResult<PyObject> {
-    let data = Runtime::new()?.block_on(async {
+    let data = RUNTIME.block_on(async {
         Vault::from_config(config.into())
             .await
             .map_err(vault_error_to_anyhow)?
@@ -240,7 +244,7 @@ fn stack_status(config: VaultConfig) -> PyResult<PyObject> {
 
 #[pyfunction()]
 fn store(name: &str, value: &[u8], config: VaultConfig) -> PyResult<()> {
-    Runtime::new()?.block_on(async {
+    RUNTIME.block_on(async {
         Ok(Box::pin(
             Vault::from_config(config.into())
                 .await
@@ -253,7 +257,7 @@ fn store(name: &str, value: &[u8], config: VaultConfig) -> PyResult<()> {
 }
 #[pyfunction()]
 fn update(config: VaultConfig) -> PyResult<PyObject> {
-    let result = Runtime::new()?.block_on(async {
+    let result = RUNTIME.block_on(async {
         Vault::from_config(config.into())
             .await
             .map_err(vault_error_to_anyhow)?
