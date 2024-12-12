@@ -92,7 +92,7 @@ jobs:
             --out dist
             --find-interpreter
             --manifest-path python-pyo3/Cargo.toml
-          sccache: "true"
+          sccache: true
           manylinux: musllinux_1_2
       - name: Upload wheels
         uses: actions/upload-artifact@v4
@@ -124,7 +124,7 @@ jobs:
             --out dist
             --find-interpreter
             --manifest-path python-pyo3/Cargo.toml
-          sccache: "true"
+          sccache: true
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
@@ -154,7 +154,7 @@ jobs:
             --out dist
             --find-interpreter
             --manifest-path python-pyo3/Cargo.toml
-          sccache: "true"
+          sccache: true
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
