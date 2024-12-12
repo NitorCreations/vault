@@ -255,6 +255,7 @@ fn store(name: &str, value: &[u8], config: VaultConfig) -> PyResult<()> {
         .map_err(vault_error_to_anyhow)?)
     })
 }
+
 #[pyfunction()]
 fn update(config: VaultConfig) -> PyResult<PyObject> {
     let result = RUNTIME.block_on(async {
