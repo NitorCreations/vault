@@ -61,7 +61,7 @@ jobs:
             --find-interpreter
             --manifest-path python-pyo3/Cargo.toml
             --zig
-          sccache: true
+          sccache: false
           manylinux: auto
 
       - name: Build free-threaded wheels
@@ -73,7 +73,7 @@ jobs:
             --out dist
             --interpreter python3.13t
             --manifest-path python-pyo3/Cargo.toml
-          sccache: true
+          sccache: false
           manylinux: auto
 
       - name: Upload wheels
