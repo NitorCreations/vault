@@ -98,6 +98,10 @@ exclude = [
     "venv*",
 ]
 
+[tool.ruff.lint.per-file-ignores]
+# Remove after upgrading minimun Python version to 3.10
+"n_vault/nitor_vault_rs.pyi" = ["UP"]
+
 [tool.ruff.lint.isort]
 # https://docs.astral.sh/ruff/settings/#isort
 combine-as-imports = true
