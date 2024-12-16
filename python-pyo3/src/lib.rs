@@ -2,7 +2,7 @@ use std::borrow::Cow;
 use std::sync::LazyLock;
 
 use pyo3::prelude::*;
-use pyo3::types::{IntoPyDict, PyDict};
+use pyo3::types::PyDict;
 use tokio::runtime::Runtime;
 
 use nitor_vault::cloudformation::CloudFormationStackData;
@@ -162,11 +162,11 @@ fn init(config: VaultConfig) -> PyResult<PyObject> {
     })?;
     Python::with_gil(|py| match result {
         CreateStackResult::Exists { data } => {
-            let dict = stack_data_to_pydict(py, data, "EXISTS");
+            let dict = stack_data_to_pydict(py, data, "EXISTS")?;
             Ok(dict.into())
         }
         CreateStackResult::ExistsWithFailedState { data } => {
-            let dict = stack_data_to_pydict(py, data, "EXISTS_WITH_FAILED_STATE");
+            let dict = stack_data_to_pydict(py, data, "EXISTS_WITH_FAILED_STATE")?;
             Ok(dict.into())
         }
         CreateStackResult::Created {
@@ -174,13 +174,11 @@ fn init(config: VaultConfig) -> PyResult<PyObject> {
             stack_id,
             region,
         } => {
-            let key_vals: Vec<(&str, PyObject)> = vec![
-                ("result", "CREATED".to_string().to_object(py)),
-                ("stack_name", stack_name.to_object(py)),
-                ("stack_id", stack_id.to_object(py)),
-                ("region", region.to_string().to_object(py)),
-            ];
-            let dict = key_vals.into_py_dict_bound(py);
+            let dict = PyDict::new(py);
+            dict.set_item("result", "CREATED".to_string())?;
+            dict.set_item("stack_name", stack_name)?;
+            dict.set_item("stack_id", stack_id)?;
+            dict.set_item("region", region.to_string())?;
             Ok(dict.into())
         }
     })
@@ -237,7 +235,7 @@ fn stack_status(config: VaultConfig) -> PyResult<PyObject> {
     })?;
 
     Python::with_gil(|py| {
-        let dict = stack_data_to_pydict(py, data, "SUCCESS");
+        let dict = stack_data_to_pydict(py, data, "SUCCESS")?;
         Ok(dict.into())
     })
 }
@@ -266,10 +264,9 @@ fn update(config: VaultConfig) -> PyResult<PyObject> {
             .await
             .map_err(vault_error_to_anyhow)
     })?;
-
     Python::with_gil(|py| match result {
         UpdateStackResult::UpToDate { data } => {
-            let dict = stack_data_to_pydict(py, data, "UP_TO_DATE");
+            let dict = stack_data_to_pydict(py, data, "UP_TO_DATE")?;
             Ok(dict.into())
         }
         UpdateStackResult::Updated {
@@ -277,13 +274,11 @@ fn update(config: VaultConfig) -> PyResult<PyObject> {
             previous_version,
             new_version,
         } => {
-            let key_vals: Vec<(&str, PyObject)> = vec![
-                ("result", "UPDATED".to_string().to_object(py)),
-                ("stack_id", stack_id.to_object(py)),
-                ("previous_version", previous_version.to_object(py)),
-                ("new_version", new_version.to_object(py)),
-            ];
-            let dict = key_vals.into_py_dict_bound(py);
+            let dict = PyDict::new(py);
+            dict.set_item("result", "UPDATED".to_string())?;
+            dict.set_item("stack_id", stack_id)?;
+            dict.set_item("previous_version", previous_version)?;
+            dict.set_item("new_version", new_version)?;
             Ok(dict.into())
         }
     })
@@ -309,6 +304,7 @@ fn nitor_vault_rs(m: &Bound<'_, PyModule>) -> PyResult<()> {
 }
 
 /// Convert `VaultError` to `anyhow::Error`
+#[inline]
 fn vault_error_to_anyhow(err: VaultError) -> anyhow::Error {
     err.into()
 }
@@ -316,21 +312,18 @@ fn vault_error_to_anyhow(err: VaultError) -> anyhow::Error {
 /// Convert `CloudFormationStackData` to a Python dictionary.
 // Lifetime annotations are required due to `&str` usage,
 // could be left out if passing a `String` for the result message.
+#[inline]
 fn stack_data_to_pydict<'a>(
     py: Python<'a>,
     data: CloudFormationStackData,
     result: &'a str,
-) -> Bound<'a, PyDict> {
-    let key_vals: Vec<(&str, PyObject)> = vec![
-        ("result", result.to_string().to_object(py)),
-        ("bucket", data.bucket_name.to_object(py)),
-        ("key", data.key_arn.to_object(py)),
-        (
-            "status",
-            data.status.map(|status| status.to_string()).to_object(py),
-        ),
-        ("status_reason", data.status_reason.to_object(py)),
-        ("version", data.version.to_object(py)),
-    ];
-    key_vals.into_py_dict_bound(py)
+) -> PyResult<Bound<'a, PyDict>> {
+    let dict = PyDict::new(py);
+    dict.set_item("result", result.to_string())?;
+    dict.set_item("bucket", data.bucket_name)?;
+    dict.set_item("key", data.key_arn)?;
+    dict.set_item("status", data.status.map(|status| status.to_string()))?;
+    dict.set_item("status_reason", data.status_reason)?;
+    dict.set_item("version", data.version)?;
+    Ok(dict)
 }
