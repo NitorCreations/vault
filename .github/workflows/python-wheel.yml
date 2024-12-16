@@ -156,17 +156,6 @@ jobs:
             --manifest-path python-pyo3/Cargo.toml
           sccache: true
 
-      - name: Build free-threaded wheels
-        uses: PyO3/maturin-action@v1
-        with:
-          target: ${{ matrix.platform.target }}
-          args: |
-            --release
-            --out dist
-            --interpreter python3.13t
-            --manifest-path python-pyo3/Cargo.toml
-          sccache: true
-
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
@@ -196,6 +185,17 @@ jobs:
             --release
             --out dist
             --find-interpreter
+            --manifest-path python-pyo3/Cargo.toml
+          sccache: true
+
+      - name: Build free-threaded wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.platform.target }}
+          args: |
+            --release
+            --out dist
+            --interpreter python3.13t
             --manifest-path python-pyo3/Cargo.toml
           sccache: true
 
