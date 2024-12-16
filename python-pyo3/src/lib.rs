@@ -147,7 +147,7 @@ fn exists(name: &str, config: VaultConfig) -> PyResult<bool> {
 }
 
 #[pyfunction()]
-fn init(config: VaultConfig) -> PyResult<PyObject> {
+fn init(config: VaultConfig) -> PyResult<Py<PyDict>> {
     let result = RUNTIME.block_on(async {
         Vault::init(
             config.vault_stack,
@@ -224,7 +224,7 @@ fn run(args: Vec<String>) -> PyResult<()> {
 }
 
 #[pyfunction()]
-fn stack_status(config: VaultConfig) -> PyResult<PyObject> {
+fn stack_status(config: VaultConfig) -> PyResult<Py<PyDict>> {
     let data = RUNTIME.block_on(async {
         Vault::from_config(config.into())
             .await
@@ -255,7 +255,7 @@ fn store(name: &str, value: &[u8], config: VaultConfig) -> PyResult<()> {
 }
 
 #[pyfunction()]
-fn update(config: VaultConfig) -> PyResult<PyObject> {
+fn update(config: VaultConfig) -> PyResult<Py<PyDict>> {
     let result = RUNTIME.block_on(async {
         Vault::from_config(config.into())
             .await
