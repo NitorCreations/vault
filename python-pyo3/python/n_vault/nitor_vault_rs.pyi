@@ -34,7 +34,7 @@ class VaultConfig:
         profile: Optional[str] = None,
         iam_id: Optional[str] = None,
         iam_secret: Optional[str] = None,
-    ) -> None:
+    ) -> VaultConfig:
         """
         Initialize a VaultConfig instance with optional parameters.
 
