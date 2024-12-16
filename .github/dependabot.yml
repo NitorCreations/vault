@@ -15,33 +15,13 @@ updates:
         patterns:
           - "*"
 
-  # Python
-  - package-ecosystem: "pip"
-    directory: "/python"
-    schedule:
-      interval: "weekly"
-    groups:
-      python:
-        patterns:
-          - "*"
-
   # Rust
   - package-ecosystem: "cargo"
-    directory: "/rust"
+    directory: "/"
     schedule:
       interval: "weekly"
     groups:
       rust:
-        patterns:
-          - "*"
-
-  # Rust (PyO3)
-  - package-ecosystem: "cargo"
-    directory: "/python-pyo3"
-    schedule:
-      interval: "weekly"
-    groups:
-      pyo3:
         patterns:
           - "*"
 
