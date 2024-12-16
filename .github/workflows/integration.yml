@@ -339,6 +339,12 @@ jobs:
       - name: Check Python vault package
         run: python -m pip show nitor-vault
 
+      - name: Check stack status with Python library
+        run: python -c "from n_vault import Vault; print(Vault().stack_status())"
+
+      - name: Check stack status with Rust CLI
+        run: bin/rust/vault stack
+
       - name: Delete all keys with Python library
         run: python -c "from n_vault import Vault; Vault().delete_many(Vault().list_all())"
 

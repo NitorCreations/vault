@@ -13,6 +13,7 @@ use nitor_vault::{CreateStackResult, UpdateStackResult, Value, Vault};
 static RUNTIME: LazyLock<Runtime> =
     LazyLock::new(|| Runtime::new().expect("Failed to start async runtime."));
 
+/// Optional parameters for a `Vault` instance.
 #[pyclass]
 #[derive(Debug, Default, Clone)]
 pub struct VaultConfig {
@@ -77,6 +78,7 @@ impl From<VaultConfig> for RustVaultConfig {
     }
 }
 
+/// Delete data in S3 for given key name.
 #[pyfunction()]
 fn delete(name: &str, config: VaultConfig) -> PyResult<()> {
     RUNTIME.block_on(async {
@@ -89,6 +91,7 @@ fn delete(name: &str, config: VaultConfig) -> PyResult<()> {
     })
 }
 
+/// Delete data for multiple keys.
 #[pyfunction()]
 #[allow(clippy::needless_pass_by_value)]
 fn delete_many(names: Vec<String>, config: VaultConfig) -> PyResult<()> {
@@ -102,6 +105,7 @@ fn delete_many(names: Vec<String>, config: VaultConfig) -> PyResult<()> {
     })
 }
 
+/// Decrypt data with KMS.
 #[pyfunction()]
 fn direct_decrypt(data: &[u8], config: VaultConfig) -> PyResult<Cow<[u8]>> {
     // Returns Cow<[u8]> instead of Vec since that will get mapped to bytes for the Python side
@@ -118,6 +122,7 @@ fn direct_decrypt(data: &[u8], config: VaultConfig) -> PyResult<Cow<[u8]>> {
     })
 }
 
+/// Encrypt data with KMS.
 #[pyfunction()]
 fn direct_encrypt(data: &[u8], config: VaultConfig) -> PyResult<Cow<[u8]>> {
     RUNTIME.block_on(async {
@@ -132,6 +137,9 @@ fn direct_encrypt(data: &[u8], config: VaultConfig) -> PyResult<Cow<[u8]>> {
     })
 }
 
+/// Check if the given key name already exists in the S3 bucket.
+///
+/// Returns True if the key exists, False otherwise.
 #[pyfunction()]
 fn exists(name: &str, config: VaultConfig) -> PyResult<bool> {
     RUNTIME.block_on(async {
@@ -146,8 +154,9 @@ fn exists(name: &str, config: VaultConfig) -> PyResult<bool> {
     })
 }
 
+/// Initialize new Vault stack.
 #[pyfunction()]
-fn init(config: VaultConfig) -> PyResult<PyObject> {
+fn init(config: VaultConfig) -> PyResult<Py<PyDict>> {
     let result = RUNTIME.block_on(async {
         Vault::init(
             config.vault_stack,
@@ -184,6 +193,9 @@ fn init(config: VaultConfig) -> PyResult<PyObject> {
     })
 }
 
+/// Get all available secrets.
+///
+/// Returns a list of key names.
 #[pyfunction()]
 fn list_all(config: VaultConfig) -> PyResult<Vec<String>> {
     RUNTIME.block_on(async {
@@ -198,6 +210,9 @@ fn list_all(config: VaultConfig) -> PyResult<Vec<String>> {
     })
 }
 
+/// Lookup value for given key name.
+///
+/// Returns raw bytes.
 #[pyfunction()]
 fn lookup(name: &str, config: VaultConfig) -> PyResult<Cow<[u8]>> {
     RUNTIME.block_on(async {
@@ -214,8 +229,8 @@ fn lookup(name: &str, config: VaultConfig) -> PyResult<Cow<[u8]>> {
     })
 }
 
-#[pyfunction]
 /// Run Vault CLI with given args.
+#[pyfunction]
 fn run(args: Vec<String>) -> PyResult<()> {
     RUNTIME.block_on(async {
         nitor_vault::run_cli_with_args(args).await?;
@@ -223,8 +238,9 @@ fn run(args: Vec<String>) -> PyResult<()> {
     })
 }
 
+/// Get vault Cloudformation stack status.
 #[pyfunction()]
-fn stack_status(config: VaultConfig) -> PyResult<PyObject> {
+fn stack_status(config: VaultConfig) -> PyResult<Py<PyDict>> {
     let data = RUNTIME.block_on(async {
         Vault::from_config(config.into())
             .await
@@ -240,6 +256,7 @@ fn stack_status(config: VaultConfig) -> PyResult<PyObject> {
     })
 }
 
+/// Store encrypted value with given key name in S3.
 #[pyfunction()]
 fn store(name: &str, value: &[u8], config: VaultConfig) -> PyResult<()> {
     RUNTIME.block_on(async {
@@ -254,8 +271,9 @@ fn store(name: &str, value: &[u8], config: VaultConfig) -> PyResult<()> {
     })
 }
 
+/// Update the vault Cloudformation stack with the current template.
 #[pyfunction()]
-fn update(config: VaultConfig) -> PyResult<PyObject> {
+fn update(config: VaultConfig) -> PyResult<Py<PyDict>> {
     let result = RUNTIME.block_on(async {
         Vault::from_config(config.into())
             .await
