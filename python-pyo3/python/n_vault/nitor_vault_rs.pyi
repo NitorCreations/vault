@@ -135,7 +135,7 @@ def run(args: List[str]) -> None:
     Run Vault CLI with the given arguments.
 
     Args:
-        args: List of command-line arguments.
+        args: List of command-line arguments, including program name.
     """
 
 def stack_status(config: VaultConfig) -> Dict[str, Any]:
