@@ -10,7 +10,7 @@ botocore==1.35.56
     #   s3transfer
 build==1.2.2.post1
     # via nitor-vault (pyproject.toml)
-certifi==2024.8.30
+certifi==2024.12.14
     # via requests
 cffi==1.17.1
     # via cryptography
@@ -85,7 +85,7 @@ rfc3986==2.0.0
     # via twine
 rich==13.9.4
     # via twine
-ruff==0.8.2
+ruff==0.8.3
     # via nitor-vault (pyproject.toml)
 s3transfer==0.10.4
     # via boto3
