@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional
 
 class VaultConfig:
     """
@@ -25,15 +25,15 @@ class VaultConfig:
     iam_secret: Optional[str]
 
     def __init__(
-            self,
-            vault_stack: Optional[str] = None,
-            region: Optional[str] = None,
-            bucket: Optional[str] = None,
-            key: Optional[str] = None,
-            prefix: Optional[str] = None,
-            profile: Optional[str] = None,
-            iam_id: Optional[str] = None,
-            iam_secret: Optional[str] = None,
+        self,
+        vault_stack: Optional[str] = None,
+        region: Optional[str] = None,
+        bucket: Optional[str] = None,
+        key: Optional[str] = None,
+        prefix: Optional[str] = None,
+        profile: Optional[str] = None,
+        iam_id: Optional[str] = None,
+        iam_secret: Optional[str] = None,
     ) -> None:
         """
         Initialize a VaultConfig instance with optional parameters.
@@ -50,18 +50,15 @@ class VaultConfig:
         """
         ...
 
-
 def delete(name: str, config: VaultConfig) -> None:
     """
     Delete data in S3 for the given key name.
     """
 
-
 def delete_many(names: List[str], config: VaultConfig) -> None:
     """
     Delete data for multiple keys.
     """
-
 
 def direct_decrypt(data: bytes, config: VaultConfig) -> bytes:
     """
@@ -75,7 +72,6 @@ def direct_decrypt(data: bytes, config: VaultConfig) -> bytes:
         Decrypted bytes.
     """
 
-
 def direct_encrypt(data: bytes, config: VaultConfig) -> bytes:
     """
     Encrypt data with KMS.
@@ -87,7 +83,6 @@ def direct_encrypt(data: bytes, config: VaultConfig) -> bytes:
     Returns:
         Encrypted bytes.
     """
-
 
 def exists(name: str, config: VaultConfig) -> bool:
     """
@@ -101,7 +96,6 @@ def exists(name: str, config: VaultConfig) -> bool:
         True if the key exists, False otherwise.
     """
 
-
 def init(config: VaultConfig) -> Dict[str, Any]:
     """
     Initialize a new Vault stack.
@@ -113,7 +107,6 @@ def init(config: VaultConfig) -> Dict[str, Any]:
         A dictionary containing stack initialization details.
     """
 
-
 def list_all(config: VaultConfig) -> List[str]:
     """
     Get all available secrets.
@@ -124,7 +117,6 @@ def list_all(config: VaultConfig) -> List[str]:
     Returns:
         A list of key names.
     """
-
 
 def lookup(name: str, config: VaultConfig) -> bytes:
     """
@@ -138,7 +130,6 @@ def lookup(name: str, config: VaultConfig) -> bytes:
         The raw bytes stored under the given key.
     """
 
-
 def run(args: List[str]) -> None:
     """
     Run Vault CLI with the given arguments.
@@ -146,7 +137,6 @@ def run(args: List[str]) -> None:
     Args:
         args: List of command-line arguments.
     """
-
 
 def stack_status(config: VaultConfig) -> Dict[str, Any]:
     """
@@ -159,7 +149,6 @@ def stack_status(config: VaultConfig) -> Dict[str, Any]:
         A dictionary with the stack status details.
     """
 
-
 def store(name: str, value: bytes, config: VaultConfig) -> None:
     """
     Store an encrypted value with the given key name in S3.
@@ -169,7 +158,6 @@ def store(name: str, value: bytes, config: VaultConfig) -> None:
         value: Bytes to store.
         config: Vault configuration.
     """
-
 
 def update(config: VaultConfig) -> Dict[str, Any]:
     """
