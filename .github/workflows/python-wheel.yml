@@ -73,6 +73,7 @@ jobs:
             --out dist
             --interpreter python3.13t
             --manifest-path python-pyo3/Cargo.toml
+            --zig
           sccache: false
           manylinux: auto
 
