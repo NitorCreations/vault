@@ -33,7 +33,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         if: ${{ matrix.lang == 'rust'}}
 
-      - uses: Swatinem/rust-cache@v2.7.5
+      - uses: Swatinem/rust-cache@v2.7.7
         if: ${{ matrix.lang == 'rust'}}
         with:
           # The build script creates a `release` build so use separate cache
