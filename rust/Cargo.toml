@@ -14,10 +14,10 @@ authors = [
 [dependencies]
 aes-gcm = "0.10.3"
 anyhow = "1.0.95"
-aws-config = { version = "1.5.11", features = ["behavior-version-latest", "rustls"] }
-aws-sdk-cloudformation = { version = "1.57.0", features = ["rustls"] }
-aws-sdk-kms = { version = "1.52.0", features = ["rustls"] }
-aws-sdk-s3 = { version = "1.66.0", features = ["rustls"] }
+aws-config = { version = "1.5.12", features = ["behavior-version-latest", "rustls"] }
+aws-sdk-cloudformation = { version = "1.58.0", features = ["rustls"] }
+aws-sdk-kms = { version = "1.53.0", features = ["rustls"] }
+aws-sdk-s3 = { version = "1.67.0", features = ["rustls"] }
 aws-sdk-sts = { version = "1.51.0", features = ["behavior-version-latest", "rustls"] }
 base64 = "0.22.1"
 clap = { version = "4.5.23", features = ["derive", "env"] }
@@ -25,7 +25,7 @@ clap_complete = "4.5.40"
 colored = "2.2.0"
 dirs = "5.0.1"
 rand = "0.8.5"
-serde = { version = "1.0.216", features = ["derive"] }
+serde = { version = "1.0.217", features = ["derive"] }
 serde_json = "1.0.134"
 thiserror = "2.0.9"
 tokio = { version = "1.42.0", features = ["full"] }
