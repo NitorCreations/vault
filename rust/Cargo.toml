@@ -14,21 +14,21 @@ authors = [
 [dependencies]
 aes-gcm = "0.10.3"
 anyhow = "1.0.95"
-aws-config = { version = "1.5.12", features = ["behavior-version-latest", "rustls"] }
-aws-sdk-cloudformation = { version = "1.58.0", features = ["rustls"] }
-aws-sdk-kms = { version = "1.53.0", features = ["rustls"] }
-aws-sdk-s3 = { version = "1.67.0", features = ["rustls"] }
+aws-config = { version = "1.5.13", features = ["behavior-version-latest", "rustls"] }
+aws-sdk-cloudformation = { version = "1.59.0", features = ["rustls"] }
+aws-sdk-kms = { version = "1.54.0", features = ["rustls"] }
+aws-sdk-s3 = { version = "1.68.0", features = ["rustls"] }
 aws-sdk-sts = { version = "1.51.0", features = ["behavior-version-latest", "rustls"] }
 base64 = "0.22.1"
-clap = { version = "4.5.23", features = ["derive", "env"] }
-clap_complete = "4.5.40"
-colored = "2.2.0"
-dirs = "5.0.1"
+clap = { version = "4.5.26", features = ["derive", "env"] }
+clap_complete = "4.5.42"
+colored = "3.0.0"
+dirs = "6.0.0"
 rand = "0.8.5"
 serde = { version = "1.0.217", features = ["derive"] }
-serde_json = "1.0.134"
-thiserror = "2.0.9"
-tokio = { version = "1.42.0", features = ["full"] }
+serde_json = "1.0.135"
+thiserror = "2.0.11"
+tokio = { version = "1.43.0", features = ["full"] }
 
 [[bin]]
 name = "vault"
