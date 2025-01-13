@@ -230,7 +230,7 @@ pub async fn list_stacks(
                 .stack_summaries()
                 .iter()
                 .filter(|summary| {
-                    summary.stack_status.as_ref().map_or(false, |status| {
+                    summary.stack_status.as_ref().is_some_and(|status| {
                         *status != StackStatus::DeleteComplete
                             && *status != StackStatus::DeleteInProgress
                     })
