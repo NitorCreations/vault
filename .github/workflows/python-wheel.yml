@@ -235,6 +235,14 @@ jobs:
       # Used to generate artifact attestation
       attestations: write
     steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python environment
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
+
       - name: Download wheel artifacts
         uses: actions/download-artifact@v4
 
