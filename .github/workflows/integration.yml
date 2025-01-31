@@ -89,7 +89,7 @@ jobs:
           path: rust/vault
 
   tests:
-    needs: build
+    needs: [build-go, build-rust]
     runs-on: ubuntu-latest
     env:
       # VAULT_STACK overwrites default 'vault' for vaults
