@@ -32,6 +32,10 @@ uv tool install nitor-vault
 
 Directly installing with pip is no longer supported by most Python distributions.
 
+The previous Python Vault implementation (versions below 2.0) can be found in the branch:
+[legacy-python-vault](https://github.com/NitorCreations/vault/tree/legacy-python-vault).
+Wheels are still available for install in PyPI, for example `nitor-vault==0.56`.
+
 ## Example usage
 
 Initialize a vault bucket and other infrastructure: `vault --init`.
