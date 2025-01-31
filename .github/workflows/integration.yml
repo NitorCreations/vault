@@ -19,40 +19,74 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
+  build-go:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        lang: [go, rust]
     defaults:
       run:
-        working-directory: ${{matrix.lang}}
+        working-directory: go
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: dtolnay/rust-toolchain@stable
-        if: ${{ matrix.lang == 'rust'}}
-
-      - uses: Swatinem/rust-cache@v2.7.7
-        if: ${{ matrix.lang == 'rust'}}
-        with:
-          # The build script creates a `release` build so use separate cache
-          key: "release"
+      - name: Check out repository
+        uses: actions/checkout@v4
 
       - uses: actions/setup-go@v5
-        if: ${{ matrix.lang == 'go'}}
         with:
           go-version: ">=1.21.0"
           cache-dependency-path: go/go.sum
 
-      - name: Run build script for compiled languages
+      - name: Run build script
         run: "./build.sh"
 
       - name: Upload built binaries
         uses: actions/upload-artifact@v4
         with:
-          name: ${{matrix.lang}}
-          path: ${{matrix.lang}}/vault
+          name: go
+          path: go/vault
+
+  build-rust:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2.7.7
+        with:
+          # The build script creates a `release` build so use separate cache
+          key: "release"
+
+      - name: Run build script
+        run: "./build.sh"
+        working-directory: rust
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
+
+      - name: Build wheel
+        uses: PyO3/maturin-action@v1
+        with:
+          target: x86_64
+          args: |
+            --release
+            --out dist
+            --find-interpreter
+            --manifest-path python-pyo3/Cargo.toml
+            --zig
+          sccache: false
+          manylinux: auto
+
+      - name: Upload wheel
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-wheel
+          path: dist
+
+      - name: Upload built binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: rust
+          path: rust/vault
 
   tests:
     needs: build
@@ -99,11 +133,8 @@ jobs:
         run: pnpm install --frozen-lockfile && pnpm build
         working-directory: nodejs
 
-      # TODO: figure better way to build Python vault
-      # Maybe build wheel in build job here and install from wheel
-      - name: Install Python PyO3 vault
-        run: python -m pip install .
-        working-directory: python-pyo3
+      - name: Install Python PyO3 vault from wheel
+        run: python -m pip install $(find bin -name '*.whl')
 
       - name: Add execute rights and run --version for all versions
         run: |
