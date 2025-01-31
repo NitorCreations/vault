@@ -20,6 +20,7 @@ concurrency:
 
 jobs:
   build-go:
+    name: Build Go
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -36,13 +37,14 @@ jobs:
       - name: Run build script
         run: "./build.sh"
 
-      - name: Upload built binaries
+      - name: Upload Go binary
         uses: actions/upload-artifact@v4
         with:
           name: go
           path: go/vault
 
   build-rust:
+    name: Build Rust and Python wheel
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -59,6 +61,12 @@ jobs:
         run: "./build.sh"
         working-directory: rust
 
+      - name: Upload Rust binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: rust
+          path: rust/vault
+
       - uses: actions/setup-python@v5
         with:
           python-version: 3.x
@@ -66,27 +74,17 @@ jobs:
       - name: Build wheel
         uses: PyO3/maturin-action@v1
         with:
-          target: x86_64
           args: |
             --release
             --out dist
             --find-interpreter
             --manifest-path python-pyo3/Cargo.toml
-            --zig
-          sccache: false
-          manylinux: auto
 
       - name: Upload wheel
         uses: actions/upload-artifact@v4
         with:
           name: python-wheel
           path: dist
-
-      - name: Upload built binaries
-        uses: actions/upload-artifact@v4
-        with:
-          name: rust
-          path: rust/vault
 
   tests:
     needs: [build-go, build-rust]
