@@ -99,6 +99,8 @@ jobs:
         run: pnpm install --frozen-lockfile && pnpm build
         working-directory: nodejs
 
+      # TODO: figure better way to build Python vault
+      # Maybe build wheel in build job here and install from wheel
       - name: Install Python PyO3 vault
         run: python -m pip install .
         working-directory: python-pyo3
