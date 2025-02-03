@@ -36,7 +36,7 @@ jobs:
           pip install ruff
 
       - name: Ruff lint
-        run: ruff check --output-format=github ./python ./python-pyo3
+        run: ruff check --output-format=github ./python-pyo3
 
       - name: Ruff format
-        run: ruff format --check --verbose ./python ./python-pyo3
+        run: ruff format --check --verbose ./python-pyo3
