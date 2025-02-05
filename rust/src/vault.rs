@@ -549,7 +549,7 @@ impl Vault {
     #[inline]
     fn create_random_nonce() -> Nonce<U12> {
         let mut nonce: [u8; 12] = [0; 12];
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         rng.fill(&mut nonce);
         Nonce::from(nonce)
     }
