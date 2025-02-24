@@ -1,5 +1,5 @@
 use std::fmt;
-use std::io::{stdin, BufWriter, Read, Write};
+use std::io::{BufWriter, Read, Write, stdin};
 use std::path::Path;
 
 use base64::Engine;
@@ -100,8 +100,8 @@ impl Value {
     /// Returns the data as a byte slice `&[u8]`.
     pub fn as_bytes(&self) -> &[u8] {
         match self {
-            Self::Utf8(ref string) => string.as_bytes(),
-            Self::Binary(ref bytes) => bytes,
+            Self::Utf8(string) => string.as_bytes(),
+            Self::Binary(bytes) => bytes,
         }
     }
 
@@ -120,12 +120,12 @@ impl Value {
     /// Binary data is outputted raw.
     pub fn output_to_stdout(&self) -> std::io::Result<()> {
         match self {
-            Self::Utf8(ref string) => {
+            Self::Utf8(string) => {
                 print!("{string}");
                 std::io::stdout().flush()?;
                 Ok(())
             }
-            Self::Binary(ref bytes) => {
+            Self::Binary(bytes) => {
                 let stdout = std::io::stdout();
                 let mut handle = stdout.lock();
                 handle.write_all(bytes)?;

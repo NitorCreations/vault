@@ -1,14 +1,14 @@
-use std::io::{stdin, stdout, IsTerminal, Write};
+use std::io::{IsTerminal, Write, stdin, stdout};
 use std::path::{Path, PathBuf};
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 use aws_sdk_cloudformation::types::StackStatus;
 use clap::Command;
 use clap_complete::Shell;
 use colored::Colorize;
 use tokio::time::Duration;
 
-use crate::{cloudformation, CreateStackResult, UpdateStackResult, Value, Vault};
+use crate::{CreateStackResult, UpdateStackResult, Value, Vault, cloudformation};
 
 static WAIT_ANIMATION_DURATION: Duration = Duration::from_millis(500);
 static QUIET_WAIT_DURATION: Duration = Duration::from_secs(1);

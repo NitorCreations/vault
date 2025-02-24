@@ -2,6 +2,7 @@
 name = "nitor-vault"
 version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
 description = "Encrypted AWS key-value storage utility"
 license = "Apache-2.0"
 repository = "https://github.com/nitorcreations/vault"

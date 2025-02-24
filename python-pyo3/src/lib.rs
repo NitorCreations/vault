@@ -5,9 +5,9 @@ use pyo3::prelude::*;
 use pyo3::types::PyDict;
 use tokio::runtime::Runtime;
 
+use nitor_vault::VaultConfig as RustVaultConfig;
 use nitor_vault::cloudformation::CloudFormationStackData;
 use nitor_vault::errors::VaultError;
-use nitor_vault::VaultConfig as RustVaultConfig;
 use nitor_vault::{CreateStackResult, UpdateStackResult, Value, Vault};
 
 static RUNTIME: LazyLock<Runtime> =

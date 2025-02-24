@@ -2,7 +2,7 @@
 name = "nitor-vault-pyo3"
 version.workspace = true
 edition.workspace = true
-rust-version = "1.80"
+rust-version.workspace = true
 
 [lib]
 name = "nitor_vault_rs"

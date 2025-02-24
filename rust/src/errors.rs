@@ -1,13 +1,13 @@
 use std::io;
 use std::string::FromUtf8Error;
 
+use aws_sdk_cloudformation::Error as cloudformationError;
 use aws_sdk_cloudformation::error::SdkError;
 use aws_sdk_cloudformation::operation::create_stack::CreateStackError;
 use aws_sdk_cloudformation::operation::delete_stack::DeleteStackError;
 use aws_sdk_cloudformation::operation::describe_stacks::DescribeStacksError;
 use aws_sdk_cloudformation::operation::list_stacks::ListStacksError;
 use aws_sdk_cloudformation::operation::update_stack::UpdateStackError;
-use aws_sdk_cloudformation::Error as cloudformationError;
 use aws_sdk_kms::operation::decrypt::DecryptError;
 use aws_sdk_kms::operation::encrypt::EncryptError;
 use aws_sdk_kms::operation::generate_data_key::GenerateDataKeyError;

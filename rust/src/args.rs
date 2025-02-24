@@ -3,7 +3,7 @@ use clap::{CommandFactory, Parser, Subcommand};
 use clap_complete::Shell;
 use colored::Colorize;
 
-use crate::{cli, Vault};
+use crate::{Vault, cli};
 
 #[allow(clippy::doc_markdown)]
 #[derive(Parser)]
