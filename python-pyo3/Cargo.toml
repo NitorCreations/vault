@@ -9,7 +9,7 @@ name = "nitor_vault_rs"
 crate-type = ["cdylib"]
 
 [dependencies]
-anyhow = "1.0.95"
+anyhow = "1.0.96"
 nitor-vault = { path = "../rust" }
 pyo3 = { version = "0.23.4", features = ["anyhow", "abi3", "abi3-py39"] }
 tokio = "1.43.0"
