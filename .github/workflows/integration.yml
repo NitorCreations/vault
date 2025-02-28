@@ -168,16 +168,56 @@ jobs:
         run: bin/rust/vault stack
 
       - name: Store secret with Python
-        run: vault -s 'secret-python' -v 'sha-${{github.sha}}' -w
+        run: vault -s 'secret-python' -v 'sha-${{github.sha}}' -w > output.log 2>&1
+      - name: Check output for Python store
+        run: test ! -s output.log || (echo "Unexpected output in Python vault command:" && cat output.log && exit 1)
+
+      - name: Retrieve secret with Python
+        run: vault -l 'secret-python' > output.log 2>&1
+      - name: Check output for Python retrieve
+        run: |
+          expected="sha-${{github.sha}}"
+          actual=$(cat output.log)
+          [ "$actual" = "$expected" ] || (echo "Unexpected output in Python vault retrieval:" && cat output.log && exit 1)
 
       - name: Store secret with Go
-        run: bin/go/vault -s 'secret-go' -v 'sha-${{github.sha}}' -w
+        run: bin/go/vault -s 'secret-go' -v 'sha-${{github.sha}}' -w > output.log 2>&1
+      - name: Check output for Go store
+        run: test ! -s output.log || (echo "Unexpected output in Go vault command:" && cat output.log && exit 1)
+
+      - name: Retrieve secret with Go
+        run: bin/go/vault -l 'secret-go' > output.log 2>&1
+      - name: Check output for Go retrieve
+        run: |
+          expected="sha-${{github.sha}}"
+          actual=$(cat output.log)
+          [ "$actual" = "$expected" ] || (echo "Unexpected output in Go vault retrieval:" && cat output.log && exit 1)
 
       - name: Store secret with Rust
-        run: bin/rust/vault -s 'secret-rust' -v 'sha-${{github.sha}}' -w
+        run: bin/rust/vault -s 'secret-rust' -v 'sha-${{github.sha}}' -w > output.log 2>&1
+      - name: Check output for Rust store
+        run: test ! -s output.log || (echo "Unexpected output in Rust vault command:" && cat output.log && exit 1)
+
+      - name: Retrieve secret with Rust
+        run: bin/rust/vault -l 'secret-rust' > output.log 2>&1
+      - name: Check output for Rust retrieve
+        run: |
+          expected="sha-${{github.sha}}"
+          actual=$(cat output.log)
+          [ "$actual" = "$expected" ] || (echo "Unexpected output in Rust vault retrieval:" && cat output.log && exit 1)
 
       - name: Store secret with Nodejs
-        run: nodejs/dist/cli/vault.js s 'secret-nodejs' 'sha-${{github.sha}}' -w
+        run: nodejs/dist/cli/vault.js s 'secret-nodejs' 'sha-${{github.sha}}' -w > output.log 2>&1
+      - name: Check output for Node.js store
+        run: test ! -s output.log || (echo "Unexpected output in Node.js vault command:" && cat output.log && exit 1)
+
+      - name: Retrieve secret with Nodejs
+        run: nodejs/dist/cli/vault.js l 'secret-nodejs' > output.log 2>&1
+      - name: Check output for Node.js retrieve
+        run: |
+          expected="sha-${{github.sha}}"
+          actual=$(cat output.log)
+          [ "$actual" = "$expected" ] || (echo "Unexpected output in Node.js vault retrieval:" && cat output.log && exit 1)
 
       - name: Validate storing worked Python
         run: diff <(vault -l secret-python) <(echo -n sha-${{github.sha}})
