@@ -6,18 +6,18 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
-	"errors"
-	"net/http"
-	"os"
-
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
+	types2 "github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/aws/smithy-go"
 	"io"
+	"os"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	awshttp "github.com/aws/aws-sdk-go-v2/aws/transport/http"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
 	"github.com/aws/aws-sdk-go-v2/service/kms"
@@ -74,6 +74,7 @@ func LoadVault(stackNameOpt ...string) (Vault, error) {
 
 	return res, nil
 }
+
 func FromCloudFormationParams(params CloudFormationParams) (*Vault, error) {
 	cfg, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
@@ -85,6 +86,7 @@ func FromCloudFormationParams(params CloudFormationParams) (*Vault, error) {
 		kmsClient:            *kms.NewFromConfig(cfg),
 	}, nil
 }
+
 func getCloudformationParams(cfg *aws.Config, stackName string) (CloudFormationParams, error) {
 	res := CloudFormationParams{}
 	cfnClient := cloudformation.NewFromConfig(*cfg)
@@ -132,16 +134,21 @@ func (v Vault) All() ([]string, error) {
 }
 
 func (v Vault) getS3Object(key string) ([]byte, error) {
-	var res []byte
-	dataKey, err := v.s3Client.GetObject(context.TODO(), &s3.GetObjectInput{Bucket: &v.cloudformationParams.BucketName, Key: &key})
+	dataKey, err := v.s3Client.GetObject(context.TODO(), &s3.GetObjectInput{
+		Bucket:       &v.cloudformationParams.BucketName,
+		Key:          &key,
+		ChecksumMode: types2.ChecksumModeEnabled,
+	})
 	if err != nil {
-		return res, err
+		return nil, err
 	}
 	defer dataKey.Body.Close()
-	res, err = io.ReadAll(dataKey.Body)
+
+	res, err := io.ReadAll(dataKey.Body)
 	if err != nil {
-		return res, err
+		return nil, err
 	}
+
 	return res, nil
 }
 
@@ -193,34 +200,52 @@ func (v Vault) Lookup(key string) (string, error) {
 
 func (v Vault) Exists(key string) (bool, error) {
 	keyName := fmt.Sprintf("%s.key", key)
-	_, err := v.s3Client.HeadObject(context.TODO(), &s3.HeadObjectInput{Bucket: &v.cloudformationParams.BucketName, Key: &keyName})
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	_, err := v.s3Client.HeadObject(ctx, &s3.HeadObjectInput{
+		Bucket: &v.cloudformationParams.BucketName,
+		Key:    &keyName,
+	})
 	if err != nil {
-		var responseError *awshttp.ResponseError
-		if errors.As(err, &responseError) && responseError.ResponseError.HTTPStatusCode() == http.StatusNotFound {
+		var apiErr smithy.APIError
+		if errors.As(err, &apiErr) && apiErr.ErrorCode() == "NotFound" {
 			return false, nil
 		}
 		return false, err
 	}
+
 	return true, nil
 }
 
 func (v Vault) putS3Object(key string, value io.Reader, c chan error) {
-	_, err := v.s3Client.PutObject(context.TODO(), &s3.PutObjectInput{Bucket: &v.cloudformationParams.BucketName, Key: &key, Body: value})
-	if err != nil {
-		c <- err
-		return
-	}
-	c <- nil
+	defer close(c)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	_, err := v.s3Client.PutObject(ctx, &s3.PutObjectInput{
+		Bucket: &v.cloudformationParams.BucketName,
+		Key:    &key,
+		Body:   value,
+	})
+	c <- err
 }
 
 func (v Vault) deleteS3Object(key string, c chan error) {
-	_, err := v.s3Client.DeleteObject(context.TODO(), &s3.DeleteObjectInput{Bucket: &v.cloudformationParams.BucketName, Key: &key})
-	if err != nil {
-		c <- err
-		return
-	}
-	c <- nil
+	defer close(c)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	_, err := v.s3Client.DeleteObject(ctx, &s3.DeleteObjectInput{
+		Bucket: &v.cloudformationParams.BucketName,
+		Key:    &key,
+	})
+	c <- err
 }
+
 func (v Vault) Delete(key string) error {
 	exists, err := v.Exists(key)
 	if err != nil {
