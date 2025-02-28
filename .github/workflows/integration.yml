@@ -252,11 +252,20 @@ jobs:
       - name: Delete secret with Nodejs
         run: nodejs/dist/cli/vault.js d 'secret-nodejs'
 
-      - name: Verify that keys have been deleted using Rust
+      - name: Verify that 'secret-python' key has been deleted
         run: |
           bin/rust/vault exists secret-python | grep -q "key 'secret-python' does not exist"
+
+      - name: Verify that 'secret-go' key has been deleted
+        run: |
           bin/rust/vault exists secret-go | grep -q "key 'secret-go' does not exist"
+
+      - name: Verify that 'secret-rust' key has been deleted
+        run: |
           bin/rust/vault exists secret-rust | grep -q "key 'secret-rust' does not exist"
+
+      - name: Verify that 'secret-nodejs' key has been deleted
+        run: |
           bin/rust/vault exists secret-nodejs | grep -q "key 'secret-nodejs' does not exist"
 
       ######## CLI BINARY FILE TESTS ########
