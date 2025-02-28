@@ -312,11 +312,20 @@ jobs:
       - name: Delete secret with Rust
         run: bin/rust/vault -d "secret-${{github.sha}}.zip"
 
-      - name: Verify that keys have been deleted using Rust
+      - name: Verify that 'secret-python' key has been deleted
         run: |
           bin/rust/vault exists secret-python | grep -q "key 'secret-python' does not exist"
+
+      - name: Verify that 'secret-go' key has been deleted
+        run: |
           bin/rust/vault exists secret-go | grep -q "key 'secret-go' does not exist"
+
+      - name: Verify that 'secret-rust' key has been deleted
+        run: |
           bin/rust/vault exists secret-rust | grep -q "key 'secret-rust' does not exist"
+
+      - name: Verify that 'secret-nodejs' key has been deleted
+        run: |
           bin/rust/vault exists secret-nodejs | grep -q "key 'secret-nodejs' does not exist"
 
       ######## PYTHON LIBRARY TESTS ########
@@ -343,7 +352,9 @@ jobs:
           diff <(python -c "from n_vault import Vault; print(Vault().lookup('secret-python-library').decode('utf-8'), end='', flush=True)") <(echo -n sha-${{github.sha}})
 
       - name: List with Python library
-        run: python -c "from n_vault import Vault; print('\n'.join(Vault().list_all()))" | wc -l | grep -q "1"
+        run: |
+          python -c "from n_vault import Vault; print('\n'.join(Vault().list_all()))"
+          python -c "from n_vault import Vault; print('\n'.join(Vault().list_all()))" | wc -l | grep -q "1"
 
       - name: Delete with Python library
         run: python -c "from n_vault import Vault; Vault().delete('secret-python-library')"
@@ -366,9 +377,18 @@ jobs:
       - name: Delete all keys with Python library
         run: python -c "from n_vault import Vault; Vault().delete_many(Vault().list_all())"
 
-      - name: Verify that keys have been deleted using Python
+      - name: Verify that 'secret-python' key has been deleted
         run: |
           vault exists secret-python | grep -q "key 'secret-python' does not exist"
+
+      - name: Verify that 'secret-go' key has been deleted
+        run: |
           vault exists secret-go | grep -q "key 'secret-go' does not exist"
+
+      - name: Verify that 'secret-rust' key has been deleted
+        run: |
           vault exists secret-rust | grep -q "key 'secret-rust' does not exist"
+
+      - name: Verify that 'secret-nodejs' key has been deleted
+        run: |
           vault exists secret-nodejs | grep -q "key 'secret-nodejs' does not exist"
