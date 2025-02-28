@@ -9,7 +9,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.29.7
 	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.57.1
 	github.com/aws/aws-sdk-go-v2/service/kms v1.37.19
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.77.1
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.78.0
 	github.com/spf13/cobra v1.9.1
 )
 
