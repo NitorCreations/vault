@@ -134,15 +134,15 @@ jobs:
       - name: Install Python PyO3 vault from wheel
         run: python -m pip install $(find bin -name '*.whl')
 
-      - name: Add execute rights and run --version for all versions
+      - name: Add execute permissions
+        run: chmod +x bin/go/vault bin/rust/vault nodejs/dist/cli/vault.js
+
+      - name: Check versions
         run: |
-          chmod +x bin/go/vault bin/rust/vault nodejs/dist/cli/vault.js
           vault --version
           bin/go/vault --version
           bin/rust/vault --version
           nodejs/dist/cli/vault.js --version
-
-        ######## CLI TESTS ########
 
       - name: Check help output
         run: |
@@ -161,139 +161,67 @@ jobs:
           echo "=============================== Node.js Vault CLI ============================"
           nodejs/dist/cli/vault.js --help
 
-      - name: Check Python version
-        run: vault --version
+        ######## CLI TESTS ########
 
       - name: Check stack status with Rust CLI
         run: bin/rust/vault stack
 
       - name: Store secret with Python
-        run: |
-          vault -s 'secret-python' -v 'sha-${{github.sha}}' -w 2>&1 | tee output.log
-          test -f output.log || (echo "Error: output.log does not exist!" && exit 1)
-          test -s output.log && (echo "Unexpected output in Python vault command:" && cat output.log && exit 1)
-          rm -f output.log
-
-      - name: Retrieve secret with Python
-        run: |
-          vault -l 'secret-python' 2>&1 | tee output.log
-          test -f output.log || (echo "Error: output.log does not exist!" && exit 1)
-          expected="sha-${{github.sha}}"
-          actual=$(cat output.log)
-          [ "$actual" = "$expected" ] || (echo "Unexpected output in Python vault retrieval:" && cat output.log && exit 1)
-          rm -f output.log
+        run: tests/store.sh vault secret-python "sha-${{github.sha}}"
 
       - name: Store secret with Go
-        run: |
-          bin/go/vault -s 'secret-go' -v 'sha-${{github.sha}}' -w 2>&1 | tee output.log
-          test -f output.log || (echo "Error: output.log does not exist!" && exit 1)
-          test -s output.log && (echo "Unexpected output in Go vault command:" && cat output.log && exit 1)
-          rm -f output.log
-
-      - name: Retrieve secret with Go
-        run: |
-          bin/go/vault -l 'secret-go' 2>&1 | tee output.log
-          test -f output.log || (echo "Error: output.log does not exist!" && exit 1)
-          expected="sha-${{github.sha}}"
-          actual=$(cat output.log)
-          [ "$actual" = "$expected" ] || (echo "Unexpected output in Go vault retrieval:" && cat output.log && exit 1)
-          rm -f output.log
+        run: tests/store.sh bin/go/vault secret-go "sha-${{github.sha}}"
 
       - name: Store secret with Rust
-        run: |
-          bin/rust/vault -s 'secret-rust' -v 'sha-${{github.sha}}' -w 2>&1 | tee output.log
-          test -f output.log || (echo "Error: output.log does not exist!" && exit 1)
-          test -s output.log && (echo "Unexpected output in Rust vault command:" && cat output.log && exit 1)
-          rm -f output.log
+        run: tests/store.sh bin/rust/vault secret-rust "sha-${{github.sha}}"
 
-      - name: Retrieve secret with Rust
-        run: |
-          bin/rust/vault -l 'secret-rust' 2>&1 | tee output.log
-          test -f output.log || (echo "Error: output.log does not exist!" && exit 1)
-          expected="sha-${{github.sha}}"
-          actual=$(cat output.log)
-          [ "$actual" = "$expected" ] || (echo "Unexpected output in Rust vault retrieval:" && cat output.log && exit 1)
-          rm -f output.log
+      - name: Store secret with Node.js
+        run: tests/store.sh nodejs/dist/cli/vault.js secret-nodejs "sha-${{github.sha}}"
 
-      - name: Store secret with Nodejs
-        run: |
-          nodejs/dist/cli/vault.js s 'secret-nodejs' 'sha-${{github.sha}}' -w 2>&1 | tee output.log
-          test -f output.log || (echo "Error: output.log does not exist!" && exit 1)
-          test -s output.log && (echo "Unexpected output in Node.js vault command:" && cat output.log && exit 1)
-          rm -f output.log
+      - name: Lookup secret with Python
+        run: tests/lookup.sh vault secret-python "sha-${{github.sha}}"
 
-      - name: Retrieve secret with Nodejs
-        run: |
-          nodejs/dist/cli/vault.js l 'secret-nodejs' 2>&1 | tee output.log
-          test -f output.log || (echo "Error: output.log does not exist!" && exit 1)
-          expected="sha-${{github.sha}}"
-          actual=$(cat output.log)
-          [ "$actual" = "$expected" ] || (echo "Unexpected output in Node.js vault retrieval:" && cat output.log && exit 1)
-          rm -f output.log
+      - name: Lookup secret with Go
+        run: tests/lookup.sh bin/go/vault secret-go "sha-${{github.sha}}"
 
-      - name: Validate storing worked Python
-        run: diff <(vault -l secret-python) <(echo -n sha-${{github.sha}})
+      - name: Lookup secret with Rust
+        run: tests/lookup.sh bin/rust/vault secret-rust "sha-${{github.sha}}"
 
-      - name: Validate Go and Rust secret equality with Python
-        run: diff <(vault -l secret-go) <(vault -l secret-rust)
+      - name: Lookup secret with Node.js
+        run: tests/lookup.sh nodejs/dist/cli/vault.js secret-nodejs "sha-${{github.sha}}"
 
-      - name: Validate Python secret equality with Rust and Go
-        run: diff <(bin/rust/vault -l secret-python) <(bin/go/vault -l secret-python)
+      - name: Validate storing worked
+        run: tests/validate.sh
 
-      - name: Validate Rust and Python secret equality with Go and Nodejs
-        run: diff <(bin/go/vault -l secret-rust) <(nodejs/dist/cli/vault.js lookup secret-python)
-
-      - name: Validate Go and Python secret equality with Rust and Go
-        run: diff <(bin/rust/vault -l secret-go) <(bin/go/vault -l secret-python)
-
-      - name: Validate Python and Nodejs secret equality with Rust
-        run: diff <(bin/rust/vault -l secret-python) <(bin/rust/vault -l secret-nodejs)
-
-      - name: Validate Rust and Go secret equality with Nodejs and Go
-        run: diff <(bin/rust/vault -l secret-rust) <(nodejs/dist/cli/vault.js lookup secret-nodejs)
+      - name: List secrets
+        run: bin/rust/vault all
 
       - name: Delete secret with Python
-        run: |
-          vault -d 'secret-python' 2>&1 | tee output.log
-          test -f output.log || (echo "Error: output.log does not exist!" && exit 1)
-          test -s output.log && (echo "Unexpected output in Python vault delete command:" && cat output.log && exit 1)
-          rm -f output.log
+        run: tests/delete.sh vault secret-python
 
       - name: Delete secret with Go
-        run: |
-          bin/go/vault -d 'secret-go' 2>&1 | tee output.log
-          test -f output.log || (echo "Error: output.log does not exist!" && exit 1)
-          test -s output.log && (echo "Unexpected output in Go vault delete command:" && cat output.log && exit 1)
-          rm -f output.log
+        run: tests/delete.sh bin/go/vault secret-go
 
       - name: Delete secret with Rust
-        run: |
-          bin/rust/vault -d 'secret-rust' 2>&1 | tee output.log
-          test -f output.log || (echo "Error: output.log does not exist!" && exit 1)
-          test -s output.log && (echo "Unexpected output in Rust vault delete command:" && cat output.log && exit 1)
-          rm -f output.log
+        run: tests/delete.sh bin/rust/vault secret-rust
 
-      - name: Delete secret with Nodejs
-        run: |
-          nodejs/dist/cli/vault.js d 'secret-nodejs' 2>&1 | tee output.log
-          test -f output.log || (echo "Error: output.log does not exist!" && exit 1)
-          test -s output.log && (echo "Unexpected output in Node.js vault delete command:" && cat output.log && exit 1)
-          rm -f output.log
+      - name: Delete secret with Node.js
+        run: tests/delete.sh nodejs/dist/cli/vault.js secret-nodejs
+
+      - name: List secrets
+        run: bin/rust/vault all
+
       - name: Verify that 'secret-python' key has been deleted
-        run: |
-          bin/rust/vault exists secret-python | grep -q "key 'secret-python' does not exist"
+        run: tests/exists.sh bin/rust/vault secret-python
 
       - name: Verify that 'secret-go' key has been deleted
-        run: |
-          bin/rust/vault exists secret-go | grep -q "key 'secret-go' does not exist"
+        run: tests/exists.sh bin/rust/vault secret-go
 
       - name: Verify that 'secret-rust' key has been deleted
-        run: |
-          bin/rust/vault exists secret-rust | grep -q "key 'secret-rust' does not exist"
+        run: tests/exists.sh bin/rust/vault secret-rust
 
       - name: Verify that 'secret-nodejs' key has been deleted
-        run: |
-          bin/rust/vault exists secret-nodejs | grep -q "key 'secret-nodejs' does not exist"
+        run: tests/exists.sh bin/rust/vault secret-nodejs
 
       ######## CLI BINARY FILE TESTS ########
 
@@ -340,20 +268,16 @@ jobs:
         run: bin/rust/vault -d "secret-${{github.sha}}.zip"
 
       - name: Verify that 'secret-python' key has been deleted
-        run: |
-          bin/rust/vault exists secret-python | grep -q "key 'secret-python' does not exist"
+        run: tests/exists.sh bin/rust/vault secret-python
 
       - name: Verify that 'secret-go' key has been deleted
-        run: |
-          bin/rust/vault exists secret-go | grep -q "key 'secret-go' does not exist"
+        run: tests/exists.sh bin/rust/vault secret-go
 
       - name: Verify that 'secret-rust' key has been deleted
-        run: |
-          bin/rust/vault exists secret-rust | grep -q "key 'secret-rust' does not exist"
+        run: tests/exists.sh bin/rust/vault secret-rust
 
       - name: Verify that 'secret-nodejs' key has been deleted
-        run: |
-          bin/rust/vault exists secret-nodejs | grep -q "key 'secret-nodejs' does not exist"
+        run: tests/exists.sh bin/rust/vault secret-nodejs
 
       ######## PYTHON LIBRARY TESTS ########
 
@@ -380,7 +304,6 @@ jobs:
 
       - name: List with Python library
         run: |
-          python -c "from n_vault import Vault; print('\n'.join(Vault().list_all()))"
           python -c "from n_vault import Vault; print('\n'.join(Vault().list_all()))" | wc -l | grep -q "1"
 
       - name: Delete with Python library
@@ -405,17 +328,13 @@ jobs:
         run: python -c "from n_vault import Vault; Vault().delete_many(Vault().list_all())"
 
       - name: Verify that 'secret-python' key has been deleted
-        run: |
-          vault exists secret-python | grep -q "key 'secret-python' does not exist"
+        run: tests/exists.sh vault secret-python
 
       - name: Verify that 'secret-go' key has been deleted
-        run: |
-          vault exists secret-go | grep -q "key 'secret-go' does not exist"
+        run: tests/exists.sh vault secret-go
 
       - name: Verify that 'secret-rust' key has been deleted
-        run: |
-          vault exists secret-rust | grep -q "key 'secret-rust' does not exist"
+        run: tests/exists.sh vault secret-rust
 
       - name: Verify that 'secret-nodejs' key has been deleted
-        run: |
-          vault exists secret-nodejs | grep -q "key 'secret-nodejs' does not exist"
+        run: tests/exists.sh vault secret-nodejs
