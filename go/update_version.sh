@@ -19,7 +19,8 @@ OPTIONS: All options are optional
     Use given version as the new version number.
 
    --verbose
-    Display commands being executed."
+    Display commands being executed.
+"
 
 init_options() {
   INCREMENT_MAJOR=false
