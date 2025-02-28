@@ -193,7 +193,7 @@ jobs:
       - name: Validate storing worked
         run: tests/validate.sh
 
-      - name: List secrets
+      - name: List secrets with Rust
         run: bin/rust/vault all
 
       - name: Delete secret with Python
@@ -208,7 +208,7 @@ jobs:
       - name: Delete secret with Node.js
         run: tests/delete.sh nodejs/dist/cli/vault.js secret-nodejs
 
-      - name: List secrets
+      - name: List secrets with Rust
         run: bin/rust/vault all
 
       - name: Verify that 'secret-python' key has been deleted
@@ -302,8 +302,12 @@ jobs:
         run: |
           diff <(python -c "from n_vault import Vault; print(Vault().lookup('secret-python-library').decode('utf-8'), end='', flush=True)") <(echo -n sha-${{github.sha}})
 
-      - name: List with Python library
+      - name: List secrets with Rust
+        run: bin/rust/vault all
+
+      - name: List secrets with Python library
         run: |
+          python -c "from n_vault import Vault; print('\n'.join(Vault().list_all()))"
           python -c "from n_vault import Vault; print('\n'.join(Vault().list_all()))" | wc -l | grep -q "1"
 
       - name: Delete with Python library
@@ -321,11 +325,19 @@ jobs:
       - name: Store secret with Nodejs
         run: nodejs/dist/cli/vault.js s 'secret-nodejs' 'sha-${{github.sha}}' -w
 
-      - name: List with Python library
-        run: python -c "from n_vault import Vault; print('\n'.join(Vault().list_all()))"
+      - name: List secrets with Python library
+        run: |
+          python -c "from n_vault import Vault; print('\n'.join(Vault().list_all()))"
+          python -c "from n_vault import Vault; print('\n'.join(Vault().list_all()))" | wc -l | grep -q "3"
+
+      - name: List secrets with Rust
+        run: bin/rust/vault all
 
       - name: Delete all keys with Python library
         run: python -c "from n_vault import Vault; Vault().delete_many(Vault().list_all())"
+
+      - name: List secrets with Rust
+        run: bin/rust/vault all
 
       - name: Verify that 'secret-python' key has been deleted
         run: tests/exists.sh vault secret-python
