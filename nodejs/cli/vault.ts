@@ -1,88 +1,132 @@
 #!/usr/bin/env node
-import sade from "sade";
+import { Command } from "commander";
 import { vault } from "../lib/vaultClient";
 
-const handleRejection = (err: string) => {
-  console.error(err);
-  process.exit(1);
+// Hack to support flags for commands to match CLI interface for other implementations
+const commandAliases: Record<string, string> = {
+  "-s": "store",
+  "--store": "store",
+  "-l": "lookup",
+  "--lookup": "lookup",
+  "-d": "delete",
+  "--delete": "delete",
+  "-e": "exists",
+  "--exists": "exists",
+  "-a": "all",
+  "--all": "all",
 };
+const modifiedArgs = process.argv.map(arg => commandAliases[arg] || arg);
 
-const prog = sade("vault").version("1.2.0");
+async function storeCommand(name: string, value: string | undefined, options: any) {
+  try {
+    const storeValue = value || options.value;
+    if (!storeValue) {
+      console.error("Error: A value must be provided either as an argument or with -v");
+      process.exit(1);
+    }
 
-prog.option(
-  "--vaultstack",
-  "Optional CloudFormation stack to lookup key and bucket."
-);
-prog.option(
-  "-p, --prefix",
-  "Optional prefix to store values under. Empty by default"
-);
-prog.option(
-  "-b, --bucket",
-  "Override the bucket name either for initialization or storing and looking up values"
-);
-prog.option(
-  "-k, --key-arn",
-  "Override the KMS key arn for storing or looking up values"
-);
-prog.option(
-  "--id",
-  "Give an IAM access key id to override those defined by the environment"
-);
-prog.option(
-  "--secret",
-  "Give an IAM secret access key to override those defined by the environment"
-);
-prog.option("-r, --region", "Give a region for the stack and the bucket");
-
-prog
-  .command("store <name> <value>", "Store data in the vault", { alias: "s" })
-  .option(
-    "-w, --overwrite",
-    "Overwrite the current value if it already exists",
-    false
-  )
-  .action(async (name, value, options) => {
-    vault(options)
-      .then(async (client) => {
-        if (!options.overwrite) {
-          if (await client.exists(name)) {
-            console.log(
-              "Error storing key, it already exists and you did not provide \x1b[33m-w\x1b[0m flag for overwriting"
-            );
-          }
-        }
-        client.store(name, value);
-      })
-      .catch(handleRejection);
-  })
-  .command("lookup <name>", "Look up data from the vault", { alias: "l" })
-  .action(async (name, options) => {
     const client = await vault(options);
-    client
-      .lookup(name)
-      .then((res) => process.stdout.write(res))
-      .catch(handleRejection);
-  })
-  .command("delete <name>", "Delete data from the vault", { alias: "d" })
-  .action((name, options) => {
-    vault(options)
-      .then((client) => client.delete(name))
-      .catch(handleRejection);
-  })
-  .command("exists <name>", "Check if the vault contains data", { alias: "e" })
-  .action((name, options) => {
-    vault(options)
-      .then((client) => client.exists(name))
-      .then(console.log)
-      .catch(handleRejection);
-  })
-  .command("all", "List all keys the vault contains", { alias: "a" })
-  .action((options) => {
-    vault(options)
-      .then((client) => client.all())
-      .then((res) => console.log(res.join("\n")))
-      .catch(handleRejection);
-  });
+    if (!options.overwrite && await client.exists(name)) {
+      console.log("Error: Key already exists. Use \x1b[33m-w\x1b[0m to overwrite.");
+      return;
+    }
+    await client.store(name, storeValue);
+  } catch (error) {
+    handleRejection(error);
+  }
+}
 
-prog.parse(process.argv);
+async function lookupCommand(name: string, options: any) {
+  try {
+    const client = await vault(options);
+    const result = await client.lookup(name);
+    process.stdout.write(result);
+  } catch (error) {
+    handleRejection(error);
+  }
+}
+
+async function deleteCommand(name: string, options: any) {
+  try {
+    const client = await vault(options);
+    await client.delete(name);
+  } catch (error) {
+    handleRejection(error);
+  }
+}
+
+async function existsCommand(name: string, options: any) {
+  try {
+    const client = await vault(options);
+    const exists = await client.exists(name);
+    console.log(`key '${name}' ${exists ? "exists" : "does not exist"}`);
+  } catch (error) {
+    handleRejection(error);
+  }
+}
+
+async function allCommand(options: any) {
+  try {
+    const client = await vault(options);
+    const keys = await client.all();
+    console.log(keys.join("\n"));
+  } catch (error) {
+    handleRejection(error);
+  }
+}
+
+function handleRejection(err: unknown) {
+  if (err instanceof Error) {
+    console.error(err.message);
+  } else {
+    console.error("An unknown error occurred:", err);
+  }
+  process.exit(1);
+}
+
+const program = new Command();
+
+program.version("2.0.0");
+
+program
+  .option("--vaultstack <stack>", "Optional CloudFormation stack to lookup key and bucket")
+  .option("-p, --prefix <prefix>", "Optional prefix to store values under")
+  .option("-b, --bucket <bucket>", "Override the bucket name")
+  .option("-k, --key-arn <arn>", "Override the KMS key ARN")
+  .option("--id <id>", "Override IAM access key ID")
+  .option("--secret <secret>", "Override IAM secret access key")
+  .option("-r, --region <region>", "Specify the AWS region");
+
+program
+  .command("store <name> [value]")
+  .alias("s")
+  .description("Store data in the vault")
+  .option("-w, --overwrite", "Overwrite the existing value", false)
+  .option("-v, --value <value>", "Value to store")
+  .action(storeCommand);
+
+program
+  .command("lookup <name>")
+  .alias("l")
+  .description("Look up data from the vault")
+  .action(lookupCommand);
+
+program
+  .command("delete <name>")
+  .alias("d")
+  .description("Delete data from the vault")
+  .action(deleteCommand);
+
+program
+  .command("exists <name>")
+  .alias("e")
+  .description("Check if the vault contains data")
+  .action(existsCommand);
+
+program
+  .command("all")
+  .alias("a")
+  .description("List all keys the vault contains")
+  .action(allCommand);
+
+program.parse(modifiedArgs);
