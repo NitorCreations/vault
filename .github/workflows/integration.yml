@@ -8,6 +8,8 @@ on:
     paths:
       - "!**/README.md"
   pull_request:
+    paths:
+      - "!**/README.md"
 
 permissions:
   id-token: write
@@ -212,16 +214,16 @@ jobs:
         run: bin/rust/vault all
 
       - name: Verify that 'secret-python' key has been deleted
-        run: tests/exists.sh bin/rust/vault secret-python
+        run: tests/does_not_exist.sh bin/rust/vault secret-python
 
       - name: Verify that 'secret-go' key has been deleted
-        run: tests/exists.sh bin/rust/vault secret-go
+        run: tests/does_not_exist.sh bin/rust/vault secret-go
 
       - name: Verify that 'secret-rust' key has been deleted
-        run: tests/exists.sh bin/rust/vault secret-rust
+        run: tests/does_not_exist.sh bin/rust/vault secret-rust
 
       - name: Verify that 'secret-nodejs' key has been deleted
-        run: tests/exists.sh bin/rust/vault secret-nodejs
+        run: tests/does_not_exist.sh bin/rust/vault secret-nodejs
 
       ######## CLI BINARY FILE TESTS ########
 
@@ -268,16 +270,16 @@ jobs:
         run: bin/rust/vault -d "secret-${{github.sha}}.zip"
 
       - name: Verify that 'secret-python' key has been deleted
-        run: tests/exists.sh bin/rust/vault secret-python
+        run: tests/does_not_exist.sh bin/rust/vault secret-python
 
       - name: Verify that 'secret-go' key has been deleted
-        run: tests/exists.sh bin/rust/vault secret-go
+        run: tests/does_not_exist.sh bin/rust/vault secret-go
 
       - name: Verify that 'secret-rust' key has been deleted
-        run: tests/exists.sh bin/rust/vault secret-rust
+        run: tests/does_not_exist.sh bin/rust/vault secret-rust
 
       - name: Verify that 'secret-nodejs' key has been deleted
-        run: tests/exists.sh bin/rust/vault secret-nodejs
+        run: tests/does_not_exist.sh bin/rust/vault secret-nodejs
 
       ######## PYTHON LIBRARY TESTS ########
 
@@ -307,7 +309,6 @@ jobs:
 
       - name: List secrets with Python library
         run: |
-          python -c "from n_vault import Vault; print('\n'.join(Vault().list_all()))"
           python -c "from n_vault import Vault; print('\n'.join(Vault().list_all()))" | wc -l | grep -q "1"
 
       - name: Delete with Python library
@@ -327,7 +328,6 @@ jobs:
 
       - name: List secrets with Python library
         run: |
-          python -c "from n_vault import Vault; print('\n'.join(Vault().list_all()))"
           python -c "from n_vault import Vault; print('\n'.join(Vault().list_all()))" | wc -l | grep -q "3"
 
       - name: List secrets with Rust
@@ -340,13 +340,13 @@ jobs:
         run: bin/rust/vault all
 
       - name: Verify that 'secret-python' key has been deleted
-        run: tests/exists.sh vault secret-python
+        run: tests/does_not_exist.sh vault secret-python
 
       - name: Verify that 'secret-go' key has been deleted
-        run: tests/exists.sh vault secret-go
+        run: tests/does_not_exist.sh vault secret-go
 
       - name: Verify that 'secret-rust' key has been deleted
-        run: tests/exists.sh vault secret-rust
+        run: tests/does_not_exist.sh vault secret-rust
 
       - name: Verify that 'secret-nodejs' key has been deleted
-        run: tests/exists.sh vault secret-nodejs
+        run: tests/does_not_exist.sh vault secret-nodejs
