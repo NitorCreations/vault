@@ -5,11 +5,11 @@ on:
     branches:
       - master
       - main
-    paths:
-      - "!**/README.md"
+    paths-ignore:
+      - "**/README.md"
   pull_request:
-    paths:
-      - "!**/README.md"
+    paths-ignore:
+      - "**/README.md"
 
 permissions:
   id-token: write
