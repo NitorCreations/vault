@@ -168,6 +168,9 @@ jobs:
       - name: Check stack status with Rust CLI
         run: bin/rust/vault stack
 
+      - name: Delete all secrets with Rust
+        run: tests/delete_all.sh bin/rust/vault
+
       - name: Store secret with Python
         run: tests/store.sh vault secret-python "sha-${{github.sha}}"
 
