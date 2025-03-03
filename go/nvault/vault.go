@@ -201,7 +201,7 @@ func (v Vault) Lookup(key string) (string, error) {
 func (v Vault) Exists(key string) (bool, error) {
 	keyName := fmt.Sprintf("%s.key", key)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	_, err := v.s3Client.HeadObject(ctx, &s3.HeadObjectInput{
@@ -220,9 +220,7 @@ func (v Vault) Exists(key string) (bool, error) {
 }
 
 func (v Vault) putS3Object(key string, value io.Reader, c chan error) {
-	defer close(c)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	_, err := v.s3Client.PutObject(ctx, &s3.PutObjectInput{
@@ -234,9 +232,7 @@ func (v Vault) putS3Object(key string, value io.Reader, c chan error) {
 }
 
 func (v Vault) deleteS3Object(key string, c chan error) {
-	defer close(c)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	_, err := v.s3Client.DeleteObject(ctx, &s3.DeleteObjectInput{
