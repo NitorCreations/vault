@@ -2,17 +2,17 @@
 set -eo pipefail
 
 COMMANDS=(
-    "vault"
-    "bin/go/vault"
-    "bin/rust/vault"
-    "nodejs/dist/cli/vault.js"
+  "vault"
+  "bin/go/vault"
+  "bin/rust/vault"
+  "nodejs/dist/cli/vault.js"
 )
 
 KEYS=(
-    "secret-python"
-    "secret-go"
-    "secret-rust"
-    "secret-nodejs"
+  "secret-python"
+  "secret-go"
+  "secret-rust"
+  "secret-nodejs"
 )
 
 for ((i = 0; i < ${#COMMANDS[@]}; i++)); do
