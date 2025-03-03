@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"log"
 
-	"runtime/debug"
-
 	vault "github.com/nitorcreations/vault/go/nvault"
 )
 
@@ -59,15 +57,5 @@ func Store(vault vault.Vault, key *string, value []byte) {
 
 // VersionInfo Returns formatted build version info string.
 func VersionInfo() string {
-	if info, ok := debug.ReadBuildInfo(); ok {
-		goVersion := info.GoVersion
-		arch := "unknown"
-		for _, setting := range info.Settings {
-			if setting.Key == "GOARCH" {
-				arch = setting.Value
-			}
-		}
-		return fmt.Sprintf("%s %s %s %s %s %s", VersionNumber, Timestamp, GitBranch, GitHash, goVersion, arch)
-	}
-	return fmt.Sprintf("%s %s %s %s", VersionNumber, Timestamp, GitBranch, GitHash)
+	return fmt.Sprintf("nitor-vault %s %s %s %s", VersionNumber, Timestamp, GitBranch, GitHash)
 }
