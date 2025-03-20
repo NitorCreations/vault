@@ -21,9 +21,14 @@ updates:
     schedule:
       interval: "weekly"
     groups:
+      rust-aws:
+        patterns:
+          - "aws-*"
       rust:
         patterns:
           - "*"
+        exclude-patterns:
+          - "aws-*"
 
   # Go
   - package-ecosystem: gomod
