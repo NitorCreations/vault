@@ -1,7 +1,7 @@
-//! Value
+//! Value enum for handling vault secret data.
 //!
 //! Defines a value type that can contain either UTF-8 text or any binary data stored as raw bytes.
-//! This is required since the secret data stored and retrieved by the vault can be anything,
+//! This is used since the secret data stored and retrieved by the vault can be anything,
 //! but handling everything internally as raw bytes is less convenient.
 //!
 
@@ -13,8 +13,9 @@ use base64::Engine;
 
 use crate::errors::VaultError;
 
+/// Value enum for handling vault secret data as either UTF-8 or binary.
+///
 /// Vault supports storing arbitrary data that might not be valid UTF-8.
-/// Handle values as either UTF-8 or binary.
 #[derive(Debug, Clone)]
 pub enum Value {
     /// Valid UTF-8 string data

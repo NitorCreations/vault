@@ -1,5 +1,3 @@
-//! Template
-//!
 //! Vault `CloudFormation` stack JSON template
 //!
 

@@ -1,5 +1,3 @@
-//! Errors
-//!
 //! Custom error definitions
 //!
 

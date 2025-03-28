@@ -1,5 +1,3 @@
-//! Args
-//!
 //! Specifies CLI arguments and commands
 //!
 

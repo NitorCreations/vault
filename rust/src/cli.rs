@@ -1,5 +1,3 @@
-//! CLI
-//!
 //! Implements CLI commands and helper functions
 //!
 

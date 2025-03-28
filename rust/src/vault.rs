@@ -1,5 +1,3 @@
-//! Vault
-//!
 //! Vault implementation
 //!
 

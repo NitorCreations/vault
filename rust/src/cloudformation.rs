@@ -1,5 +1,3 @@
-//! `CloudFormation`
-//!
 //! Defines types and helper functions for AWS `CloudFormation`
 //!
 
