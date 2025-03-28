@@ -23,8 +23,8 @@ use serde::{Deserialize, Serialize};
 use crate::cloudformation::CloudFormationStackData;
 use crate::errors::VaultError;
 
-#[derive(Debug, Clone)]
 /// Result data for initializing a new vault stack.
+#[derive(Debug, Clone)]
 pub enum CreateStackResult {
     /// Vault stack has already been initialized.
     Exists { data: CloudFormationStackData },
@@ -38,8 +38,8 @@ pub enum CreateStackResult {
     },
 }
 
-#[derive(Debug, Clone)]
 /// Result data for updating the vault stack.
+#[derive(Debug, Clone)]
 pub enum UpdateStackResult {
     /// Vault stack is up to date. No update needed.
     UpToDate { data: CloudFormationStackData },
@@ -51,8 +51,8 @@ pub enum UpdateStackResult {
     },
 }
 
-#[derive(Debug, Default, Clone)]
 /// Optional parameters for a `Vault` instance.
+#[derive(Debug, Default, Clone)]
 pub struct VaultConfig {
     pub vault_stack: Option<String>,
     pub region: Option<String>,
@@ -77,8 +77,8 @@ pub(crate) struct Meta {
     nonce: String,
 }
 
-#[derive(Debug, Clone)]
 /// S3 object identifier names for a single value.
+#[derive(Debug, Clone)]
 pub(crate) struct S3DataKeys {
     key: String,
     cipher: String,
@@ -94,8 +94,8 @@ impl Meta {
         }
     }
 
-    #[must_use]
     /// Shorthand to initialize new Meta with AES-GCM algorithm.
+    #[must_use]
     fn aesgcm(nonce: &[u8]) -> Self {
         Self::new("AESGCM", nonce)
     }
@@ -134,20 +134,20 @@ impl S3DataKeys {
     }
 }
 
+/// Return possible env variable value as Option.
 #[inline]
 #[must_use]
-/// Return possible env variable value as Option.
 pub fn get_env_variable(name: &str) -> Option<String> {
     std::env::var(name).ok()
 }
 
-#[must_use]
 /// Get AWS SDK config from optional arguments.
 ///
 /// Uses the following priority:
 /// 1. Use `id` and `secret` if provided.
 /// 2. Use the specified profile name if available.
 /// 3. Fallback to environment variables and defaults.
+#[must_use]
 pub async fn resolve_aws_config_from_args(
     region: Option<String>,
     profile: Option<String>,
@@ -161,9 +161,9 @@ pub async fn resolve_aws_config_from_args(
     }
 }
 
+/// Return AWS SDK config with optional region name to use.
 #[inline]
 #[must_use]
-/// Return AWS SDK config with optional region name to use.
 pub async fn get_aws_config(region: Option<String>, profile: Option<String>) -> SdkConfig {
     profile
         .map_or_else(aws_config::from_env, |profile| {
@@ -174,9 +174,9 @@ pub async fn get_aws_config(region: Option<String>, profile: Option<String>) -> 
         .await
 }
 
+/// Return AWS SDK config from id and secret with optional region name to use.
 #[inline]
 #[must_use]
-/// Return AWS SDK config from id and secret with optional region name to use.
 async fn get_aws_config_from_credentials(
     id: &str,
     secret: &str,

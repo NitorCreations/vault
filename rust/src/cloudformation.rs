@@ -1,3 +1,8 @@
+//! `CloudFormation`
+//!
+//! Defines types and helper functions for AWS `CloudFormation`
+//!
+
 use std::fmt;
 
 use aws_sdk_cloudformation::operation::describe_stacks::DescribeStacksOutput;
@@ -5,16 +10,16 @@ use aws_sdk_cloudformation::types::{Output, StackStatus, StackSummary};
 
 use crate::errors::VaultError;
 
-#[derive(Debug, Clone, Default)]
 /// Parameter values for Cloudformation resources.
+#[derive(Debug, Clone, Default)]
 pub struct CloudFormationParams {
     pub bucket_name: String,
     pub key_arn: Option<String>,
     pub stack_name: String,
 }
 
-#[derive(Debug, Clone, Default)]
 /// Cloudformation stack status information.
+#[derive(Debug, Clone, Default)]
 pub struct CloudFormationStackData {
     pub bucket_name: Option<String>,
     pub key_arn: Option<String>,
@@ -32,8 +37,8 @@ pub struct CloudFormationStackSummary {
 }
 
 impl CloudFormationParams {
-    #[must_use]
     /// Create `CloudFormationParams` from owned values.
+    #[must_use]
     pub const fn new(bucket_name: String, key_arn: Option<String>, stack_name: String) -> Self {
         Self {
             bucket_name,
@@ -42,8 +47,8 @@ impl CloudFormationParams {
         }
     }
 
-    #[must_use]
     /// Create `CloudFormationParams` from references.
+    #[must_use]
     pub fn from(bucket_name: &str, key_arn: Option<&str>, stack_name: &str) -> Self {
         Self {
             bucket_name: bucket_name.to_owned(),
@@ -195,8 +200,8 @@ pub async fn get_stack_data(
     Ok(data)
 }
 
+/// Get Cloudformation describe stack output
 #[inline]
-// Get Cloudformation describe stack output.
 pub async fn describe_stack(
     cf_client: &aws_sdk_cloudformation::Client,
     stack_name: &str,

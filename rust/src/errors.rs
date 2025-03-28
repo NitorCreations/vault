@@ -1,3 +1,8 @@
+//! Errors
+//!
+//! Custom error definitions
+//!
+
 use std::io;
 use std::string::FromUtf8Error;
 

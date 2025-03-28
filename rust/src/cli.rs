@@ -1,3 +1,8 @@
+//! CLI
+//!
+//! Implements CLI commands and helper functions
+//!
+
 use std::io::{IsTerminal, Write, stdin, stdout};
 use std::path::{Path, PathBuf};
 

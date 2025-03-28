@@ -1,3 +1,8 @@
+//! Args
+//!
+//! Specifies CLI arguments and commands
+//!
+
 use anyhow::{Context, Result};
 use clap::{CommandFactory, Parser, Subcommand};
 use clap_complete::Shell;
@@ -78,7 +83,6 @@ enum Command {
     #[command(long_flag("completion"), verbatim_doc_comment)]
     Completion {
         shell: Shell,
-
         /// Output completion directly to the default directory instead of stdout
         #[arg(short, long, default_value_t = false)]
         install: bool,

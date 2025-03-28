@@ -1,3 +1,10 @@
+//! Value
+//!
+//! Defines a value type that can contain either UTF-8 text or any binary data stored as raw bytes.
+//! This is required since the secret data stored and retrieved by the vault can be anything,
+//! but handling everything internally as raw bytes is less convenient.
+//!
+
 use std::fmt;
 use std::io::{BufWriter, Read, Write, stdin};
 use std::path::Path;
@@ -6,20 +13,22 @@ use base64::Engine;
 
 use crate::errors::VaultError;
 
-#[derive(Debug, Clone)]
 /// Vault supports storing arbitrary data that might not be valid UTF-8.
 /// Handle values as either UTF-8 or binary.
+#[derive(Debug, Clone)]
 pub enum Value {
+    /// Valid UTF-8 string data
     Utf8(String),
+    /// Any binary data that is not a valid UTF-8 string
     Binary(Vec<u8>),
 }
 
 impl Value {
-    #[must_use]
     /// Create a `Value` from owned raw bytes.
     ///
     /// This will check if the given bytes are valid UTF-8,
     /// and return the corresponding enum value.
+    #[must_use]
     pub fn new(bytes: Vec<u8>) -> Self {
         #[allow(clippy::option_if_let_else)]
         // ^using `map_or` would require cloning buffer
@@ -29,11 +38,11 @@ impl Value {
         }
     }
 
-    #[must_use]
     /// Create a `Value` from raw bytes slice.
     ///
     /// This will check if the given bytes are valid UTF-8,
     /// and return the corresponding enum value.
+    #[must_use]
     pub fn from(bytes: &[u8]) -> Self {
         std::str::from_utf8(bytes).map_or_else(
             |_| Self::Binary(Vec::from(bytes)),
@@ -41,12 +50,12 @@ impl Value {
         )
     }
 
-    #[must_use]
     /// Create a `Value` from a string,
     /// and try to decode the value as base64 binary data.
     ///
     /// If the decoded result is valid UTF-8, return `Value::Utf8`.
     /// Otherwise, return `Value::Binary`.
+    #[must_use]
     pub fn from_possibly_base64_encoded(value: String) -> Self {
         #[allow(clippy::option_if_let_else)]
         // ^using `map_or` would require cloning buffer
@@ -96,8 +105,8 @@ impl Value {
         }
     }
 
-    #[must_use]
     /// Returns the data as a byte slice `&[u8]`.
+    #[must_use]
     pub fn as_bytes(&self) -> &[u8] {
         match self {
             Self::Utf8(string) => string.as_bytes(),
@@ -105,8 +114,8 @@ impl Value {
         }
     }
 
-    #[must_use]
     /// Returns the data as owned bytes, consuming the Value.
+    #[must_use]
     pub fn to_bytes(self) -> Vec<u8> {
         match self {
             Self::Utf8(string) => string.as_bytes().into(),
@@ -142,8 +151,8 @@ impl Value {
         writer.flush()
     }
 
-    #[must_use]
     /// Try to decode UTF-8 string from base64.
+    #[must_use]
     pub fn decode_base64(self) -> Self {
         if let Self::Utf8(string) = self {
             Self::from_possibly_base64_encoded(string)
@@ -152,10 +161,10 @@ impl Value {
         }
     }
 
-    #[must_use]
     /// Encode binary data to base64.
     ///
     /// Valid UTF-8 won't be encoded.
+    #[must_use]
     pub fn encode_base64(self) -> Self {
         if let Self::Binary(bytes) = self {
             Self::Utf8(base64::engine::general_purpose::STANDARD.encode(bytes))

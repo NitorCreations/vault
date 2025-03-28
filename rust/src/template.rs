@@ -1,3 +1,8 @@
+//! Template
+//!
+//! Vault `CloudFormation` stack JSON template
+//!
+
 use std::sync::LazyLock;
 
 /// Cloudformation stack version.

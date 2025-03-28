@@ -1,3 +1,8 @@
+//! Vault
+//!
+//! Vault implementation
+//!
+
 use std::fmt;
 
 use aes_gcm::aead::consts::U12;
@@ -25,6 +30,7 @@ use crate::template::{VAULT_STACK_VERSION, template};
 use crate::value::Value;
 use crate::{CreateStackResult, EncryptObject, Meta, S3DataKeys, UpdateStackResult, VaultConfig};
 
+/// Vault implementation that initializes a vault instance and handles all the vault operations.
 #[derive(Debug)]
 pub struct Vault {
     /// AWS region to use with Vault.
@@ -32,6 +38,7 @@ pub struct Vault {
     pub region: Region,
     /// Prefix for key name
     pub prefix: String,
+    /// `CloudFormation` parameters for vault stack
     pub cloudformation_params: CloudFormationParams,
     cf: CloudFormationClient,
     kms: KmsClient,
@@ -45,7 +52,7 @@ impl Vault {
     /// and otherwise fall back to current AWS config and/or retrieve config values from the
     /// Cloudformation stack description.
     ///
-    // The Default trait can't be implemented for Vault since it can fail.
+    // The Default trait can't be implemented for Vault since initializing it can fail.
     pub async fn default() -> Result<Self, VaultError> {
         Self::new(None, None, None, None, None, None, None, None).await
     }
@@ -117,6 +124,7 @@ impl Vault {
     }
 
     /// Initialize new Vault stack.
+    ///
     /// This will create all required resources in AWS,
     /// after which the Vault can be used to store and lookup values.
     ///
@@ -538,6 +546,7 @@ impl Vault {
     }
 
     /// Add prefix to key if prefix has been specified.
+    #[inline]
     fn full_key_name(&self, name: &str) -> String {
         if self.prefix.is_empty() {
             name.to_string()
