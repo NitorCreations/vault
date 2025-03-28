@@ -12,17 +12,19 @@ on:
       - master
     paths:
       - ".github/workflows/python-wheel.yml"
-      - "python-pyo3/src/lib.rs"
-      - "python-pyo3/Cargo.lock"
+      - "Cargo.lock"
+      - "Cargo.toml"
       - "python-pyo3/Cargo.toml"
+      - "python-pyo3/src/lib.rs"
     tags:
       - "python-*"
   pull_request:
     paths:
       - ".github/workflows/python-wheel.yml"
-      - "python-pyo3/src/lib.rs"
-      - "python-pyo3/Cargo.lock"
+      - "Cargo.lock"
+      - "Cargo.toml"
       - "python-pyo3/Cargo.toml"
+      - "python-pyo3/src/lib.rs"
   workflow_dispatch:
 
 permissions:
