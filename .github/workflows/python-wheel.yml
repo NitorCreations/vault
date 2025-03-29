@@ -123,7 +123,7 @@ jobs:
             --manifest-path python-pyo3/Cargo.toml
           sccache: true
           manylinux: musllinux_1_2
-          before-script-linux: "lsb_release -a && sudo apt-get update && sudo apt search libclang && sudo apt-get install -y libclang1; cargo install --force --locked bindgen-cli"
+          before-script-linux: "cat /etc/os-release; sudo apt-get update && sudo apt search libclang && sudo apt-get install -y libclang1; cargo install --force --locked bindgen-cli"
 
       - name: Build free-threaded wheels
         uses: PyO3/maturin-action@v1
@@ -136,7 +136,7 @@ jobs:
             --manifest-path python-pyo3/Cargo.toml
           sccache: true
           manylinux: musllinux_1_2
-          before-script-linux: "lsb_release -a && sudo apt-get update && sudo apt-get install -y libclang1; cargo install --force --locked bindgen-cli"
+          before-script-linux: "cat /etc/os-release; sudo apt-get update && sudo apt-get install -y libclang1; cargo install --force --locked bindgen-cli"
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
