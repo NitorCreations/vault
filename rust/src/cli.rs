@@ -197,7 +197,7 @@ pub async fn lookup(vault: &Vault, key: &str, outfile: Option<String>) -> Result
     match resolve_output_file_path(outfile)? {
         Some(path) => result.output_to_file(&path)?,
         None => result.output_to_stdout()?,
-    };
+    }
 
     Ok(())
 }
@@ -295,7 +295,7 @@ pub async fn encrypt(
     match resolve_output_file_path(outfile)? {
         Some(path) => value.output_to_file(&path)?,
         None => value.output_to_stdout()?,
-    };
+    }
 
     Ok(())
 }
@@ -317,7 +317,7 @@ pub async fn decrypt(
     match resolve_output_file_path(outfile)? {
         Some(path) => value.output_to_file(&path)?,
         None => value.output_to_stdout()?,
-    };
+    }
 
     Ok(())
 }

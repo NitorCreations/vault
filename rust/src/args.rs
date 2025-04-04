@@ -514,7 +514,7 @@ async fn run(args: Args) -> Result<()> {
                     _ => unreachable!(),
                 }
             }
-        };
+        }
     }
     Ok(())
 }

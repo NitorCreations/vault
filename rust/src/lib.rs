@@ -117,7 +117,7 @@ impl S3DataKeys {
 
     /// Return key strings as an array for easy iteration.
     fn as_array(&self) -> [&str; 3] {
-        [&self.key, &self.cipher, &self.meta]
+        [self.key.as_str(), self.cipher.as_str(), self.meta.as_str()]
     }
 
     /// Convert keys to S3 object identifiers.
