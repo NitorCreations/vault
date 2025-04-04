@@ -16,6 +16,7 @@ authors = [
 aes-gcm = "0.10.3"
 anyhow = "1.0.97"
 aws-config = { version = "1.6.1", features = ["behavior-version-latest", "rustls"] }
+aws-lc-rs = { version = "1", features = ["bindgen", "prebuilt-nasm"] }
 aws-sdk-cloudformation = { version = "1.71.0", features = ["rustls"] }
 aws-sdk-kms = { version = "1.65.0", features = ["rustls"] }
 aws-sdk-s3 = { version = "1.81.0", features = ["rustls"] }
