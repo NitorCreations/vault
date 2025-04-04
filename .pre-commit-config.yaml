@@ -18,7 +18,7 @@ repos:
       - id: trailing-whitespace
 
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.8.1
+    rev: v0.11.3
     hooks:
       - id: ruff
         name: python ruff
@@ -26,7 +26,7 @@ repos:
         args: [--fix, --exit-non-zero-on-fix, --config, python/pyproject.toml]
 
   - repo: https://github.com/psf/black-pre-commit-mirror
-    rev: 24.10.0
+    rev: 25.1.0
     hooks:
       - id: black
         name: python black
@@ -34,7 +34,7 @@ repos:
         files: ^python/
 
   - repo: https://github.com/pycqa/isort
-    rev: 5.13.2
+    rev: 6.0.1
     hooks:
       - id: isort
         name: python isort
