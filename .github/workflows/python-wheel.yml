@@ -86,18 +86,22 @@ jobs:
           path: dist
 
   musllinux:
+    # Needs extra dependencies for aws-lc-rs compile:
+    # sudo apt-get install -y libclang1; cargo install --force --locked bindgen-cli
+    # Disabled until we can have a custom docker manylinux image with the dependencies or a self-hosted musllinux runner
+    if: false
     runs-on: ${{ matrix.platform.runner }}
     strategy:
       fail-fast: false
       matrix:
         platform:
-          - runner: ubuntu-22.04
+          - runner: ubuntu-latest
             target: x86_64
-          - runner: ubuntu-22.04
+          - runner: ubuntu-latest
             target: x86
-          - runner: ubuntu-22.04
+          - runner: ubuntu-24.04-arm
             target: aarch64
-          - runner: ubuntu-22.04
+          - runner: ubuntu-24.04-arm
             target: armv7
     steps:
       - uses: actions/checkout@v4
@@ -115,7 +119,6 @@ jobs:
             --manifest-path python-pyo3/Cargo.toml
           sccache: false
           manylinux: musllinux_1_2
-          before-script-linux: "cat /etc/os-release; sudo apt-get update && sudo apt-get install -y libclang1; cargo install --force --locked bindgen-cli"
 
       - name: Build free-threaded wheels
         uses: PyO3/maturin-action@v1
@@ -128,7 +131,6 @@ jobs:
             --manifest-path python-pyo3/Cargo.toml
           sccache: false
           manylinux: musllinux_1_2
-          before-script-linux: "cat /etc/os-release; sudo apt-get update && sudo apt-get install -y libclang1; cargo install --force --locked bindgen-cli"
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
