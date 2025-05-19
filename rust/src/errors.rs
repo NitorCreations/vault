@@ -28,7 +28,7 @@ use thiserror::Error;
 #[derive(Debug, Error)]
 pub enum VaultError {
     #[error("Describe CloudFormation Stack failed")]
-    DescribeStackError(#[from] SdkError<DescribeStacksError>),
+    DescribeStackError(Box<SdkError<DescribeStacksError>>),
     #[error("CloudFormation Stack outputs missing")]
     StackOutputsMissingError,
     #[error("Failed to get bucket name from stack")]
@@ -36,11 +36,11 @@ pub enum VaultError {
     #[error("No KEY_ARN provided, can't encrypt")]
     KeyArnMissingError,
     #[error("Failed to generate KMS Data key")]
-    KmsGenerateDataKeyError(#[from] SdkError<GenerateDataKeyError>),
+    KmsGenerateDataKeyError(Box<SdkError<GenerateDataKeyError>>),
     #[error("Failed to decrypt Ciphertext with KMS")]
-    KmsDecryptError(#[from] SdkError<DecryptError>),
+    KmsDecryptError(Box<SdkError<DecryptError>>),
     #[error("Failed to encrypt data with KMS")]
-    KmsEncryptError(#[from] SdkError<EncryptError>),
+    KmsEncryptError(Box<SdkError<EncryptError>>),
     #[error("No Plaintext for generated data key")]
     KmsDataKeyPlainTextMissingError,
     #[error("No ciphertextBlob for generated data key")]
@@ -56,9 +56,9 @@ pub enum VaultError {
     #[error("Failed to parse meta with serde")]
     EncryptObjectMetaToJsonError(#[from] serde_json::Error),
     #[error("Failed getting object from S3")]
-    S3GetObjectError(#[from] SdkError<GetObjectError>),
+    S3GetObjectError(Box<SdkError<GetObjectError>>),
     #[error("Failed deleting object from S3")]
-    S3DeleteObjectError(#[from] SdkError<DeleteObjectError>),
+    S3DeleteObjectError(Box<SdkError<DeleteObjectError>>),
     #[error("Key does not exist in S3: '{name}'")]
     S3DeleteObjectKeyMissingError { name: String },
     #[error("Failed getting head-object from S3")]
@@ -66,13 +66,13 @@ pub enum VaultError {
     #[error("Failed to decrypt S3-object body")]
     S3GetObjectBodyError,
     #[error("Failed putting object to S3")]
-    S3PutObjectError(#[from] SdkError<PutObjectError>),
+    S3PutObjectError(Box<SdkError<PutObjectError>>),
     #[error("Failed to list S3 objects")]
-    S3ListObjectsError(#[from] SdkError<ListObjectsV2Error>),
+    S3ListObjectsError(Box<SdkError<ListObjectsV2Error>>),
     #[error("Failed to build S3 object")]
     S3BuildObjectError(#[from] BuildError),
     #[error("Failed to delete S3 objects")]
-    S3DeleteObjectsError(#[from] SdkError<DeleteObjectsError>),
+    S3DeleteObjectsError(Box<SdkError<DeleteObjectsError>>),
     #[error("No contents found from S3")]
     S3NoContentsError,
     #[error("Failed getting region")]
@@ -88,13 +88,13 @@ pub enum VaultError {
     #[error("CloudFormation error: {0}")]
     CloudFormationError(#[from] Box<cloudformationError>),
     #[error("CloudFormation stack update failed: {0}")]
-    UpdateStackError(#[from] SdkError<UpdateStackError>),
+    UpdateStackError(Box<SdkError<UpdateStackError>>),
     #[error("Account ID missing from caller ID")]
     MissingAccountIdError,
     #[error("Failed to get called ID: {0}")]
-    CallerIdError(#[from] SdkError<GetCallerIdentityError>),
+    CallerIdError(Box<SdkError<GetCallerIdentityError>>),
     #[error("Failed to create stack: {0}")]
-    CreateStackError(#[from] SdkError<CreateStackError>),
+    CreateStackError(Box<SdkError<CreateStackError>>),
     #[error("Failed to get stack ID for new vault stack")]
     MissingStackIdError,
     #[error("Failed to get stack status for vault stack")]
@@ -104,7 +104,91 @@ pub enum VaultError {
     #[error("Key does not exist in S3")]
     KeyDoesNotExistError,
     #[error("Failed to list stacks: {0}")]
-    ListVaultStacksError(#[from] SdkError<ListStacksError>),
+    ListVaultStacksError(Box<SdkError<ListStacksError>>),
     #[error("Failed to delete stack: {0}")]
-    DeleteVaultStackError(#[from] SdkError<DeleteStackError>),
+    DeleteVaultStackError(Box<SdkError<DeleteStackError>>),
+}
+
+impl From<SdkError<DescribeStacksError>> for VaultError {
+    fn from(err: SdkError<DescribeStacksError>) -> Self {
+        Self::DescribeStackError(Box::new(err))
+    }
+}
+
+impl From<SdkError<GenerateDataKeyError>> for VaultError {
+    fn from(err: SdkError<GenerateDataKeyError>) -> Self {
+        Self::KmsGenerateDataKeyError(Box::new(err))
+    }
+}
+
+impl From<SdkError<DecryptError>> for VaultError {
+    fn from(err: SdkError<DecryptError>) -> Self {
+        Self::KmsDecryptError(Box::new(err))
+    }
+}
+
+impl From<SdkError<EncryptError>> for VaultError {
+    fn from(err: SdkError<EncryptError>) -> Self {
+        Self::KmsEncryptError(Box::new(err))
+    }
+}
+
+impl From<SdkError<GetObjectError>> for VaultError {
+    fn from(err: SdkError<GetObjectError>) -> Self {
+        Self::S3GetObjectError(Box::new(err))
+    }
+}
+
+impl From<SdkError<DeleteObjectError>> for VaultError {
+    fn from(err: SdkError<DeleteObjectError>) -> Self {
+        Self::S3DeleteObjectError(Box::new(err))
+    }
+}
+
+impl From<SdkError<PutObjectError>> for VaultError {
+    fn from(err: SdkError<PutObjectError>) -> Self {
+        Self::S3PutObjectError(Box::new(err))
+    }
+}
+
+impl From<SdkError<ListObjectsV2Error>> for VaultError {
+    fn from(err: SdkError<ListObjectsV2Error>) -> Self {
+        Self::S3ListObjectsError(Box::new(err))
+    }
+}
+
+impl From<SdkError<DeleteObjectsError>> for VaultError {
+    fn from(err: SdkError<DeleteObjectsError>) -> Self {
+        Self::S3DeleteObjectsError(Box::new(err))
+    }
+}
+
+impl From<SdkError<UpdateStackError>> for VaultError {
+    fn from(err: SdkError<UpdateStackError>) -> Self {
+        Self::UpdateStackError(Box::new(err))
+    }
+}
+
+impl From<SdkError<GetCallerIdentityError>> for VaultError {
+    fn from(err: SdkError<GetCallerIdentityError>) -> Self {
+        Self::CallerIdError(Box::new(err))
+    }
+}
+
+impl From<SdkError<CreateStackError>> for VaultError {
+    fn from(err: SdkError<CreateStackError>) -> Self {
+        Self::CreateStackError(Box::new(err))
+    }
+}
+
+impl From<SdkError<ListStacksError>> for VaultError {
+    fn from(err: SdkError<ListStacksError>) -> Self {
+        Self::ListVaultStacksError(Box::new(err))
+    }
+}
+
+impl From<SdkError<DeleteStackError>> for VaultError {
+    fn from(err: SdkError<DeleteStackError>) -> Self {
+        Self::DeleteVaultStackError(Box::new(err))
+    }
 }

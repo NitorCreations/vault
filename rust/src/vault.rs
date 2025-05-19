@@ -464,10 +464,10 @@ impl Vault {
                     if service_error.is_no_such_key() {
                         VaultError::KeyDoesNotExistError
                     } else {
-                        VaultError::S3GetObjectError(err)
+                        VaultError::S3GetObjectError(Box::new(err))
                     }
                 } else {
-                    VaultError::S3GetObjectError(err)
+                    VaultError::S3GetObjectError(Box::new(err))
                 }
             })?;
 
