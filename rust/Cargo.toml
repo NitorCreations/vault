@@ -17,10 +17,10 @@ aes-gcm = "0.10.3"
 anyhow = "1.0.98"
 aws-config = { version = "1.6.1", features = ["behavior-version-latest", "rustls"] }
 aws-lc-rs = { version = "1", features = ["bindgen", "prebuilt-nasm"] }
-aws-sdk-cloudformation = { version = "1.74.0", features = ["rustls"] }
-aws-sdk-kms = { version = "1.68.0", features = ["rustls"] }
-aws-sdk-s3 = { version = "1.85.0", features = ["rustls"] }
-aws-sdk-sts = { version = "1.68.0", features = ["behavior-version-latest", "rustls"] }
+aws-sdk-cloudformation = { version = "1.78.0", features = ["rustls"] }
+aws-sdk-kms = { version = "1.72.0", features = ["rustls"] }
+aws-sdk-s3 = { version = "1.90.0", features = ["rustls"] }
+aws-sdk-sts = { version = "1.72.0", features = ["behavior-version-latest", "rustls"] }
 base64 = "0.22.1"
 clap = { version = "4.5.38", features = ["derive", "env"] }
 clap_complete = "4.5.50"
