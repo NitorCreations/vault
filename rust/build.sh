@@ -17,7 +17,7 @@ fi
 cd "$DIR"
 cargo build --release
 
-if [ "$PLATFORM" = windows ]; then
+if [ "$BASH_PLATFORM" = windows ]; then
     executable="vault.exe"
 else
     executable="vault"

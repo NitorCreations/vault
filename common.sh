@@ -6,25 +6,27 @@ set -eo pipefail
 REPO_ROOT=$(git rev-parse --show-toplevel || (cd "$(dirname "${BASH_SOURCE[0]}")" && pwd))
 export REPO_ROOT
 
-# Check platform
+# Check BASH_PLATFORM
 case "$(uname -s)" in
   "Darwin")
-    PLATFORM="mac"
+    BASH_PLATFORM="mac"
     ;;
   "MINGW"*)
-    PLATFORM="windows"
+    BASH_PLATFORM="windows"
     ;;
   *)
-    PLATFORM="linux"
+    BASH_PLATFORM="linux"
     ;;
 esac
+export BASH_PLATFORM
 
 # BSD sed on MacOS works differently
-if [ "$PLATFORM" = mac ]; then
+if [ "$BASH_PLATFORM" = mac ]; then
   SED_COMMAND=(sed -i '')
 else
   SED_COMMAND=(sed -i)
 fi
+export SED_COMMAND
 
 # Print a message with red color
 print_red() {
@@ -54,9 +56,9 @@ print_warn() {
   print_yellow "WARNING: $1"
 }
 
-# Print an error and exit
+# Print an error and exit the program
 print_error_and_exit() {
-  print_red "ERROR: $1"
+  print_error "$1"
   # use exit code if given as argument, otherwise default to 1
   exit "${2:-1}"
 }
