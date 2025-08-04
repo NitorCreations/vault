@@ -24,9 +24,9 @@
     "vault": "tsx cli/vault.ts"
   },
   "dependencies": {
-    "@aws-sdk/client-cloudformation": "^3.848.0",
-    "@aws-sdk/client-kms": "^3.854.0",
-    "@aws-sdk/client-s3": "^3.850.0",
+    "@aws-sdk/client-cloudformation": "^3.859.0",
+    "@aws-sdk/client-kms": "^3.859.0",
+    "@aws-sdk/client-s3": "^3.859.0",
     "commander": "^14.0.0"
   },
   "engines": {
@@ -43,7 +43,7 @@
   "devDependencies": {
     "@types/node": "^24.1.0",
     "tsx": "^4.20.3",
-    "typescript": "^5.8.3"
+    "typescript": "^5.9.2"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
