@@ -78,7 +78,7 @@ impl From<VaultConfig> for RustVaultConfig {
     }
 }
 
-/// Delete data in S3 for given key name.
+/// Delete data in S3 for a given key name.
 #[pyfunction()]
 fn delete(name: &str, config: VaultConfig) -> PyResult<()> {
     RUNTIME.block_on(async {
@@ -107,7 +107,7 @@ fn delete_many(names: Vec<String>, config: VaultConfig) -> PyResult<()> {
 
 /// Decrypt data with KMS.
 #[pyfunction()]
-fn direct_decrypt(data: &[u8], config: VaultConfig) -> PyResult<Cow<[u8]>> {
+fn direct_decrypt(data: &'_ [u8], config: VaultConfig) -> PyResult<Cow<'_, [u8]>> {
     // Returns Cow<[u8]> instead of Vec since that will get mapped to bytes for the Python side
     // https://pyo3.rs/main/conversions/tables#returning-rust-values-to-python
     RUNTIME.block_on(async {
@@ -124,7 +124,7 @@ fn direct_decrypt(data: &[u8], config: VaultConfig) -> PyResult<Cow<[u8]>> {
 
 /// Encrypt data with KMS.
 #[pyfunction()]
-fn direct_encrypt(data: &[u8], config: VaultConfig) -> PyResult<Cow<[u8]>> {
+fn direct_encrypt(data: &'_ [u8], config: VaultConfig) -> PyResult<Cow<'_, [u8]>> {
     RUNTIME.block_on(async {
         let result = Vault::from_config(config.into())
             .await
@@ -169,7 +169,7 @@ fn init(config: VaultConfig) -> PyResult<Py<PyDict>> {
         .await
         .map_err(vault_error_to_anyhow)
     })?;
-    Python::with_gil(|py| match result {
+    Python::attach(|py| match result {
         CreateStackResult::Exists { data } => {
             let dict = stack_data_to_pydict(py, data, "EXISTS")?;
             Ok(dict.into())
@@ -210,11 +210,11 @@ fn list_all(config: VaultConfig) -> PyResult<Vec<String>> {
     })
 }
 
-/// Lookup value for given key name.
+/// Lookup value for a given key name.
 ///
 /// Returns raw bytes.
 #[pyfunction()]
-fn lookup(name: &str, config: VaultConfig) -> PyResult<Cow<[u8]>> {
+fn lookup(name: &'_ str, config: VaultConfig) -> PyResult<Cow<'_, [u8]>> {
     RUNTIME.block_on(async {
         let result: Value = Box::pin(
             Vault::from_config(config.into())
@@ -250,13 +250,13 @@ fn stack_status(config: VaultConfig) -> PyResult<Py<PyDict>> {
             .map_err(vault_error_to_anyhow)
     })?;
 
-    Python::with_gil(|py| {
+    Python::attach(|py| {
         let dict = stack_data_to_pydict(py, data, "SUCCESS")?;
         Ok(dict.into())
     })
 }
 
-/// Store encrypted value with given key name in S3.
+/// Store encrypted value with the given key name in S3.
 #[pyfunction()]
 fn store(name: &str, value: &[u8], config: VaultConfig) -> PyResult<()> {
     RUNTIME.block_on(async {
@@ -282,7 +282,7 @@ fn update(config: VaultConfig) -> PyResult<Py<PyDict>> {
             .await
             .map_err(vault_error_to_anyhow)
     })?;
-    Python::with_gil(|py| match result {
+    Python::attach(|py| match result {
         UpdateStackResult::UpToDate { data } => {
             let dict = stack_data_to_pydict(py, data, "UP_TO_DATE")?;
             Ok(dict.into())

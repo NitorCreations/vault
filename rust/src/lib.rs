@@ -116,7 +116,7 @@ impl S3DataKeys {
     }
 
     /// Return key strings as an array for easy iteration.
-    fn as_array(&self) -> [&str; 3] {
+    const fn as_array(&self) -> [&str; 3] {
         [self.key.as_str(), self.cipher.as_str(), self.meta.as_str()]
     }
 
