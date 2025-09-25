@@ -162,33 +162,33 @@ pub async fn get_stack_data(
     let stack_response = describe_stack(cf_client, stack_name).await?;
 
     let mut data = CloudFormationStackData::default();
-    if let Some(stacks) = stack_response.stacks {
-        if let Some(stack) = stacks.first() {
-            data.status.clone_from(&stack.stack_status);
-            data.status_reason.clone_from(&stack.stack_status_reason);
-            if let Some(outputs) = &stack.outputs {
-                for output in outputs {
-                    if let Some(output_key) = output.output_key() {
-                        match output_key {
-                            "vaultBucketName" => {
-                                if let Some(output_value) = output.output_value() {
-                                    data.bucket_name = Some(output_value.to_string());
-                                }
+    if let Some(stacks) = stack_response.stacks
+        && let Some(stack) = stacks.first()
+    {
+        data.status.clone_from(&stack.stack_status);
+        data.status_reason.clone_from(&stack.stack_status_reason);
+        if let Some(outputs) = &stack.outputs {
+            for output in outputs {
+                if let Some(output_key) = output.output_key() {
+                    match output_key {
+                        "vaultBucketName" => {
+                            if let Some(output_value) = output.output_value() {
+                                data.bucket_name = Some(output_value.to_string());
                             }
-                            "kmsKeyArn" => {
-                                if let Some(output_value) = output.output_value() {
-                                    data.key_arn = Some(output_value.to_string());
-                                }
-                            }
-                            "vaultStackVersion" => {
-                                if let Some(output_value) = output.output_value() {
-                                    if let Ok(version) = output_value.parse::<u32>() {
-                                        data.version = Some(version);
-                                    }
-                                }
-                            }
-                            _ => {}
                         }
+                        "kmsKeyArn" => {
+                            if let Some(output_value) = output.output_value() {
+                                data.key_arn = Some(output_value.to_string());
+                            }
+                        }
+                        "vaultStackVersion" => {
+                            if let Some(output_value) = output.output_value()
+                                && let Ok(version) = output_value.parse::<u32>()
+                            {
+                                data.version = Some(version);
+                            }
+                        }
+                        _ => {}
                     }
                 }
             }
