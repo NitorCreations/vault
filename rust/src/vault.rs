@@ -396,6 +396,9 @@ impl Vault {
         let cipher: AesGcm<Aes256, U12> =
             AesGcm::new_from_slice(self.direct_decrypt(data_key).await?.as_slice())?;
         let nonce = base64::engine::general_purpose::STANDARD.decode(meta.nonce)?;
+        // TODO remove deprecated allow once library has been updated
+        // https://github.com/RustCrypto/traits/issues/2036
+        #[allow(deprecated)]
         let nonce = Nonce::from_slice(nonce.as_slice());
         let decrypted_bytes = cipher
             .decrypt(
