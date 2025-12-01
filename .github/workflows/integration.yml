@@ -54,7 +54,7 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
 
-      - uses: Swatinem/rust-cache@v2.8.1
+      - uses: Swatinem/rust-cache@v2.8.2
         with:
           # The build script creates a `release` build so use separate cache
           key: "release"
