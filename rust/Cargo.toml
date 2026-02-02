@@ -19,7 +19,7 @@ aws-config = { version = "1.8.12", features = ["behavior-version-latest", "rustl
 aws-lc-rs = { version = "1", features = ["bindgen", "prebuilt-nasm"] }
 aws-sdk-cloudformation = { version = "1.105.0", features = ["rustls"] }
 aws-sdk-kms = { version = "1.98.0", features = ["rustls"] }
-aws-sdk-s3 = { version = "1.120.0", features = ["rustls"] }
+aws-sdk-s3 = { version = "1.121.0", features = ["rustls"] }
 aws-sdk-sts = { version = "1.96.0", features = ["behavior-version-latest", "rustls"] }
 base64 = "0.22.1"
 clap = { version = "4.5.56", features = ["derive", "env"] }
