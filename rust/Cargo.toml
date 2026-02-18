@@ -14,7 +14,7 @@ authors = [
 
 [dependencies]
 aes-gcm = "0.10.3"
-anyhow = "1.0.100"
+anyhow = "1.0.101"
 aws-config = { version = "1.8.13", features = ["behavior-version-latest", "rustls"] }
 aws-lc-rs = { version = "1", features = ["bindgen", "prebuilt-nasm"] }
 aws-sdk-cloudformation = { version = "1.106.0", features = ["rustls"] }
@@ -22,11 +22,11 @@ aws-sdk-kms = { version = "1.99.0", features = ["rustls"] }
 aws-sdk-s3 = { version = "1.122.0", features = ["rustls"] }
 aws-sdk-sts = { version = "1.96.0", features = ["behavior-version-latest", "rustls"] }
 base64 = "0.22.1"
-clap = { version = "4.5.56", features = ["derive", "env"] }
-clap_complete = "4.5.64"
+clap = { version = "4.5.59", features = ["derive", "env"] }
+clap_complete = "4.5.66"
 colored = "3.1.1"
 dirs = "6.0.0"
-rand = "0.9.2"
+rand = "0.10.0"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.148"
 thiserror = "2.0.18"
