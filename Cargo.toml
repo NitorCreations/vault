@@ -5,8 +5,8 @@ resolver = "3"
 
 [workspace.package]
 edition = "2024"
-version = "2.7.6"
-rust-version = "1.90"
+version = "2.7.7"
+rust-version = "1.92"
 
 [profile.release]
 lto = "thin"
