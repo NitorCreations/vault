@@ -44,11 +44,6 @@ jobs:
         platform:
           - runner: ubuntu-24.04
             target: x86_64
-          # Disabled due to build issues
-          # Without Docker, ring compile fails
-          # With Docker, aws-lc compile fails
-          #- runner: ubuntu-latest
-          #  target: x86
           - runner: ubuntu-24.04-arm
             target: aarch64
     steps:
@@ -101,9 +96,7 @@ jobs:
         platform:
           - runner: ubuntu-24.04
             target: x86_64
-          - runner: ubuntu-24.04
-            target: x86
-          - runner: ubuntu-24.04
+          - runner: ubuntu-24.04-arm
             target: aarch64
     steps:
       - uses: actions/checkout@v6
@@ -148,13 +141,12 @@ jobs:
         platform:
           - runner: windows-latest
             target: x64
-            python_arch: x64
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with:
           python-version: 3.x
-          architecture: ${{ matrix.platform.python_arch }}
+          architecture: ${{ matrix.platform.target }}
 
       - name: Install NASM
         run: choco install nasm -y
