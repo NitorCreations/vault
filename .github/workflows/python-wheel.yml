@@ -49,22 +49,13 @@ jobs:
           # With Docker, aws-lc compile fails
           #- runner: ubuntu-latest
           #  target: x86
-          - runner: ubuntu-24.04
+          - runner: ubuntu-24.04-arm
             target: aarch64
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with:
           python-version: 3.x
-
-      - name: Install cross-compilation dependencies
-        if: matrix.platform.target == 'aarch64'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu libc6-dev-arm64-cross
-          echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc" >> $GITHUB_ENV
-          echo "CC_aarch64_unknown_linux_gnu=aarch64-linux-gnu-gcc" >> $GITHUB_ENV
-          echo "CXX_aarch64_unknown_linux_gnu=aarch64-linux-gnu-g++" >> $GITHUB_ENV
 
       - name: Build wheels
         uses: PyO3/maturin-action@v1
