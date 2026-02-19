@@ -14,7 +14,7 @@ static RUNTIME: LazyLock<Runtime> =
     LazyLock::new(|| Runtime::new().expect("Failed to start async runtime."));
 
 /// Optional parameters for a `Vault` instance.
-#[pyclass]
+#[pyclass(from_py_object)]
 #[derive(Debug, Default, Clone)]
 pub struct VaultConfig {
     #[pyo3(get, set)]
