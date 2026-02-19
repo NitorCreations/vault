@@ -204,10 +204,22 @@ To publish a new version:
 
 1. Update the version in `Cargo.toml`
 2. Commit the change to the `master` branch
-3. Create and push an annotated git tag matching the version: `git tag -a v1.2.3 -m "v1.2.3" && git push origin v1.2.3`
+3. Run the tagging script: `./tag-release.sh --push`
+
+Alternatively, create and push tags manually:
+
+```sh
+git tag -a rust-1.2.3 -m "rust-1.2.3" && git push origin rust-1.2.3
+```
 
 The [publish workflow](/.github/workflows/publish.yml) will automatically verify the tag is on `master`,
 run tests, and publish to crates.io.
+
+### Tag script options
+
+- `./tag-release.sh` — Create `rust-x.x.x` and `python-x.x.x` tags locally
+- `./tag-release.sh --push` — Create and push tags to origin
+- `./tag-release.sh --force` — Overwrite existing tags
 
 ## TODO
 
