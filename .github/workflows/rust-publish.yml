@@ -11,7 +11,7 @@ env:
 jobs:
   publish:
     name: Publish to crates.io
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-latest
     environment: release
     permissions:
       contents: read
