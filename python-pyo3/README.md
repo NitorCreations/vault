@@ -159,3 +159,19 @@ uv run vault -h
 pip install .
 vault -h
 ```
+
+### Updating dependencies
+
+Update all Python dependencies to latest versions:
+
+```shell
+uv lock --upgrade
+uv sync
+```
+
+To update a specific package:
+
+```shell
+uv lock --upgrade-package <package-name>
+uv sync
+```
