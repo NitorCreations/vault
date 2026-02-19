@@ -197,17 +197,17 @@ cargo update
 
 ## Publish a new crate version
 
-Go to [crates.io/settings/tokens](https://crates.io/settings/tokens) and create a new API token,
-unless you already have one that has not expired.
-Do _not_ create a token with no expiration date,
-and prefer short expiration times.
+Publishing is handled automatically via GitHub Actions using
+[trusted publishing](https://crates.io/docs/trusted-publishing).
 
-Copy token and run `cargo login <token>`.
+To publish a new version:
 
-If you need to publish an older version (that is not the current git HEAD commit),
-first checkout the version you want to publish.
+1. Update the version in `Cargo.toml`
+2. Commit the change to the `master` branch
+3. Create and push an annotated git tag matching the version: `git tag -a v1.2.3 -m "v1.2.3" && git push origin v1.2.3`
 
-Try publishing with `cargo publish --dry-run` and then run with `cargo publish`.
+The [publish workflow](/.github/workflows/publish.yml) will automatically verify the tag is on `master`,
+run tests, and publish to crates.io.
 
 ## TODO
 
