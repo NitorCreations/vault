@@ -17,33 +17,34 @@ repos:
       - id: mixed-line-ending
       - id: trailing-whitespace
 
-  - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.14.11
-    hooks:
-      - id: ruff
-        name: python ruff
-        files: ^python/
-        args: [--fix, --exit-non-zero-on-fix, --config, python/pyproject.toml]
-
   - repo: local
     hooks:
+      - id: python-ruff
+        name: Python Ruff
+        description: Run Ruff format and lint on files included in the commit.
+        entry: bash -c 'cd python && uv run ruff format && uv run ruff check --fix; cd ../python-pyo3 && uv run ruff format && uv run ruff check --fix'
+        pass_filenames: false
+        types: [file, python]
+        language: system
+        files: ^(python|python-pyo3)/
+
       - id: rust-fmt
         name: rust format
         description: Run cargo fmt on files included in the commit. rustfmt should be installed before-hand.
-        entry: bash -c 'cd rust && cargo fmt'
+        entry: bash -c 'cd rust && cargo fmt; cd ../python-pyo3 && cargo fmt'
         pass_filenames: false
         types: [file, rust]
         language: system
-        files: ^rust/
+        files: ^(rust|python-pyo3)/
 
       - id: rust-clippy
         name: rust lint
         description: Run cargo clippy on files included in the commit. clippy should be installed before-hand.
-        entry: bash -c 'cd rust && cargo clippy'
+        entry: bash -c 'cd rust && cargo clippy; cd ../python-pyo3 && cargo clippy'
         pass_filenames: false
         types: [file, rust]
         language: system
-        files: ^rust/
+        files: ^(rust|python-pyo3)/
 
       - id: gofmt
         name: go format
