@@ -19,7 +19,7 @@ use aws_sdk_s3::primitives::ByteStream;
 use aws_sdk_s3::types::Delete;
 use aws_sdk_sts::Client as stsClient;
 use base64::Engine;
-use rand::Rng;
+use rand::RngExt;
 
 use crate::cloudformation;
 use crate::cloudformation::{CloudFormationParams, CloudFormationStackData};
