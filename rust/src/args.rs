@@ -19,39 +19,39 @@ use crate::{Vault, cli};
 )]
 struct Args {
     /// Override the bucket name
-    #[arg(short, long, env = "VAULT_BUCKET")]
+    #[arg(short, long, env = "VAULT_BUCKET", global = true)]
     bucket: Option<String>,
 
     /// Override the KMS key ARN
-    #[arg(short, long, name = "ARN", env = "VAULT_KEY")]
+    #[arg(short, long, name = "ARN", env = "VAULT_KEY", global = true)]
     key_arn: Option<String>,
 
     /// Optional prefix for key name
-    #[arg(short, long, env = "VAULT_PREFIX")]
+    #[arg(short, long, env = "VAULT_PREFIX", global = true)]
     prefix: Option<String>,
 
     /// Specify AWS region for the bucket
-    #[arg(short, long, env = "AWS_REGION")]
+    #[arg(short, long, env = "AWS_REGION", global = true)]
     region: Option<String>,
 
     /// Specify CloudFormation stack name to use
-    #[arg(long = "vaultstack", name = "NAME", env = "VAULT_STACK")]
+    #[arg(long = "vaultstack", name = "NAME", env = "VAULT_STACK", global = true)]
     vault_stack: Option<String>,
 
     /// Specify AWS IAM access key ID
-    #[arg(long = "id", name = "ID", requires = "SECRET")]
+    #[arg(long = "id", name = "ID", requires = "SECRET", global = true)]
     iam_id: Option<String>,
 
     /// Specify AWS IAM secret access key
-    #[arg(long = "secret", name = "SECRET", requires = "ID")]
+    #[arg(long = "secret", name = "SECRET", requires = "ID", global = true)]
     iam_secret: Option<String>,
 
     /// Specify AWS profile name to use
-    #[arg(long = "profile", name = "PROFILE", env = "AWS_PROFILE")]
+    #[arg(long = "profile", name = "PROFILE", env = "AWS_PROFILE", global = true)]
     aws_profile: Option<String>,
 
     /// Suppress additional output and error messages
-    #[arg(short, long)]
+    #[arg(short, long, global = true)]
     quiet: bool,
 
     /// Available subcommands
