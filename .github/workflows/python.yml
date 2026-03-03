@@ -41,10 +41,10 @@ jobs:
         uses: astral-sh/setup-uv@v7
 
       - name: Ruff lint
-        run: uv run ruff check --output-format=github .
+        run: uv run --no-project ruff check --output-format=github .
 
       - name: Ruff format
-        run: uv run ruff format --check --verbose .
+        run: uv run --no-project ruff format --check --verbose .
 
       - name: Type check
-        run: uv run ty check .
+        run: uv run --no-project ty check .
