@@ -16,7 +16,6 @@ import os
 
 from collections.abc import Collection
 from dataclasses import dataclass
-from typing import Optional, Union
 
 from n_vault import nitor_vault_rs
 
@@ -26,11 +25,11 @@ class CloudFormationStackData:
     """Vault stack data from AWS CloudFormation describe stack."""
 
     result: str
-    bucket: Optional[str]
-    key: Optional[str]
-    status: Optional[str]
-    status_reason: Optional[str]
-    version: Optional[int]
+    bucket: str | None
+    key: str | None
+    status: str | None
+    status_reason: str | None
+    version: int | None
 
 
 @dataclass
@@ -38,9 +37,9 @@ class StackCreated:
     """Result data for vault init."""
 
     result: str
-    stack_name: Optional[str]
-    stack_id: Optional[str]
-    region: Optional[str]
+    stack_name: str | None
+    stack_id: str | None
+    region: str | None
 
 
 @dataclass
@@ -48,9 +47,9 @@ class StackUpdated:
     """Result data for vault update."""
 
     result: str
-    stack_id: Optional[str]
-    previous_version: Optional[int]
-    new_version: Optional[int]
+    stack_id: str | None
+    previous_version: int | None
+    new_version: int | None
 
 
 class Vault:
@@ -64,14 +63,14 @@ class Vault:
 
     def __init__(
         self,
-        vault_stack: str = None,
-        vault_key: str = None,
-        vault_bucket: str = None,
-        vault_iam_id: str = None,
-        vault_iam_secret: str = None,
-        vault_prefix: str = None,
-        vault_region: str = None,
-        profile: str = None,
+        vault_stack: str | None = None,
+        vault_key: str | None = None,
+        vault_bucket: str | None = None,
+        vault_iam_id: str | None = None,
+        vault_iam_secret: str | None = None,
+        vault_prefix: str | None = None,
+        vault_region: str | None = None,
+        profile: str | None = None,
     ):
         self.vault_stack = vault_stack
         self.vault_key = vault_key
@@ -119,7 +118,7 @@ class Vault:
         """
         return nitor_vault_rs.direct_decrypt(encrypted_data, self.config)
 
-    def direct_encrypt(self, data: Union[bytes, str]) -> bytes:
+    def direct_encrypt(self, data: bytes | str) -> bytes:
         """
         Encrypt data with KMS.
         """
@@ -136,7 +135,7 @@ class Vault:
         """
         return nitor_vault_rs.exists(name, self.config)
 
-    def init(self) -> Union[StackCreated, CloudFormationStackData]:
+    def init(self) -> StackCreated | CloudFormationStackData:
         """
         Initialize new Vault stack.
 
@@ -150,7 +149,7 @@ class Vault:
         result_status = result.get("result")
         if result_status == "CREATED":
             return StackCreated(**result)
-        elif result_status == "EXISTS" or result_status == "EXISTS_WITH_FAILED_STATE":
+        if result_status in ("EXISTS", "EXISTS_WITH_FAILED_STATE"):
             return CloudFormationStackData(**result)
 
         raise RuntimeError(f"Unexpected result data: {result}")
@@ -178,7 +177,7 @@ class Vault:
         data = nitor_vault_rs.stack_status(self.config)
         return CloudFormationStackData(**data)
 
-    def store(self, name: str, data: Union[bytes, str]) -> None:
+    def store(self, name: str, data: bytes | str) -> None:
         """
         Store encrypted value with given key name in S3.
         """
@@ -187,7 +186,7 @@ class Vault:
 
         return nitor_vault_rs.store(name, data, self.config)
 
-    def update(self) -> Union[StackUpdated, CloudFormationStackData]:
+    def update(self) -> StackUpdated | CloudFormationStackData:
         """
         Update the vault Cloudformation stack with the current template.
 
@@ -198,7 +197,7 @@ class Vault:
         result_status = result.get("result")
         if result_status == "UPDATED":
             return StackUpdated(**result)
-        elif result_status == "UP_TO_DATE":
+        if result_status == "UP_TO_DATE":
             return CloudFormationStackData(**result)
 
         raise RuntimeError(f"Unexpected result data: {result}")
