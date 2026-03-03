@@ -110,7 +110,7 @@ jobs:
             --manifest-path python-pyo3/Cargo.toml
           sccache: false
           manylinux: musllinux_1_2
-          before-script-linux: apk add --no-cache clang
+          before-script-linux: apt-get update && apt-get install -y clang
 
       - name: Build free-threaded wheels
         uses: PyO3/maturin-action@v1
@@ -123,7 +123,7 @@ jobs:
             --manifest-path python-pyo3/Cargo.toml
           sccache: false
           manylinux: musllinux_1_2
-          before-script-linux: apk add --no-cache clang
+          before-script-linux: apt-get update && apt-get install -y clang
 
       - name: Upload wheels
         uses: actions/upload-artifact@v6
