@@ -29,9 +29,16 @@ classifiers = [
 ]
 dependencies = []
 
+[dependency-groups]
+dev = [
+    "maturin>=1.12.6",
+    "ruff>=0.15.4",
+    "ty>=0.0.20",
+]
+
 [project.optional-dependencies]
 build = ["maturin", "wheel"]
-dev = ["maturin", "ruff"]
+dev = ["maturin", "ruff", "ty"]
 
 [project.urls]
 Repository = "https://github.com/NitorCreations/vault"
