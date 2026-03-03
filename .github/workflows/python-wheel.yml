@@ -222,7 +222,7 @@ jobs:
           args: |
             --release
             --out dist
-            --interpreter python3.13t
+            --interpreter python3.14t
             --manifest-path python-pyo3/Cargo.toml
           sccache: ${{ !startsWith(github.ref, 'refs/tags/python') }}
 
