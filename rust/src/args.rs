@@ -9,7 +9,7 @@ use colored::Colorize;
 use crate::{Vault, cli};
 
 #[allow(clippy::doc_markdown)]
-#[derive(Parser)]
+#[derive(Parser, Debug)]
 #[command(
     author,
     version,
@@ -60,7 +60,7 @@ struct Args {
 }
 
 #[allow(clippy::doc_markdown)]
-#[derive(Subcommand)]
+#[derive(Subcommand, Debug, PartialEq)]
 enum Command {
     /// List available secrets
     #[command(
@@ -291,7 +291,7 @@ enum Command {
     },
 }
 
-#[derive(Subcommand, Debug)]
+#[derive(Subcommand, Debug, PartialEq)]
 enum StackAction {
     #[command(
         short_flag('l'),
@@ -517,4 +517,669 @@ async fn run(args: Args) -> Result<()> {
         }
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use clap::Parser;
+
+    /// Helper to parse args from a string slice
+    fn parse_args(args: &[&str]) -> Result<Args, clap::Error> {
+        Args::try_parse_from(args)
+    }
+
+    // ==================== Global Args Tests ====================
+
+    #[test]
+    fn test_global_args_before_subcommand() {
+        // Traditional: global args before subcommand
+        let args = parse_args(&["vault", "-r", "eu-central-1", "-b", "my-bucket", "--all"])
+            .expect("Should parse successfully");
+
+        assert_eq!(args.region, Some("eu-central-1".to_string()));
+        assert_eq!(args.bucket, Some("my-bucket".to_string()));
+        assert!(matches!(args.command, Some(Command::All {})));
+    }
+
+    #[test]
+    fn test_global_args_after_subcommand() {
+        // New behavior: global args after subcommand should work
+        let args = parse_args(&["vault", "--all", "-r", "eu-central-1", "-b", "my-bucket"])
+            .expect("Should parse successfully");
+
+        assert_eq!(args.region, Some("eu-central-1".to_string()));
+        assert_eq!(args.bucket, Some("my-bucket".to_string()));
+        assert!(matches!(args.command, Some(Command::All {})));
+    }
+
+    #[test]
+    fn test_global_args_mixed_position() {
+        // Global args both before and after subcommand
+        let args = parse_args(&[
+            "vault",
+            "-r",
+            "eu-central-1",
+            "store",
+            "mykey",
+            "myvalue",
+            "-w",
+            "-b",
+            "my-bucket",
+        ])
+        .expect("Should parse successfully");
+
+        assert_eq!(args.region, Some("eu-central-1".to_string()));
+        assert_eq!(args.bucket, Some("my-bucket".to_string()));
+        assert!(matches!(
+            args.command,
+            Some(Command::Store {
+                key: Some(_),
+                value: Some(_),
+                overwrite: true,
+                ..
+            })
+        ));
+    }
+
+    #[test]
+    fn test_example_from_user_story() {
+        // The exact example from the user: vault -s version.txt -f version.txt -w -r eu-central-1
+        // This is store with file flag
+        let args = parse_args(&[
+            "vault",
+            "-s",
+            "version.txt",
+            "-f",
+            "version.txt",
+            "-w",
+            "-r",
+            "eu-central-1",
+        ])
+        .expect("Should parse successfully");
+
+        assert_eq!(args.region, Some("eu-central-1".to_string()));
+        if let Some(Command::Store {
+            key,
+            file,
+            overwrite,
+            ..
+        }) = args.command
+        {
+            assert_eq!(key, Some("version.txt".to_string()));
+            assert_eq!(file, Some("version.txt".to_string()));
+            assert!(overwrite);
+        } else {
+            panic!("Expected Store command");
+        }
+    }
+
+    #[test]
+    fn test_all_global_args() {
+        let args = parse_args(&[
+            "vault",
+            "-b",
+            "test-bucket",
+            "-k",
+            "arn:aws:kms:region:account:key/id",
+            "-p",
+            "myprefix",
+            "-r",
+            "us-west-2",
+            "--vaultstack",
+            "my-stack",
+            "--id",
+            "AKIAIOSFODNN7EXAMPLE",
+            "--secret",
+            "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+            "--profile",
+            "myprofile",
+            "-q",
+            "--all",
+        ])
+        .expect("Should parse successfully");
+
+        assert_eq!(args.bucket, Some("test-bucket".to_string()));
+        assert_eq!(
+            args.key_arn,
+            Some("arn:aws:kms:region:account:key/id".to_string())
+        );
+        assert_eq!(args.prefix, Some("myprefix".to_string()));
+        assert_eq!(args.region, Some("us-west-2".to_string()));
+        assert_eq!(args.vault_stack, Some("my-stack".to_string()));
+        assert_eq!(args.iam_id, Some("AKIAIOSFODNN7EXAMPLE".to_string()));
+        assert_eq!(
+            args.iam_secret,
+            Some("wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY".to_string())
+        );
+        assert_eq!(args.aws_profile, Some("myprofile".to_string()));
+        assert!(args.quiet);
+        assert!(matches!(args.command, Some(Command::All {})));
+    }
+
+    #[test]
+    fn test_iam_credentials_require_both() {
+        // Only id without secret should fail
+        let result = parse_args(&["vault", "--id", "AKIAIOSFODNN7EXAMPLE", "--all"]);
+        assert!(result.is_err());
+
+        // Only secret without id should fail
+        let result = parse_args(&[
+            "vault",
+            "--secret",
+            "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+            "--all",
+        ]);
+        assert!(result.is_err());
+
+        // Both together should succeed
+        let result = parse_args(&[
+            "vault",
+            "--id",
+            "AKIAIOSFODNN7EXAMPLE",
+            "--secret",
+            "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+            "--all",
+        ]);
+        assert!(result.is_ok());
+    }
+
+    // ==================== Command Tests ====================
+
+    #[test]
+    fn test_all_command_variants() {
+        // Test all the different ways to invoke "all" command
+        let variants = ["-a", "--all", "all", "a", "list", "ls"];
+        for variant in variants {
+            let args = parse_args(&["vault", variant])
+                .unwrap_or_else(|_| panic!("Should parse '{variant}'"));
+            assert!(
+                matches!(args.command, Some(Command::All {})),
+                "Failed for variant: {variant}"
+            );
+        }
+    }
+
+    #[test]
+    fn test_store_command_with_key_value() {
+        let args =
+            parse_args(&["vault", "store", "mykey", "myvalue"]).expect("Should parse successfully");
+
+        if let Some(Command::Store { key, value, .. }) = args.command {
+            assert_eq!(key, Some("mykey".to_string()));
+            assert_eq!(value, Some("myvalue".to_string()));
+        } else {
+            panic!("Expected Store command");
+        }
+    }
+
+    #[test]
+    fn test_store_command_short_flag() {
+        let args =
+            parse_args(&["vault", "-s", "mykey", "myvalue"]).expect("Should parse successfully");
+
+        assert!(matches!(args.command, Some(Command::Store { .. })));
+    }
+
+    #[test]
+    fn test_store_command_long_flag() {
+        let args = parse_args(&["vault", "--store", "mykey", "myvalue"])
+            .expect("Should parse successfully");
+
+        assert!(matches!(args.command, Some(Command::Store { .. })));
+    }
+
+    #[test]
+    fn test_store_command_with_file() {
+        let args = parse_args(&["vault", "store", "mykey", "--file", "path/to/file.txt"])
+            .expect("Should parse successfully");
+
+        if let Some(Command::Store { key, file, .. }) = args.command {
+            assert_eq!(key, Some("mykey".to_string()));
+            assert_eq!(file, Some("path/to/file.txt".to_string()));
+        } else {
+            panic!("Expected Store command");
+        }
+    }
+
+    #[test]
+    fn test_store_command_with_overwrite() {
+        let args = parse_args(&["vault", "store", "mykey", "myvalue", "-w"])
+            .expect("Should parse successfully");
+
+        if let Some(Command::Store { overwrite, .. }) = args.command {
+            assert!(overwrite);
+        } else {
+            panic!("Expected Store command");
+        }
+    }
+
+    #[test]
+    fn test_lookup_command() {
+        let args = parse_args(&["vault", "lookup", "mykey"]).expect("Should parse successfully");
+
+        if let Some(Command::Lookup { key, outfile }) = args.command {
+            assert_eq!(key, "mykey");
+            assert_eq!(outfile, None);
+        } else {
+            panic!("Expected Lookup command");
+        }
+    }
+
+    #[test]
+    fn test_lookup_command_with_outfile() {
+        let args = parse_args(&["vault", "-l", "mykey", "-o", "output.txt"])
+            .expect("Should parse successfully");
+
+        if let Some(Command::Lookup { key, outfile }) = args.command {
+            assert_eq!(key, "mykey");
+            assert_eq!(outfile, Some("output.txt".to_string()));
+        } else {
+            panic!("Expected Lookup command");
+        }
+    }
+
+    #[test]
+    fn test_delete_command() {
+        let args = parse_args(&["vault", "delete", "mykey"]).expect("Should parse successfully");
+
+        if let Some(Command::Delete { key }) = args.command {
+            assert_eq!(key, "mykey");
+        } else {
+            panic!("Expected Delete command");
+        }
+    }
+
+    #[test]
+    fn test_delete_command_short_flag() {
+        let args = parse_args(&["vault", "-d", "mykey"]).expect("Should parse successfully");
+
+        assert!(matches!(args.command, Some(Command::Delete { .. })));
+    }
+
+    #[test]
+    fn test_exists_command() {
+        let args = parse_args(&["vault", "--exists", "mykey"]).expect("Should parse successfully");
+
+        if let Some(Command::Exists { key }) = args.command {
+            assert_eq!(key, "mykey");
+        } else {
+            panic!("Expected Exists command");
+        }
+    }
+
+    #[test]
+    fn test_init_command() {
+        let args =
+            parse_args(&["vault", "init", "my-vault-stack"]).expect("Should parse successfully");
+
+        if let Some(Command::Init { name }) = args.command {
+            assert_eq!(name, Some("my-vault-stack".to_string()));
+        } else {
+            panic!("Expected Init command");
+        }
+    }
+
+    #[test]
+    fn test_init_command_short_flag() {
+        let args =
+            parse_args(&["vault", "-i", "my-vault-stack"]).expect("Should parse successfully");
+
+        assert!(matches!(args.command, Some(Command::Init { .. })));
+    }
+
+    #[test]
+    fn test_update_command() {
+        let args = parse_args(&["vault", "update"]).expect("Should parse successfully");
+
+        if let Some(Command::Update { name }) = args.command {
+            assert_eq!(name, None);
+        } else {
+            panic!("Expected Update command");
+        }
+    }
+
+    #[test]
+    fn test_update_command_with_name() {
+        let args =
+            parse_args(&["vault", "-u", "my-vault-stack"]).expect("Should parse successfully");
+
+        if let Some(Command::Update { name }) = args.command {
+            assert_eq!(name, Some("my-vault-stack".to_string()));
+        } else {
+            panic!("Expected Update command");
+        }
+    }
+
+    #[test]
+    fn test_encrypt_command() {
+        let args =
+            parse_args(&["vault", "encrypt", "secret-value"]).expect("Should parse successfully");
+
+        if let Some(Command::Encrypt { value, .. }) = args.command {
+            assert_eq!(value, Some("secret-value".to_string()));
+        } else {
+            panic!("Expected Encrypt command");
+        }
+    }
+
+    #[test]
+    fn test_encrypt_command_short_flag() {
+        let args = parse_args(&["vault", "-e", "secret-value"]).expect("Should parse successfully");
+
+        assert!(matches!(args.command, Some(Command::Encrypt { .. })));
+    }
+
+    #[test]
+    fn test_decrypt_command() {
+        let args = parse_args(&["vault", "decrypt", "encrypted-value"])
+            .expect("Should parse successfully");
+
+        if let Some(Command::Decrypt { value, .. }) = args.command {
+            assert_eq!(value, Some("encrypted-value".to_string()));
+        } else {
+            panic!("Expected Decrypt command");
+        }
+    }
+
+    #[test]
+    fn test_decrypt_command_short_flag() {
+        let args =
+            parse_args(&["vault", "-y", "encrypted-value"]).expect("Should parse successfully");
+
+        assert!(matches!(args.command, Some(Command::Decrypt { .. })));
+    }
+
+    #[test]
+    fn test_describe_command() {
+        let args = parse_args(&["vault", "--describe"]).expect("Should parse successfully");
+
+        assert!(matches!(args.command, Some(Command::Describe {})));
+    }
+
+    #[test]
+    fn test_info_command() {
+        let args = parse_args(&["vault", "--info"]).expect("Should parse successfully");
+
+        assert!(matches!(args.command, Some(Command::Info {})));
+    }
+
+    #[test]
+    fn test_id_command() {
+        let args = parse_args(&["vault", "id"]).expect("Should parse successfully");
+
+        assert!(matches!(args.command, Some(Command::Id {})));
+    }
+
+    #[test]
+    fn test_completion_command() {
+        let args = parse_args(&["vault", "completion", "bash"]).expect("Should parse successfully");
+
+        if let Some(Command::Completion { shell, install }) = args.command {
+            assert_eq!(shell, Shell::Bash);
+            assert!(!install);
+        } else {
+            panic!("Expected Completion command");
+        }
+    }
+
+    #[test]
+    fn test_completion_command_with_install() {
+        let args = parse_args(&["vault", "--completion", "zsh", "--install"])
+            .expect("Should parse successfully");
+
+        if let Some(Command::Completion { shell, install }) = args.command {
+            assert_eq!(shell, Shell::Zsh);
+            assert!(install);
+        } else {
+            panic!("Expected Completion command");
+        }
+    }
+
+    // ==================== Stack Subcommand Tests ====================
+
+    #[test]
+    fn test_stack_command_no_action() {
+        let args = parse_args(&["vault", "stack"]).expect("Should parse successfully");
+
+        if let Some(Command::Stack { action }) = args.command {
+            assert!(action.is_none());
+        } else {
+            panic!("Expected Stack command");
+        }
+    }
+
+    #[test]
+    fn test_stack_list_command() {
+        let args = parse_args(&["vault", "stack", "list"]).expect("Should parse successfully");
+
+        if let Some(Command::Stack { action }) = args.command {
+            assert!(matches!(action, Some(StackAction::List)));
+        } else {
+            panic!("Expected Stack command");
+        }
+    }
+
+    #[test]
+    fn test_stack_list_command_variants() {
+        let variants = ["list", "-l", "--list", "l", "ls"];
+        for variant in variants {
+            let args = parse_args(&["vault", "stack", variant])
+                .unwrap_or_else(|_| panic!("Should parse 'stack {variant}'"));
+            if let Some(Command::Stack { action }) = args.command {
+                assert!(
+                    matches!(action, Some(StackAction::List)),
+                    "Failed for variant: {variant}"
+                );
+            } else {
+                panic!("Expected Stack command for variant: {variant}");
+            }
+        }
+    }
+
+    #[test]
+    fn test_stack_delete_command() {
+        let args = parse_args(&["vault", "stack", "delete", "my-vault"])
+            .expect("Should parse successfully");
+
+        if let Some(Command::Stack { action }) = args.command {
+            if let Some(StackAction::Delete { name, force, .. }) = action {
+                assert_eq!(name, Some("my-vault".to_string()));
+                assert!(!force);
+            } else {
+                panic!("Expected StackAction::Delete");
+            }
+        } else {
+            panic!("Expected Stack command");
+        }
+    }
+
+    #[test]
+    fn test_stack_delete_with_force() {
+        let args = parse_args(&["vault", "stack", "--delete", "my-vault", "--force"])
+            .expect("Should parse successfully");
+
+        if let Some(Command::Stack { action }) = args.command {
+            if let Some(StackAction::Delete { name, force, .. }) = action {
+                assert_eq!(name, Some("my-vault".to_string()));
+                assert!(force);
+            } else {
+                panic!("Expected StackAction::Delete");
+            }
+        } else {
+            panic!("Expected Stack command");
+        }
+    }
+
+    #[test]
+    fn test_stack_with_global_args_after() {
+        // Test that global args work after stack subcommand
+        let args = parse_args(&["vault", "stack", "list", "-r", "eu-west-1"])
+            .expect("Should parse successfully");
+
+        assert_eq!(args.region, Some("eu-west-1".to_string()));
+        if let Some(Command::Stack { action }) = args.command {
+            assert!(matches!(action, Some(StackAction::List)));
+        } else {
+            panic!("Expected Stack command");
+        }
+    }
+
+    // ==================== Edge Cases and Error Handling ====================
+
+    #[test]
+    fn test_quiet_flag_global() {
+        // Quiet flag should work in various positions
+        let args = parse_args(&["vault", "-q", "--all"]).expect("Should parse successfully");
+        assert!(args.quiet);
+
+        let args = parse_args(&["vault", "--all", "-q"]).expect("Should parse successfully");
+        assert!(args.quiet);
+
+        let args = parse_args(&["vault", "store", "key", "value", "-q"])
+            .expect("Should parse successfully");
+        assert!(args.quiet);
+    }
+
+    #[test]
+    fn test_conflicting_value_args_in_store() {
+        // Cannot use both positional value and --value flag
+        let result = parse_args(&["vault", "store", "key", "value", "--value", "other"]);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_conflicting_value_and_file_in_store() {
+        // Cannot use both value and file
+        let result = parse_args(&["vault", "store", "key", "value", "--file", "path/to/file"]);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_missing_required_args() {
+        // Lookup requires a key
+        let result = parse_args(&["vault", "lookup"]);
+        assert!(result.is_err());
+
+        // Delete requires a key
+        let result = parse_args(&["vault", "delete"]);
+        assert!(result.is_err());
+
+        // Exists requires a key
+        let result = parse_args(&["vault", "--exists"]);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_no_command_shows_help() {
+        // Without any command, clap should error (arg_required_else_help = true)
+        let result = parse_args(&["vault"]);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_unknown_command() {
+        let result = parse_args(&["vault", "unknown-command"]);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_unknown_flag() {
+        let result = parse_args(&["vault", "--unknown-flag", "--all"]);
+        assert!(result.is_err());
+    }
+
+    // ==================== Complex Scenarios ====================
+
+    #[test]
+    fn test_lookup_with_all_global_options() {
+        let args = parse_args(&[
+            "vault",
+            "lookup",
+            "mykey",
+            "-r",
+            "ap-southeast-1",
+            "-b",
+            "prod-bucket",
+            "-p",
+            "prod/",
+            "--vaultstack",
+            "prod-vault",
+            "-q",
+        ])
+        .expect("Should parse successfully");
+
+        assert_eq!(args.region, Some("ap-southeast-1".to_string()));
+        assert_eq!(args.bucket, Some("prod-bucket".to_string()));
+        assert_eq!(args.prefix, Some("prod/".to_string()));
+        assert_eq!(args.vault_stack, Some("prod-vault".to_string()));
+        assert!(args.quiet);
+
+        if let Some(Command::Lookup { key, .. }) = args.command {
+            assert_eq!(key, "mykey");
+        } else {
+            panic!("Expected Lookup command");
+        }
+    }
+
+    #[test]
+    fn test_init_with_vaultstack_global_and_positional() {
+        // When both --vaultstack and positional name are provided,
+        // the run() function prefers vault_stack over name
+        let args = parse_args(&[
+            "vault",
+            "--vaultstack",
+            "global-name",
+            "init",
+            "positional-name",
+        ])
+        .expect("Should parse successfully");
+
+        assert_eq!(args.vault_stack, Some("global-name".to_string()));
+        if let Some(Command::Init { name }) = args.command {
+            assert_eq!(name, Some("positional-name".to_string()));
+        } else {
+            panic!("Expected Init command");
+        }
+    }
+
+    #[test]
+    fn test_decrypt_with_file_flag() {
+        let args = parse_args(&[
+            "vault",
+            "decrypt",
+            "--file",
+            "encrypted.bin",
+            "-o",
+            "output.txt",
+        ])
+        .expect("Should parse successfully");
+
+        if let Some(Command::Decrypt {
+            value,
+            file,
+            outfile,
+            ..
+        }) = args.command
+        {
+            assert_eq!(value, None);
+            assert_eq!(file, Some("encrypted.bin".to_string()));
+            assert_eq!(outfile, Some("output.txt".to_string()));
+        } else {
+            panic!("Expected Decrypt command");
+        }
+    }
+
+    #[test]
+    fn test_encrypt_with_file_flag() {
+        let args = parse_args(&["vault", "-e", "--file", "secret.txt"])
+            .expect("Should parse successfully");
+
+        if let Some(Command::Encrypt { value, file, .. }) = args.command {
+            assert_eq!(value, None);
+            assert_eq!(file, Some("secret.txt".to_string()));
+        } else {
+            panic!("Expected Encrypt command");
+        }
+    }
 }
