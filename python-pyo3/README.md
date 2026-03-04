@@ -15,7 +15,7 @@ Usage: vault [OPTIONS] [COMMAND]
 
 Commands:
   all, -a, --all            List available secrets [aliases: a, list, ls]
-  completion, --completion  Generate shell completion
+  completion, --completion  Generate shell completions
   delete, -d, --delete      Delete an existing key from the store [aliases: d]
   describe, --describe      Print CloudFormation stack parameters for current configuration
   decrypt, -y, --decrypt    Directly decrypt given value [aliases: y]
@@ -23,11 +23,11 @@ Commands:
   exists, --exists          Check if a key exists
   info, --info              Print vault information
   id                        Print AWS user account information
-  status, --status          Print vault stack information
-  init, -i, --init          Initialize a new KMS key and S3 bucket [aliases: i]
-  update, -u, --update      Update the vault CloudFormation stack [aliases: u]
+  stack                     Commands for cloudformation stack
+  init, -i, --init          Initialize a new KMS key and S3 bucket. [aliases: i]
   lookup, -l, --lookup      Output secret value for given key [aliases: l]
-  store, -s, --store        Store a new key-value pair [aliases: s]
+  store, -s, --store        Store a new key-value pair. [aliases: s]
+  update, -u, --update      Update the vault CloudFormation stack. [aliases: u]
   help                      Print this message or the help of the given subcommand(s)
 
 Options:
