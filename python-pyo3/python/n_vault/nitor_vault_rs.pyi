@@ -1,39 +1,41 @@
-from typing import Any, Dict, List, Optional
+from __future__ import annotations
+
+from typing import Any
 
 class VaultConfig:
     """
     Optional parameters for a `Vault` instance.
 
     Attributes:
-        vault_stack (Optional[str]): The name of the CloudFormation stack.
-        region (Optional[str]): The AWS region for the bucket.
-        bucket (Optional[str]): The name of the S3 bucket.
-        key (Optional[str]): The encryption key ARN.
-        prefix (Optional[str]): The prefix for keys.
-        profile (Optional[str]): The AWS profile name.
-        iam_id (Optional[str]): The IAM user ID.
-        iam_secret (Optional[str]): The IAM secret key.
+        vault_stack (str | None): The name of the CloudFormation stack.
+        region (str | None): The AWS region for the bucket.
+        bucket (str | None): The name of the S3 bucket.
+        key (str | None): The encryption key ARN.
+        prefix (str | None): The prefix for keys.
+        profile (str | None): The AWS profile name.
+        iam_id (str | None): The IAM user ID.
+        iam_secret (str | None): The IAM secret key.
     """
 
-    vault_stack: Optional[str]
-    region: Optional[str]
-    bucket: Optional[str]
-    key: Optional[str]
-    prefix: Optional[str]
-    profile: Optional[str]
-    iam_id: Optional[str]
-    iam_secret: Optional[str]
+    vault_stack: str | None
+    region: str | None
+    bucket: str | None
+    key: str | None
+    prefix: str | None
+    profile: str | None
+    iam_id: str | None
+    iam_secret: str | None
 
     def __init__(
         self,
-        vault_stack: Optional[str] = None,
-        region: Optional[str] = None,
-        bucket: Optional[str] = None,
-        key: Optional[str] = None,
-        prefix: Optional[str] = None,
-        profile: Optional[str] = None,
-        iam_id: Optional[str] = None,
-        iam_secret: Optional[str] = None,
+        vault_stack: str | None = None,
+        region: str | None = None,
+        bucket: str | None = None,
+        key: str | None = None,
+        prefix: str | None = None,
+        profile: str | None = None,
+        iam_id: str | None = None,
+        iam_secret: str | None = None,
     ) -> VaultConfig:
         """
         Initialize a VaultConfig instance with optional parameters.
@@ -55,7 +57,7 @@ def delete(name: str, config: VaultConfig) -> None:
     Delete data in S3 for the given key name.
     """
 
-def delete_many(names: List[str], config: VaultConfig) -> None:
+def delete_many(names: list[str], config: VaultConfig) -> None:
     """
     Delete data for multiple keys.
     """
@@ -96,7 +98,7 @@ def exists(name: str, config: VaultConfig) -> bool:
         True if the key exists, False otherwise.
     """
 
-def init(config: VaultConfig) -> Dict[str, Any]:
+def init(config: VaultConfig) -> dict[str, Any]:
     """
     Initialize a new Vault stack.
 
@@ -107,7 +109,7 @@ def init(config: VaultConfig) -> Dict[str, Any]:
         A dictionary containing stack initialization details.
     """
 
-def list_all(config: VaultConfig) -> List[str]:
+def list_all(config: VaultConfig) -> list[str]:
     """
     Get all available secrets.
 
@@ -130,7 +132,7 @@ def lookup(name: str, config: VaultConfig) -> bytes:
         The raw bytes stored under the given key.
     """
 
-def run(args: List[str]) -> None:
+def run(args: list[str]) -> None:
     """
     Run Vault CLI with the given arguments.
 
@@ -138,7 +140,7 @@ def run(args: List[str]) -> None:
         args: List of command-line arguments, including program name.
     """
 
-def stack_status(config: VaultConfig) -> Dict[str, Any]:
+def stack_status(config: VaultConfig) -> dict[str, Any]:
     """
     Get the Vault CloudFormation stack status.
 
@@ -159,7 +161,7 @@ def store(name: str, value: bytes, config: VaultConfig) -> None:
         config: Vault configuration.
     """
 
-def update(config: VaultConfig) -> Dict[str, Any]:
+def update(config: VaultConfig) -> dict[str, Any]:
     """
     Update the Vault CloudFormation stack with the current template.
 

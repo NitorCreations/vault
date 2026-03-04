@@ -160,6 +160,36 @@ pip install .
 vault -h
 ```
 
+### Code Formatting and Linting
+
+This project uses [Ruff](https://docs.astral.sh/ruff/) for code formatting and linting.
+
+Format code, apply lint fixes, and re-format:
+
+```shell
+uv run ruff format . && uv run ruff check --fix . && uv run ruff format .
+```
+
+Or run the commands separately:
+
+```shell
+# Format code
+uv run ruff format .
+
+# Run linter and apply auto-fixes
+uv run ruff check --fix .
+```
+
+### Type Checking
+
+This project uses [ty](https://github.com/astral-sh/ty) for type checking.
+
+Run type checker:
+
+```shell
+uv run ty check
+```
+
 ### Updating dependencies
 
 Update all Python dependencies to latest versions:

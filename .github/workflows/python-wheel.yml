@@ -62,8 +62,8 @@ jobs:
             --find-interpreter
             --manifest-path python-pyo3/Cargo.toml
           sccache: ${{ !startsWith(github.ref, 'refs/tags/python') }}
-          manylinux: auto
-          container: off
+          manylinux: 2_34
+          before-script-linux: yum install -y clang
 
       - name: Build free-threaded wheels
         uses: PyO3/maturin-action@v1
@@ -75,8 +75,8 @@ jobs:
             --interpreter python3.14t
             --manifest-path python-pyo3/Cargo.toml
           sccache: ${{ !startsWith(github.ref, 'refs/tags/python') }}
-          manylinux: auto
-          container: off
+          manylinux: 2_34
+          before-script-linux: yum install -y clang
 
       - name: Upload wheels
         uses: actions/upload-artifact@v7
@@ -85,10 +85,6 @@ jobs:
           path: dist
 
   musllinux:
-    # Needs extra dependencies for aws-lc-rs compile:
-    # sudo apt-get install -y libclang1; cargo install --force --locked bindgen-cli
-    # Disabled until we can have a custom docker manylinux image with the dependencies or a self-hosted musllinux runner
-    if: false
     runs-on: ${{ matrix.platform.runner }}
     strategy:
       fail-fast: false
@@ -114,6 +110,7 @@ jobs:
             --manifest-path python-pyo3/Cargo.toml
           sccache: false
           manylinux: musllinux_1_2
+          before-script-linux: apt-get update && apt-get install -y clang
 
       - name: Build free-threaded wheels
         uses: PyO3/maturin-action@v1
@@ -126,6 +123,7 @@ jobs:
             --manifest-path python-pyo3/Cargo.toml
           sccache: false
           manylinux: musllinux_1_2
+          before-script-linux: apt-get update && apt-get install -y clang
 
       - name: Upload wheels
         uses: actions/upload-artifact@v7
@@ -222,7 +220,7 @@ jobs:
           args: |
             --release
             --out dist
-            --interpreter python3.13t
+            --interpreter python3.14t
             --manifest-path python-pyo3/Cargo.toml
           sccache: ${{ !startsWith(github.ref, 'refs/tags/python') }}
 
