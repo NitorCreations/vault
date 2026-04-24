@@ -5,5 +5,5 @@ resolver = "3"
 
 [workspace.package]
 edition = "2024"
-version = "2.8.0"
-rust-version = "1.92"
+version = "2.8.1"
+rust-version = "1.94"
