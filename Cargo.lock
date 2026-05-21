@@ -1853,7 +1853,7 @@ dependencies = [
 
 [[package]]
 name = "nitor-vault"
-version = "2.8.1"
+version = "2.8.2"
 dependencies = [
  "aes-gcm",
  "anyhow",
@@ -1877,7 +1877,7 @@ dependencies = [
 
 [[package]]
 name = "nitor-vault-pyo3"
-version = "2.8.1"
+version = "2.8.2"
 dependencies = [
  "anyhow",
  "nitor-vault",
