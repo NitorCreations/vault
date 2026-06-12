@@ -31,14 +31,14 @@ dependencies = []
 
 [dependency-groups]
 dev = [
-    "maturin>=1.12.6",
+    "maturin>=1.14,<2.0",
     "ruff>=0.15.4",
     "ty>=0.0.20",
 ]
 
 [project.optional-dependencies]
-build = ["maturin", "wheel"]
-dev = ["maturin", "ruff", "ty"]
+build = ["maturin>=1.14,<2.0", "wheel"]
+dev = ["maturin>=1.14,<2.0", "ruff", "ty"]
 
 [project.urls]
 Repository = "https://github.com/NitorCreations/vault"
@@ -48,7 +48,7 @@ Homepage = "https://github.com/NitorCreations/vault"
 vault = "n_vault.cli:main"
 
 [build-system]
-requires = ["maturin>=1.9,<2.0"]
+requires = ["maturin>=1.14,<2.0"]
 build-backend = "maturin"
 
 [tool.maturin]

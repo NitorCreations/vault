@@ -55,6 +55,7 @@ jobs:
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
+          maturin-version: v1.14.0
           target: ${{ matrix.platform.target }}
           args: |
             --release
@@ -68,6 +69,7 @@ jobs:
       - name: Build free-threaded wheels
         uses: PyO3/maturin-action@v1
         with:
+          maturin-version: v1.14.0
           target: ${{ matrix.platform.target }}
           args: |
             --release
@@ -102,6 +104,7 @@ jobs:
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
+          maturin-version: v1.14.0
           target: ${{ matrix.platform.target }}
           args: |
             --release
@@ -115,6 +118,7 @@ jobs:
       - name: Build free-threaded wheels
         uses: PyO3/maturin-action@v1
         with:
+          maturin-version: v1.14.0
           target: ${{ matrix.platform.target }}
           args: |
             --release
@@ -156,6 +160,7 @@ jobs:
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
+          maturin-version: v1.14.0
           target: ${{ matrix.platform.target }}
           args: |
             --release
@@ -172,6 +177,7 @@ jobs:
       - name: Build free-threaded wheels
         uses: PyO3/maturin-action@v1
         with:
+          maturin-version: v1.14.0
           target: ${{ matrix.platform.target }}
           args: |
             --release
@@ -205,6 +211,7 @@ jobs:
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
+          maturin-version: v1.14.0
           target: ${{ matrix.platform.target }}
           args: |
             --release
@@ -216,6 +223,7 @@ jobs:
       - name: Build free-threaded wheels
         uses: PyO3/maturin-action@v1
         with:
+          maturin-version: v1.14.0
           target: ${{ matrix.platform.target }}
           args: |
             --release
@@ -237,6 +245,7 @@ jobs:
       - name: Build sdist
         uses: PyO3/maturin-action@v1
         with:
+          maturin-version: v1.14.0
           command: sdist
           args: --out dist --manifest-path python-pyo3/Cargo.toml
 
