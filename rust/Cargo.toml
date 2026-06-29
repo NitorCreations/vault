@@ -13,7 +13,7 @@ authors = [
 ]
 
 [dependencies]
-aes-gcm = "0.10.3"
+aes-gcm = "0.11.0"
 anyhow = "1.0.102"
 aws-config = { version = "1.8.18", features = ["behavior-version-latest", "rustls"] }
 aws-lc-rs = { version = "1", features = ["bindgen", "prebuilt-nasm"] }
