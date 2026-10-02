@@ -341,9 +341,8 @@ pub async fn run_cli_with_args(mut args: Vec<String>) -> Result<()> {
     if let Err(error) = run(args).await {
         if quiet {
             std::process::exit(1);
-        } else {
-            return Err(error);
         }
+        return Err(error);
     }
 
     Ok(())
@@ -358,9 +357,8 @@ pub async fn run_cli() -> Result<()> {
     if let Err(error) = run(args).await {
         if quiet {
             std::process::exit(1);
-        } else {
-            return Err(error);
         }
+        return Err(error);
     }
 
     Ok(())
