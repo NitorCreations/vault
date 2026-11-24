@@ -76,7 +76,7 @@ jobs:
       - name: Build wheel
         uses: PyO3/maturin-action@v1
         with:
-          maturin-version: v1.14.0
+          maturin-version: v1.16.0
           args: |
             --release
             --out dist

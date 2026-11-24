@@ -14,23 +14,23 @@ authors = [
 
 [dependencies]
 aes-gcm = "0.11.1"
-anyhow = "1.0.104"
-aws-config = { version = "1.12.0", features = ["behavior-version-latest", "rustls"] }
+anyhow = "1.0.105"
+aws-config = { version = "1.13.3", features = ["behavior-version-latest", "rustls"] }
 aws-lc-rs = { version = "1", features = ["bindgen", "prebuilt-nasm"] }
-aws-sdk-cloudformation = { version = "1.130.0", features = ["rustls"] }
-aws-sdk-kms = { version = "1.123.0", features = ["rustls"] }
-aws-sdk-s3 = { version = "1.152.0", features = ["rustls"] }
-aws-sdk-sts = { version = "1.119.0", features = ["behavior-version-latest", "rustls"] }
+aws-sdk-cloudformation = { version = "1.142.0", features = ["rustls"] }
+aws-sdk-kms = { version = "1.133.0", features = ["rustls"] }
+aws-sdk-s3 = { version = "1.161.0", features = ["rustls"] }
+aws-sdk-sts = { version = "1.128.0", features = ["behavior-version-latest", "rustls"] }
 base64 = "0.23.1"
-clap = { version = "4.6.7", features = ["derive", "env"] }
-clap_complete = "4.6.11"
+clap = { version = "4.6.10", features = ["derive", "env"] }
+clap_complete = "4.6.12"
 colored = "3.1.1"
 dirs = "7.0.0"
-rand = "0.10.3"
+rand = "0.10.4"
 serde = { version = "1.0.229", features = ["derive"] }
-serde_json = "1.0.151"
+serde_json = "1.0.154"
 thiserror = "2.0.21"
-tokio = { version = "1.53.1", features = ["full"] }
+tokio = { version = "1.54.1", features = ["full"] }
 
 [[bin]]
 name = "vault"
